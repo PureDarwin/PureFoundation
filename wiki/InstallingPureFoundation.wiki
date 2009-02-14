@@ -1,0 +1,27 @@
+#summary How to install PureFoundation on Darwin
+
+= Introduction =
+
+The PureFoundation project consists of two components: the Foundation.framework, which reproduces the functionality of Apple's Foundation, and a patched version of the open source CFLite. Each component relies on the other, so you will need to install both. However, the patches to CFLite _shouldn't_ prevent it operating as normal for non-Foundation applications.
+
+This page details installing the binaries. Details of building Foundation from source and patching CFLite will be along soon.
+
+= Details =
+
+PureFoundation has been tested with (and was developed using) the PureDarwin project's [http://www.puredarwin.org/downloads/xmas PureDarwinXmas], which is a VMWare image. These instructions assume that you are running this on a Mac, using VMWare Fusion.
+
+  # Download `PureFoundation_v0.xxxx.zip` and `PF_v0.xxxx_CFLite.zip` from the [http://code.google.com/p/purefoundation/downloads/list downloads] page and un-archive them. For the rest of these instructions we'll assume the decompressed folders are in `~/Downloads`.
+  # Ensure that VMWare Fusion is not running. Find the `puredarwinxmas.vmwarevm` virtual machine file in the Finder. Right- (Command-) click on it and select "Show Package Contents". A new window will open. Double click on the file `puredarwinxmas.vmdk`. This is the virtual machine's disk image, which should now be mounted.
+  # You will probably want to move the existing CoreFoundation.framework somewhere safe, for if (when) something goes wrong.
+{{{
+    mv /Volumes/PureDarwinXmas/System/Library/Frameworks/CoreFoundation.framework /Volumes/PureDarwinXmas/Users/Shared
+}}}
+  # Copy the frameworks into place. I suggest using `ditto` from the Terminal. (These are for the v0.0006 release. Obviously, use the current version number.)
+{{{
+    ditto ~/Downloads/PureFoundation_v0.0006/Foundation.framework/ /Volumes/PureDarwinXmas/System/Library/Frameworks/Foundation.framework
+
+    ditto ~/Downloads/PF_v0.0006_CFLite/CoreFoundation.framework/ /Volumes/PureDarwinXmas/System/Library/Frameworks/CoreFoundation.framework
+}}}
+  # Unmount the disk image.
+  # Boot VMWare Fusion.
+  # Start making notes about everything which doesn't work.
