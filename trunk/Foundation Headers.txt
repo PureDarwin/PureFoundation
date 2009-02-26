@@ -1,0 +1,8 @@
+FOUNDATION HEADERS
+==================
+
+PureFoundation is built using the header files provided by Apple's own Foundation.framework. This ensure that PureFoundation will be compatible (in terms of publically-declared ivar layout) with any other application also compiled against these headers and linked to Foundation.
+
+Apple's Foundation headers are copyright, and therefore cannot be distributed with PureFoundation. They also contain the occasional reference to other Apple-only headers (eg. NSGeometry.h references CoreGraphics). For this reason, in its current form, PureFoundation can only be built in XCode under OS X.
+
+The PureFoundation XCode project includes Apple's Foundation headers by reference. In particular, it references the versions stored in /System/Library/frameworks/Foundation.framework/Headers. 

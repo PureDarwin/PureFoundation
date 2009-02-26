@@ -1,0 +1,44 @@
+/*
+ *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *	PureFoundation_Prefix.pch
+ *
+ *	Common file prefix
+ *
+ *	Created by Stuart Crook on 08/1/2009.
+ *	LGPL'd. See LICENCE.txt for copyright information.
+ */
+
+//
+// Prefix header for all source files of the 'PureFoundation' target in the 'PureFoundation' project.
+//
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <stdio.h>
+
+#import <Foundation/Foundation.h>
+
+//#import "PFEnumerator.h"
+
+//#import <NSError.h"
+//#import "NSObjCRuntime.h"
+
+#ifdef DEBUG
+#define PF_HELLO(x) printf("%s %s\n", __func__, x);
+#define PF_DEBUG(x) printf("\t%s\n", x );
+#define PF_DEBUG_F(x,...) 
+//PF_DEBUG( sprintf(x,__VA_ARGS__) );
+#else
+#define PF_HELLO(x)
+#define PF_DEBUG(x)
+#define PF_DEBUG_F(x,...)
+#endif
+
+// TODO comment, which we may want to keep in the release code
+#define PF_TODO printf("%s TODO\n", __func__);
+
+#define PF_PATH_TO_CF ../CF-476.15
+
+#define PF_RETURN_NEW(obj) return NSMakeCollectable(obj);
+#define PF_RETURN_TEMP(obj) return NSMakeCollectable((CFTypeRef)[(id)obj autorelease]);
+#define PF_NIL_ARG(obj) if( obj == nil ) [NSException raise: NSInvalidArgumentException format: nil];
+
