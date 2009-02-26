@@ -1,0 +1,18 @@
+ORGANISATION OF PUREFOUNDATION PROJECT FILES
+============================================
+
+There are already a lot of files in this project, and we're not even close to having added all we need. Since things were getting a but messy I've tried to organise the file is a more logical manner. (Yes, only using groups -- the actual project directory is still an almighty mess.)
+
+* Foundation Headers -- references to Apple's Foundation.framework headers files
+* Bridged Classes -- source code for classes which bridge directly to CFLite, and their immediate parents. (eg. NSArray.m contiains declarations and implementations of NSArray, NSMutableArray, and NSCFArray.)
+* Cocotron -- for source and headers pulled wholesale from Cocotron (and possibly renamed).
+* GNUStep -- for source and headers pulled wholesale from GNUStep (and, again, possibly renamed).
+* PureFoundation -- utility code, and classes which use the PF namespace.
+
+Beyond this point we begin to group files according to function.
+
+* Files, etc. -- NSFileHandle, NSFileManager
+* Threads -- also locks, tasks, process info, and runloops
+* Runtime -- low-level, anything which interacts with the runtime, and also memory management
+
+

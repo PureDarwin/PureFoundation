@@ -1,0 +1,8 @@
+Code from GNUStep has been used in the following files, in addition to those inside the "GNUStep" group:
+
+	* NSFileManager.m
+	* NSGeometry.m
+	* NSRange.m
+	
+	
+	
