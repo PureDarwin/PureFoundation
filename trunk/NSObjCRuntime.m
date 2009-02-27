@@ -14,7 +14,12 @@
 //#import "GSNextRuntime.h"
 #import "PFObjCTypeTools.h"
 
-#import "../CF-476.15/CFLogUtilities.h"
+/*
+ *	This is defined in CFLogUtilities.h in CFLite. It is slow and creates far to
+ *	many objects as it runs, so one day will be replaced with an entirely internal
+ *	version.
+ */
+extern void CFLog(int32_t level, CFStringRef format, ...);
 
 /*
  *	Set this to the version of the proper Foundation we're trying to be
@@ -150,7 +155,7 @@ void NSLogv(NSString *format, va_list args)
 	//printf("-- calling CFLog --\n");
 	NSString *msg = [[NSString alloc] initWithFormat: format arguments: args];
 	//printf("msg: 0x%X - ", msg);
-	CFLog( kCFLogLevelNotice, (CFStringRef)msg );
+	CFLog( 5, (CFStringRef)msg ); // the 5 = kCFLogLevelNotice, defined in CFLogUtilities.h
 	[msg release];
 	PF_DEBUG("-- back from CFLog --\n"); //these proved that CFLog, on first calling does																	//	_A LOT_ of retain/releasing
 }
