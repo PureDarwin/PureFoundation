@@ -162,6 +162,8 @@
 		179AB9070F56A3280075286B /* NSXMLParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 179AB88B0F56A3280075286B /* NSXMLParser.h */; };
 		179AB9080F56A3280075286B /* NSZone.h in Headers */ = {isa = PBXBuildFile; fileRef = 179AB88C0F56A3280075286B /* NSZone.h */; };
 		179AB90D0F56A4B30075286B /* Organisation.txt in Resources */ = {isa = PBXBuildFile; fileRef = 179AB90C0F56A4B30075286B /* Organisation.txt */; };
+		179ABAAB0F58321E0075286B /* PFFileHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 179ABAA90F58321E0075286B /* PFFileHandle.m */; };
+		179ABAAC0F58321E0075286B /* PFFileHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 179ABAAA0F58321E0075286B /* PFFileHandle.h */; };
 		179DDC480F3A6BA9008E838A /* PFEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DDC460F3A6BA9008E838A /* PFEnumerator.h */; };
 		179DDC490F3A6BA9008E838A /* PFEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 179DDC470F3A6BA9008E838A /* PFEnumerator.m */; };
 		179DDC650F3A6F70008E838A /* NSEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 179DDC640F3A6F70008E838A /* NSEnumerator.m */; };
@@ -170,8 +172,6 @@
 		179DE1580F3DB1B6008E838A /* 64-bit.txt in Resources */ = {isa = PBXBuildFile; fileRef = 179DE1570F3DB1B6008E838A /* 64-bit.txt */; };
 		179DE3150F3EF16C008E838A /* GSNextRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DE3140F3EF16C008E838A /* GSNextRuntime.h */; };
 		179DE3200F3EF18E008E838A /* PFObjCTypeTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DE31F0F3EF18E008E838A /* PFObjCTypeTools.h */; };
-		179DE3530F3EF8DA008E838A /* PFFileHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DE3500F3EF8DA008E838A /* PFFileHandle.h */; };
-		179DE3540F3EF8DA008E838A /* PFFileHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 179DE3510F3EF8DA008E838A /* PFFileHandle.m */; };
 		179DE3AE0F3EFCFA008E838A /* GSDirectoryEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 179DE3AD0F3EFCFA008E838A /* GSDirectoryEnumerator.m */; };
 		179DE3B00F3EFD02008E838A /* GSIArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DE3AF0F3EFD02008E838A /* GSIArray.h */; };
 		179DE3B20F3EFD0B008E838A /* GSUnion.h in Headers */ = {isa = PBXBuildFile; fileRef = 179DE3B10F3EFD0B008E838A /* GSUnion.h */; };
@@ -362,6 +362,8 @@
 		179AB88B0F56A3280075286B /* NSXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSXMLParser.h; path = /System/Library/Frameworks/Foundation.framework/Versions/C/Headers/NSXMLParser.h; sourceTree = "<absolute>"; };
 		179AB88C0F56A3280075286B /* NSZone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSZone.h; path = /System/Library/Frameworks/Foundation.framework/Versions/C/Headers/NSZone.h; sourceTree = "<absolute>"; };
 		179AB90C0F56A4B30075286B /* Organisation.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Organisation.txt; sourceTree = "<group>"; };
+		179ABAA90F58321E0075286B /* PFFileHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PFFileHandle.m; sourceTree = "<group>"; };
+		179ABAAA0F58321E0075286B /* PFFileHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PFFileHandle.h; sourceTree = "<group>"; };
 		179DDC460F3A6BA9008E838A /* PFEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PFEnumerator.h; sourceTree = "<group>"; };
 		179DDC470F3A6BA9008E838A /* PFEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PFEnumerator.m; sourceTree = "<group>"; };
 		179DDC640F3A6F70008E838A /* NSEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSEnumerator.m; sourceTree = "<group>"; };
@@ -371,8 +373,6 @@
 		179DE3140F3EF16C008E838A /* GSNextRuntime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GSNextRuntime.h; sourceTree = "<group>"; };
 		179DE31F0F3EF18E008E838A /* PFObjCTypeTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PFObjCTypeTools.h; sourceTree = "<group>"; };
 		179DE3400F3EF89A008E838A /* GSDirectoryEnumerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GSDirectoryEnumerator.h; sourceTree = "<group>"; };
-		179DE3500F3EF8DA008E838A /* PFFileHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFFileHandle.h; path = ../test/PFFileHandle.h; sourceTree = SOURCE_ROOT; };
-		179DE3510F3EF8DA008E838A /* PFFileHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PFFileHandle.m; path = ../test/PFFileHandle.m; sourceTree = SOURCE_ROOT; };
 		179DE3AD0F3EFCFA008E838A /* GSDirectoryEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GSDirectoryEnumerator.m; sourceTree = "<group>"; };
 		179DE3AF0F3EFD02008E838A /* GSIArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GSIArray.h; sourceTree = "<group>"; };
 		179DE3B10F3EFD0B008E838A /* GSUnion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GSUnion.h; sourceTree = "<group>"; };
@@ -499,8 +499,6 @@
 				171DA0D10F41F4FE00B7020A /* PFDateComponents.m */,
 				179DDC460F3A6BA9008E838A /* PFEnumerator.h */,
 				179DDC470F3A6BA9008E838A /* PFEnumerator.m */,
-				179DE3500F3EF8DA008E838A /* PFFileHandle.h */,
-				179DE3510F3EF8DA008E838A /* PFFileHandle.m */,
 			);
 			name = PureFoundation;
 			sourceTree = "<group>";
@@ -669,6 +667,8 @@
 				179DE3B70F3EFD84008E838A /* NSFileManager.m */,
 				179DE3B60F3EFD84008E838A /* NSFileHandle.m */,
 				179DE3C80F3EFD93008E838A /* NSPathUtilities.m */,
+				179ABAA90F58321E0075286B /* PFFileHandle.m */,
+				179ABAAA0F58321E0075286B /* PFFileHandle.h */,
 			);
 			name = "Files, etc.";
 			sourceTree = "<group>";
@@ -743,7 +743,6 @@
 				179DDC480F3A6BA9008E838A /* PFEnumerator.h in Headers */,
 				179DE3150F3EF16C008E838A /* GSNextRuntime.h in Headers */,
 				179DE3200F3EF18E008E838A /* PFObjCTypeTools.h in Headers */,
-				179DE3530F3EF8DA008E838A /* PFFileHandle.h in Headers */,
 				179DE3B00F3EFD02008E838A /* GSIArray.h in Headers */,
 				179DE3B20F3EFD0B008E838A /* GSUnion.h in Headers */,
 				171DA0D20F41F4FE00B7020A /* PFDateComponents.h in Headers */,
@@ -872,6 +871,7 @@
 				179AB9060F56A3280075286B /* NSXMLNodeOptions.h in Headers */,
 				179AB9070F56A3280075286B /* NSXMLParser.h in Headers */,
 				179AB9080F56A3280075286B /* NSZone.h in Headers */,
+				179ABAAC0F58321E0075286B /* PFFileHandle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -979,7 +979,6 @@
 				17175C450F38EE6B00254BC9 /* NSRange.m in Sources */,
 				179DDC490F3A6BA9008E838A /* PFEnumerator.m in Sources */,
 				179DDC650F3A6F70008E838A /* NSEnumerator.m in Sources */,
-				179DE3540F3EF8DA008E838A /* PFFileHandle.m in Sources */,
 				179DE3AE0F3EFCFA008E838A /* GSDirectoryEnumerator.m in Sources */,
 				179DE3B40F3EFD15008E838A /* GSNextRuntime.m in Sources */,
 				179DE3B80F3EFD84008E838A /* NSFileHandle.m in Sources */,
@@ -1002,6 +1001,7 @@
 				17B11FD20F4B0FF5008D395B /* CTScanner.m in Sources */,
 				17B120C40F4C037B008D395B /* NSCountedSet.m in Sources */,
 				17B1212F0F4C2247008D395B /* NSRunLoop.m in Sources */,
+				179ABAAB0F58321E0075286B /* PFFileHandle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
