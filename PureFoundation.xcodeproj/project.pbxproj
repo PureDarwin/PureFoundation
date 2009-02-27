@@ -1044,6 +1044,7 @@
 				);
 				PRODUCT_NAME = Foundation;
 				SKIP_INSTALL = YES;
+				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = framework;
 				ZERO_LINK = YES;
 			};
@@ -1070,6 +1071,7 @@
 				);
 				PRODUCT_NAME = Foundation;
 				SKIP_INSTALL = YES;
+				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
