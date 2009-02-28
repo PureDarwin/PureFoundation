@@ -1,13 +1,47 @@
-#summary One-sentence summary of this page.
+#summary Instructions for building CFLite for PureFoundation from scratch
 
 = Introduction =
 
-Add your content here.
+If you just want to try out PureFoundation you'll probably be better off using the pre-compiled binaries available from the [http://code.google.com/p/purefoundation/downloads/list downloads page]. Otherwise, read on.
 
+== Building CFLite ==
 
-= Details =
+CFLite is built using the `darwinbuild` script and environment, available from [http://darwinbuild.macosforge.org/ MacOSForge]. It is always a good idea to be running the latest version pulled from svn, since new bug-fixes and enhancements are frequently added.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+You should also be building using the [http://www.puredarwin.org/developers/darwinbuild/patchfiles PureDarwin patches], since these add common fixes which PureFoundation relies upon.
+
+For the rest of this discussion we will assume that your `darwinbuild` path is `/Volumes/dbuf/9G55`. It doesn't matter if it isn't. The patch has been tested with 9F33 and 9G55.
+
+=== Updating the PureDarwin patches ===
+
+At the time of writing, it's necessary to update the patch file automatically downloaded from the PureDarwin project. When this is changed, these instructions will be removed. Until then...
+
+  # Run `darwinbuild CF` once, to ensure that the patch files are downloaded.
+  # Download the file "`CF-476.15.CFBundle_Resources.p1.patch`" from the [http://code.google.com/p/purefoundation/downloads/list downloads page].
+  # Copy the downloaded patch into the Sources directory, over-writing the PureDarwin patch of the same name.
+{{{
+cp ~/Downloads/http://code.google.com/p/purefoundation/downloads/list /Volumes/dbufs/9G55/Source/
+}}}
+
+The updated patch will now be applied each time you build CF.
+
+=== Building the patched CFLite ===
+
+  # Change into the Source directory and un-tar the CFLite source tarball.
+{{{
+cd Sources/
+tar xfvz CF-476.17.tar.gz
+}}}
+  # Download the latest PureFoundation patch from the [http://code.google.com/p/purefoundation/downloads/list downloads page]. (At the time of writing this was "`CF-476.15.pf6.patch`".) (Don't worry about the different CFLite version numbers - the source doesn't change that much between releases.)
+  # Change into the CFLite source directory and apply the patch.
+{{{
+cd CF-476.17/
+patch -p1 -r . < ~/Downloads/CF-476.15.pf6.patch
+}}}
+  # Change back to the main `darwinbuild` directory and build CFLite.
+{{{
+cd ../..
+darwinbuild CF
+}}}
+
+`darwinbuild` will apply the PureDarwin patches to the patched source code.
