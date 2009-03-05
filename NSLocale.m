@@ -207,6 +207,15 @@ static Class _PFNSCFLocaleClass = nil;
 	return CFLocaleGetTypeID();
 }
 
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
 // appears to return NSObjects <class address> description
 //-(NSString *)description
 //{

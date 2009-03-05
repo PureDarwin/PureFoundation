@@ -427,10 +427,14 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	return CFArrayGetTypeID();
 }
 
--(NSUInteger)hash
-{
-	return CFHash((CFTypeRef)self);
-}
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 /*
  *	sjc -- 9/2/09 -- The format now matches Cocoa's. I thought.

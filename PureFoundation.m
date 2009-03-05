@@ -11,7 +11,7 @@
 #import "PureFoundation.h"
 
 // default state of multi-thread flag
-BOOL _pf_IsMultiThreaded = NO;
+BOOL _pf_IsMultiThreaded = YES;
 
 /*
  *	Objective-C message-sending callbacks for use with CF collections
@@ -25,7 +25,7 @@ const void *_PFRetainCallBack( CFAllocatorRef allocator, const void *value );
 
 // actual functions
 // maybe the description should recieve an extra -retain so that CF's release doesn't cause problems
-CFStringRef _PFDescriptionCallBack(const void *value ) { return (CFStringRef)[(id)value description]; }
+CFStringRef _PFDescriptionCallBack(const void *value ) { return (CFStringRef)[[(id)value description] retain]; }
 Boolean _PFEqualsCallBack( const void *value1, const void *value2 ) { return [(id)value1 isEqual: (id)value2]; }
 CFHashCode _PFHashCallBack( const void *value ) { return (CFHashCode)[(id)value hash]; }
 const void *_PFRetainCallBack( CFAllocatorRef allocator, const void *value ) 

@@ -192,10 +192,14 @@ Class _PFNSCFNumberClass = nil;
 	return CFNumberGetTypeID();
 }
 
--(NSUInteger)hash
-{
-	return CFHash((CFTypeRef)self);
-}
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // because numbers are kept unique by CF
 - (id)copyWithZone: (NSZone *)zone
@@ -501,10 +505,14 @@ Class _PFNSCFNumberClass = nil;
 	return CFBooleanGetTypeID();
 }
 
--(NSUInteger)hash
-{
-	return CFHash((CFTypeRef)self);
-}
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 -(id)copyWithZone:(NSZone *)zone
 {

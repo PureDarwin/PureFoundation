@@ -188,6 +188,15 @@ static CFDateRef _PFReferenceDate = nil;
 }
 
 /*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
+/*
  *	"A string representation of the receiver in the international format 
  *	YYYY-MM-DD HH:MM:SS ±HHMM, where ±HHMM represents the time zone offset 
  *	in hours and minutes from GMT (for example, “2001-03-24 10:45:32 +0600”)."
