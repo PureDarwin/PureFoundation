@@ -65,6 +65,15 @@ static Class _PFNSErrorClass = nil;
 	return CFErrorGetTypeID();
 }
 
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
 -(NSString *)description
 {
 	PF_HELLO("")

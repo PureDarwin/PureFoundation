@@ -351,6 +351,15 @@ extern bool _CFSetIsMutable( CFSetRef set );
 }
 
 /*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
+/*
  *	See NSArray.h, -[NSCFArray countByEnumeratingWithState:...] for the gory details
  *
  *	This actually points to its _count var, which should also do the trick

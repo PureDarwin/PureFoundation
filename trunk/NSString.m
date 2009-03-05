@@ -448,20 +448,20 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 	return CFStringGetTypeID();
 }
 
--(NSUInteger)hash
-{
-	PF_HELLO("")
-	return CFHash((CFTypeRef)self);
-}
-
 /*
- *	This is called a lot from collections, and we need to think about how memory is managed
- *	ie. should this object be autoreleased?
+ *	Standard bridged-class over-rides
  */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
+// "Returns the receiver."
 -(NSString *)description
 {
 	PF_HELLO("")
-	return (NSString *)CFCopyDescription((CFTypeRef)self);
+	return self;//(NSString *)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ); //CFCopyDescription((CFTypeRef)self);
 }
 
 /**	NSCopying COMPLIANCE **/
@@ -2463,6 +2463,5 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 - (void)release { }
 - (id)autorelease { return self; }
 - (NSUInteger)retainCount { return 2147483647; }
-- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
 @end
 

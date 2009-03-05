@@ -515,11 +515,11 @@ extern NSZone _PFDefaultZone;
 }
 
 /* because this may be being called... */
-//- (CFTypeID) _cfTypeID
-//{
+-(CFTypeID)_cfTypeID
+{
 //	printf("-_cfTypeID called!\n");
-//	return _kCFRuntimeNotATypeID;
-//}
+	return 0; //_kCFRuntimeNotATypeID;
+}
 
 @end
 
@@ -577,11 +577,13 @@ id NSAllocateObject(Class aClass, NSUInteger extraBytes, NSZone *zone)
  *
  *	Of course, it's going to be far more complicated than that, but I can dream, can't I?
  */
+extern void _CFRelease(CFTypeRef cf); // CFRuntime.c line #1101
+
 void NSDeallocateObject(id object)
 {
 	PF_HELLO("")
 
-	//printf("asked to deallocate 0x%X ... ", object);
+	//fprintf(stderr, "PF: %s asked to deallocate 0x%X\n", getprogname(), object);
 	
 	if( object == nil ) return;
 	
@@ -593,8 +595,13 @@ void NSDeallocateObject(id object)
 	else
 	{
 		//printf("Deallocating <%s 0x%X>\n", object_getClassName(object), object);
-		NSZoneFree( nil, object );
+		
+		//if( [object _cfTypeID] != 0 ) // free bridged objects via CF
+		//	_CFRelease((CFTypeRef)object);
+		//else
+			NSZoneFree( nil, object );
 	}
+	//fprintf(stderr, "PF: leaving deallocate\n");
 }
 
 /*
@@ -629,12 +636,14 @@ void NSIncrementExtraRefCount(id object)
 	//PF_HELLO("")
 	if( object == nil ) return;
 	
-	if( _pf_IsMultiThreaded ) pthread_mutex_lock(&_pf_retm);
+	//if( _pf_IsMultiThreaded ) 
+	pthread_mutex_lock(&_pf_retm);
 	
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
 	CFDictionarySetValue( _PFRetainTable, object, (void *)(++count) );
 	
-	if( _pf_IsMultiThreaded ) pthread_mutex_unlock(&_pf_retm);
+	//if( _pf_IsMultiThreaded ) 
+	pthread_mutex_unlock(&_pf_retm);
 }
 
 /*
@@ -646,12 +655,14 @@ BOOL NSDecrementExtraRefCountWasZero(id object)
 	//PF_HELLO("")
 	if( object == nil ) return NO; // get this simple case out the way quickly
 	
-	if( _pf_IsMultiThreaded ) pthread_mutex_lock(&_pf_retm);
+	//if( _pf_IsMultiThreaded ) 
+	pthread_mutex_lock(&_pf_retm);
 		
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
 	if( count != 0 ) CFDictionarySetValue( _PFRetainTable, object, (void *)(--count) );
 	
-	if( _pf_IsMultiThreaded ) pthread_mutex_unlock(&_pf_retm);
+	//if( _pf_IsMultiThreaded ) 
+	pthread_mutex_unlock(&_pf_retm);
 
 	return (count == 0) ? YES : NO;
 }
@@ -684,24 +695,24 @@ NSUInteger NSExtraRefCount(id object)
 @implementation _NSZombie_
 - (id)retain 
 { 
-	//printf("<_NSZombie_ 0x%X> sent -retain\n", self); 
+	fprintf(stderr, "<_NSZombie_ 0x%X> in %s sent -retain\n", self, getprogname()); 
 	return self; 
 }
 
 - (void)release 
 { 
-	//printf("<_NSZombie_ 0x%X> sent -release\n", self); 
+	fprintf(stderr, "<_NSZombie_ 0x%X> in %s sent -release\n", self, getprogname()); 
 }
 
 - (id)autorelease 
 { 
-	//printf("<_NSZombie_ 0x%X> sent -release\n", self); 
+	fprintf(stderr, "<_NSZombie_ 0x%X> in %s sent -release\n", self, getprogname()); 
 	return self; 
 }
 
 - (id)forward:(SEL)sel :(marg_list)margs 
 { 
-	//printf("<_NSZombie_ 0x%X> sent '%s'\n", self, sel_getName(sel)); 
+	fprintf(stderr, "<_NSZombie_ 0x%X> in %s sent '%s'\n", self, getprogname(), sel_getName(sel)); 
 	return nil; 
 }
 

@@ -224,6 +224,15 @@ NSString * const NSStreamSOCKSErrorDomain		= @"NSStreamSOCKSErrorDomain";
 	return CFReadStreamGetTypeID();
 }
 
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+
 -(NSString *)description
 {
 	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
@@ -414,6 +423,15 @@ NSString * const NSStreamSOCKSErrorDomain		= @"NSStreamSOCKSErrorDomain";
 	PF_HELLO("")
 	return CFWriteStreamGetTypeID();
 }
+
+/*
+ *	Standard bridged-class over-rides
+ */
+-(id)retain { return (id)CFRetain((CFTypeRef)self); }
+-(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+-(void)release { CFRelease((CFTypeRef)self); }
+- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
+-(NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 -(NSString *)description
 {
