@@ -1,0 +1,13 @@
+#summary Detail of how PureFoundation bridges to CFLite
+
+= Introduction =
+
+The main difference between PureFoundation and other Foundation/Cocoa clones (such as GNUStep or Cocotron) is that PureFoundation implements a bridge to the open-source CFLite in the same way that Apple's Foundation bridges to the full CoreFoundation. This page details how this was achieved, and some of the points you need to consider when developing PureFoundation. (When developing _with_ PureFoundation you should treat it exactly as you would 'proper' Foundation.)
+
+== Bridged classes ==
+
+As of v0.0009 (5/3/09) the following CFLite types have been bridged to their Foundation equivalents: CFArray, CFCalendar, CFCharacterSet, CFData, CFDate, CFDictionary, CFError, CFLocale, CFNumber (and CFBoolean), CFReadStream, CFWriteStream, CFRunLoopTimer, CFSet, CFTimeZone and CFURL. (CFAttributedString is not supported by CFLite.)
+
+== Bridging to CFLite ==
+
+(Sorry, I'll finish this soon.)
