@@ -2,4 +2,5 @@
 
 = Introduction =
 
-Coming soon...
+CFLite does not contain the code for the CFNotificationCenter types. This is a pain because at least a couple of key components (one of configd's children and DirectoryServices) are big fans of the whole "distributed notifications" thing. So I guess we'd better patch support back in.
+
