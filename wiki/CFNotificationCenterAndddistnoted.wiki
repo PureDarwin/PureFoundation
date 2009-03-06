@@ -4,3 +4,7 @@
 
 CFLite does not contain the code for the CFNotificationCenter types. This is a pain because at least a couple of key components (one of configd's children and DirectoryServices) are big fans of the whole "distributed notifications" thing. So I guess we'd better patch support back in.
 
+= Daemons and notifications =
+
+Under grown-up OS X, distributed (system-wide) notifications are handled by two components: there's the client code in CoreFoundation and Foundation, and the daemon `distnoted` which handles passing the notifications between interested parties. Of curse, `distnoted` is not open source.
+
