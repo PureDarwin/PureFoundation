@@ -9,11 +9,13 @@
  */
 
 #import "NSObjCRuntime.h"
-#import "Foundation/NSString.h"
+
 #import <objc/runtime.h>
 //#import "GSNextRuntime.h"
 #import "PFObjCTypeTools.h"
 
+#import <pthread.h>
+#import <xlocale.h>
 /*
  *	This is defined in CFLogUtilities.h in CFLite. It is slow and creates far to
  *	many objects as it runs, so one day will be replaced with an entirely internal
@@ -147,17 +149,33 @@ void NSLog(NSString *format, ...) //__attribute__((format(__NSString__, 1, 2)));
 }
 
 /*
- *	...which calls the super-secret CFLog(), which does a rather good job of being NSLog()
+ *	...which calls this function, which is copied from CFLogv() in CFUtilities.c
  */
 void NSLogv(NSString *format, va_list args)
 {
 	PF_HELLO("")
+	
+	CFStringRef s = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, args);
+	CFIndex length = CFStringGetLength(s);
+	char chars[++length];
+	CFStringGetCString(s, chars, length, kCFStringEncodingASCII);
+	
+	CFTimeZoneRef tz = CFTimeZoneCopySystem();
+    CFGregorianDate gdate = CFAbsoluteTimeGetGregorianDate(CFAbsoluteTimeGetCurrent(), tz);
+    CFRelease(tz);
+    gdate.second = gdate.second + 0.0005;
+	
+	fprintf_l(stderr, NULL, "%04d-%02d-%02d %02d:%02d:%06.3f %s[%d:%x] %s\n", (int)gdate.year, gdate.month, gdate.day, gdate.hour, gdate.minute, gdate.second, getprogname(), getpid(), pthread_mach_thread_np(pthread_self()), chars);
+	
+	CFRelease(s);
+	CFRelease(tz);
+	
 	//printf("-- calling CFLog --\n");
-	NSString *msg = [[NSString alloc] initWithFormat: format arguments: args];
+	//NSString *msg = [[NSString alloc] initWithFormat: format arguments: args];
 	//printf("msg: 0x%X - ", msg);
-	CFLog( 5, (CFStringRef)msg ); // the 5 = kCFLogLevelNotice, defined in CFLogUtilities.h
-	[msg release];
-	PF_DEBUG("-- back from CFLog --\n"); //these proved that CFLog, on first calling does																	//	_A LOT_ of retain/releasing
+	//CFLog( 5, (CFStringRef)msg ); // the 5 = kCFLogLevelNotice, defined in CFLogUtilities.h
+	//[msg release];
+	//PF_DEBUG("-- back from CFLog --\n"); //these proved that CFLog, on first calling does																	//	_A LOT_ of retain/releasing
 }
 
 
