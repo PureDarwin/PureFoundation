@@ -30,14 +30,19 @@ Boolean _PFEqualsCallBack( const void *value1, const void *value2 ) { return [(i
 CFHashCode _PFHashCallBack( const void *value ) { return (CFHashCode)[(id)value hash]; }
 const void *_PFRetainCallBack( CFAllocatorRef allocator, const void *value ) 
 {
-	//printf("collection retain called on 0X%X\n", value); 
+	printf("collection retain called on <%s 0X%X>\n", object_getClassName(value), value); 
+	if( *(uintptr_t *)value == 0 )
+		return CFRetain((CFTypeRef)value);
 	return (const void *)[(id)value retain]; 
 }
 
 void _PFReleaseCallBack( CFAllocatorRef allocator, const void *value ) 
 {
-	//printf("collection release called on 0x%X\n", value); 
-	[(id)value release]; 
+	printf("collection release called on <%s 0x%X>\n", object_getClassName(value), value); 
+	if( *(uintptr_t *)value == 0 )
+		CFRelease((CFTypeRef)value);
+	else
+		[(id)value autorelease]; 
 }
 
 // and the callback structure

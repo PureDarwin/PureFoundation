@@ -39,6 +39,7 @@ typedef struct _pf_nsrlock {
 		pthread_mutexattr_t attr;
 		if( (pthread_mutexattr_init(&attr) != 0) || (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) != 0) || (pthread_mutex_init(&storage->mutex, &attr) != 0) )
 		{
+			printf("Couldn't create recursive lock\n");
 			pthread_mutexattr_destroy(&attr); // well, it might have succeeded
 			free(storage);
 			NSDeallocateObject(self);
