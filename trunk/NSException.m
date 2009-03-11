@@ -12,6 +12,122 @@
 #import <Foundation/NSString.h>
 
 /*
+ *	Application-specific uncaught exception handler
+ */
+static NSUncaughtExceptionHandler *uncaughtHandler = nil;
+
+NSUncaughtExceptionHandler *NSGetUncaughtExceptionHandler(void) 
+{ 
+	//printf("NSGetUncaughtExceptionHandler()\n");
+	return uncaughtHandler; 
+}
+
+void NSSetUncaughtExceptionHandler(NSUncaughtExceptionHandler *handler) 
+{ 
+	//printf("NSSetUncaughtExceptionHandler()\n");
+	uncaughtHandler = handler; 
+}
+
+
+/*
+ *	PureFoundation's default uncaught exception handler. Like Apple's, this gets
+ *	invoked in addition to any application-specific handler. Unlike Apple's, it
+ *	doesn't provide any useful information
+ */
+void __defaultUncaughtHandler( id value )
+{
+	NSLog( @"*** Uncaught Exception Handler: Good Bye." );
+}
+
+
+/*
+ *	Exception handlers
+ */
+#import <objc/runtime.h>
+#import <objc/objc-exception.h>
+
+#import <pthread.h>
+#import <setjmp.h>
+
+/* This structure is created and passed-in by the compiler and runtime and 
+ *	is defined in objc-exception.c. It's copied here so we know what we're
+ *	dealing with */
+typedef struct { jmp_buf buf; void *pointers[4]; } LocalData_t;
+
+// the key under which we'll store the head of the exception chain
+static pthread_key_t exceptionKey;
+
+/*
+ *	The functions below began life by being copy & pasted from objc/objc-exceptions.c.
+ *	Since then they have been changed beyond recognition, so I think we're safe in
+ *	not invoking the Apple licence here.
+ */
+static void default_try_enter(void *localExceptionData) {
+	//printf("default_try_enter\n");
+
+    ((LocalData_t *)localExceptionData)->pointers[1] = pthread_getspecific(exceptionKey);
+	pthread_setspecific(exceptionKey, localExceptionData);
+}
+
+static void default_throw(id value) {
+	//printf("default_throw\n");
+
+    if (value == nil) {
+        //printf("EXCEPTIONS: objc_exception_throw with nil value\n");
+        return;
+    }
+	
+	LocalData_t *firstHandler = pthread_getspecific(exceptionKey);
+
+	if (firstHandler == NULL) {
+        //printf("EXCEPTIONS: No handler in place!\n");
+		if( uncaughtHandler != NULL ) uncaughtHandler(value);
+		__defaultUncaughtHandler(value);
+		exit(0);
+    }
+	
+	pthread_setspecific(exceptionKey, firstHandler->pointers[1]);
+	firstHandler->pointers[0] = value;
+    _longjmp(firstHandler->buf, 1);
+}
+
+static void default_try_exit(void *led) {
+	//printf("default_try_exit\n");
+
+	LocalData_t *firstHandler = pthread_getspecific(exceptionKey);
+	if( firstHandler != NULL )
+		pthread_setspecific(exceptionKey, firstHandler->pointers[1]);
+}
+
+static id default_extract(void *localExceptionData) {
+	//printf("default_extract\n");
+
+	return (id)((LocalData_t *)localExceptionData)->pointers[0];
+}
+
+static int default_match(Class exceptionClass, id exception) {
+	//printf("default_match: class = %p, exception = %p\n", exceptionClass, exception);
+
+    for (Class cls = exception->isa; nil != cls; cls = class_getSuperclass(cls)) 
+		if (cls == exceptionClass) 
+			return 1; //printf("default_match: returning 1\n");
+	//printf("default_match: returning 0\n");
+	return 0;
+}
+
+extern void _pfInitExceptions( void )
+{
+	// create the key used to access each thread's list of exception handlers
+	pthread_key_create(&exceptionKey, NULL);
+	
+	// install our exception handling functions
+	objc_exception_functions_t handlers = { 0, default_throw, default_try_enter, default_try_exit, default_extract, default_match };
+    objc_exception_set_functions(&handlers);
+}
+
+
+
+/*
  *	NSException itself is fairly simple -- it just holds two strings and a dictionary -- the
  *	trick is raising it, calling the correct exception handler, and then leanving
  */
@@ -79,10 +195,10 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 {
 	if( self = [super init] )
 	{
-		//NSLog(@"NSException initWithName: %@ reason: %@", aName, aReason);
-		name = aName;
-		reason = aReason;
-		userInfo = aUserInfo;
+		NSLog(@"NSException initWithName: %@ reason: %@", aName, aReason);
+		name = [aName retain];
+		reason = [aReason retain];
+		userInfo = [aUserInfo retain];
 	}
 	return self;
 }
@@ -94,6 +210,8 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 
 - (NSString *)reason
 {
+	//NSLog( reason );
+	printf("NSException -reason\n");
 	return reason;
 }
 
@@ -132,17 +250,6 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 }
 
 @end
-
-
-NSUncaughtExceptionHandler *NSGetUncaughtExceptionHandler(void)
-{
-	return nil;
-}
-
-void NSSetUncaughtExceptionHandler(NSUncaughtExceptionHandler *handler)
-{
-	
-}
 
 
 

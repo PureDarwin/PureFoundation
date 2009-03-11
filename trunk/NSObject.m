@@ -23,6 +23,8 @@
 #import <stdio.h>	// we're going to be doing some diagnostic printing!
 #include <pthread.h>
 
+extern void _pfInitExceptions(void);
+
 /*
  *	Objective-C objects' extra retain/release counts will be kept in an external CFMutableDictionary
  *	with their address as key and a simple CFIndex integer as key (which I think will ensure that it
@@ -61,6 +63,8 @@ extern NSZone _PFDefaultZone;
 {
 	PF_HELLO("")
 
+	_pfInitExceptions();
+	
 	/*
 	 *	Create a mutable dictionary which can grow and doesn't retain keys or values */ 
 	

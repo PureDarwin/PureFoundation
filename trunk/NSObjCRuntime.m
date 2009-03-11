@@ -154,7 +154,7 @@ void NSLog(NSString *format, ...) //__attribute__((format(__NSString__, 1, 2)));
 void NSLogv(NSString *format, va_list args)
 {
 	PF_HELLO("")
-	
+
 	CFStringRef s = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, args);
 	CFIndex length = CFStringGetLength(s);
 	char chars[++length];
@@ -162,20 +162,12 @@ void NSLogv(NSString *format, va_list args)
 	
 	CFTimeZoneRef tz = CFTimeZoneCopySystem();
     CFGregorianDate gdate = CFAbsoluteTimeGetGregorianDate(CFAbsoluteTimeGetCurrent(), tz);
-    CFRelease(tz);
     gdate.second = gdate.second + 0.0005;
 	
 	fprintf_l(stderr, NULL, "%04d-%02d-%02d %02d:%02d:%06.3f %s[%d:%x] %s\n", (int)gdate.year, gdate.month, gdate.day, gdate.hour, gdate.minute, gdate.second, getprogname(), getpid(), pthread_mach_thread_np(pthread_self()), chars);
 	
+    CFRelease(tz);
 	CFRelease(s);
-	CFRelease(tz);
-	
-	//printf("-- calling CFLog --\n");
-	//NSString *msg = [[NSString alloc] initWithFormat: format arguments: args];
-	//printf("msg: 0x%X - ", msg);
-	//CFLog( 5, (CFStringRef)msg ); // the 5 = kCFLogLevelNotice, defined in CFLogUtilities.h
-	//[msg release];
-	//PF_DEBUG("-- back from CFLog --\n"); //these proved that CFLog, on first calling does																	//	_A LOT_ of retain/releasing
 }
 
 
