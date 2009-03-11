@@ -461,7 +461,8 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 -(NSString *)description
 {
 	PF_HELLO("")
-	return self;//(NSString *)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ); //CFCopyDescription((CFTypeRef)self);
+	return CFRetain((CFTypeRef)self);
+	//(NSString *)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ); //CFCopyDescription((CFTypeRef)self);
 }
 
 /**	NSCopying COMPLIANCE **/
