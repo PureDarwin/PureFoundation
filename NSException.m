@@ -79,6 +79,7 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 {
 	if( self = [super init] )
 	{
+		//NSLog(@"NSException initWithName: %@ reason: %@", aName, aReason);
 		name = aName;
 		reason = aReason;
 		userInfo = aUserInfo;
@@ -111,7 +112,8 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
  */
 - (void)raise
 {
-	NSLog(@"Exception: %@ (%@)", [self name], [self reason]);
+	printf("Exception raise: is this getting through?\n");
+	//NSLog(@"Exception: %@ (%@)", [self name], [self reason]);
 	@throw self;
 }
 

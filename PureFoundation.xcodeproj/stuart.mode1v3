@@ -279,12 +279,14 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>88</integer>
-									<integer>87</integer>
+									<integer>60</integer>
+									<integer>57</integer>
+									<integer>1</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 876}, {205, 773}}</string>
+							<string>{{0, 474}, {205, 773}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +323,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>NSObjCRuntime.m</string>
+								<string>NSException.m</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +331,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>NSObjCRuntime.m</string>
+										<string>NSException.m</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>17CC65A20F631E4000E43496</string>
+										<string>179F48490F66CFE20012FEDD</string>
 										<key>history</key>
 										<array>
 											<string>170D221D0F2E29BC0029901B</string>
@@ -366,7 +368,6 @@
 											<string>179AB9390F56CB530075286B</string>
 											<string>179AB93A0F56CB530075286B</string>
 											<string>179AB93C0F56CB530075286B</string>
-											<string>179AB93D0F56CB530075286B</string>
 											<string>179AB93E0F56CB530075286B</string>
 											<string>179AB93F0F56CB530075286B</string>
 											<string>179AB9400F56CB530075286B</string>
@@ -389,12 +390,7 @@
 											<string>179ABA030F57347F0075286B</string>
 											<string>179ABAE70F584F320075286B</string>
 											<string>1737E65B0F5EFF9500580BFD</string>
-											<string>1737E66B0F5F0D2300580BFD</string>
 											<string>1737E6790F5F140900580BFD</string>
-											<string>1737E6A00F5F35A600580BFD</string>
-											<string>1737E6E20F5FEC9200580BFD</string>
-											<string>1737E6E30F5FEC9200580BFD</string>
-											<string>1737E6E40F5FEC9200580BFD</string>
 											<string>1737E6E80F5FEC9200580BFD</string>
 											<string>1737E6E90F5FEC9200580BFD</string>
 											<string>1737E6EA0F5FEC9200580BFD</string>
@@ -410,7 +406,14 @@
 											<string>17EE81FC0F602D9C00448F79</string>
 											<string>17EE81FD0F602D9C00448F79</string>
 											<string>17EE82100F60698200448F79</string>
-											<string>17EE823F0F62B88400448F79</string>
+											<string>179F48330F66CFE20012FEDD</string>
+											<string>179F48340F66CFE20012FEDD</string>
+											<string>179F48350F66CFE20012FEDD</string>
+											<string>179F48360F66CFE20012FEDD</string>
+											<string>179F48370F66CFE20012FEDD</string>
+											<string>179F48380F66CFE20012FEDD</string>
+											<string>179F48390F66CFE20012FEDD</string>
+											<string>179F483A0F66CFE20012FEDD</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -489,6 +492,20 @@
 											<string>179AB95E0F56CB530075286B</string>
 											<string>179AB9610F56CB530075286B</string>
 											<string>179AB97F0F56CB530075286B</string>
+											<string>179F483B0F66CFE20012FEDD</string>
+											<string>179F483C0F66CFE20012FEDD</string>
+											<string>179F483D0F66CFE20012FEDD</string>
+											<string>179F483E0F66CFE20012FEDD</string>
+											<string>179F483F0F66CFE20012FEDD</string>
+											<string>179F48400F66CFE20012FEDD</string>
+											<string>179F48410F66CFE20012FEDD</string>
+											<string>179F48420F66CFE20012FEDD</string>
+											<string>179F48430F66CFE20012FEDD</string>
+											<string>179F48440F66CFE20012FEDD</string>
+											<string>179F48450F66CFE20012FEDD</string>
+											<string>179F48460F66CFE20012FEDD</string>
+											<string>179F48470F66CFE20012FEDD</string>
+											<string>179F48480F66CFE20012FEDD</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -500,14 +517,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {943, 550}}</string>
+								<string>{{0, 0}, {943, 716}}</string>
 								<key>RubberWindowFrame</key>
 								<string>181 46 1170 832 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>550pt</string>
+							<string>716pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -520,14 +537,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 555}, {943, 236}}</string>
+								<string>{{0, 721}, {943, 70}}</string>
 								<key>RubberWindowFrame</key>
 								<string>181 46 1170 832 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>236pt</string>
+							<string>70pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -546,9 +563,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>17CC65990F631CE000E43496</string>
+				<string>179F484A0F66CFE20012FEDD</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>17CC659A0F631CE000E43496</string>
+				<string>179F484B0F66CFE20012FEDD</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -682,6 +699,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>17CD9B710F162E0E00A925B3</string>
 		<string>/Users/stuart/darwin/pf/svn/trunk/PureFoundation.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
@@ -762,7 +780,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>17CD9B710F162E0E00A925B3</string>
-				<string>17EE80DD0F5FF8DD00448F79</string>
+				<string>179F484C0F66CFE20012FEDD</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>

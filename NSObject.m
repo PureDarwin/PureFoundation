@@ -571,9 +571,8 @@ id NSAllocateObject(Class aClass, NSUInteger extraBytes, NSZone *zone)
 
 /*
  *	Here we're assuming that the only objects we're dealing with are ones which were allocated by us
- *	in NSAllocateObject() above, or in the -init method of a bridged class. This means that the memory
- *	should have been allocated from the default allocator pool, which means we need only use it to
- *	free the object memory.
+ *	in NSAllocateObject() above. This means that the memory should have been allocated from the default 
+ *	allocator pool, which means we need only use it to free the object memory.
  *
  *	Of course, it's going to be far more complicated than that, but I can dream, can't I?
  */
@@ -589,7 +588,7 @@ void NSDeallocateObject(id object)
 	
 	if(NSZombieEnabled)
 	{
-		//printf("Turning <%s 0x%X> into a zombie\n", object_getClassName(object), object);
+		printf("Turning <%s 0x%X> into a zombie\n", object_getClassName(object), object);
 		object_setClass(object, objc_getClass("_NSZombie_"));
 	}
 	else
@@ -640,6 +639,11 @@ void NSIncrementExtraRefCount(id object)
 	pthread_mutex_lock(&_pf_retm);
 	
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
+	
+	printf("Retaining <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
+
+	
+	
 	CFDictionarySetValue( _PFRetainTable, object, (void *)(++count) );
 	
 	//if( _pf_IsMultiThreaded ) 
@@ -659,6 +663,9 @@ BOOL NSDecrementExtraRefCountWasZero(id object)
 	pthread_mutex_lock(&_pf_retm);
 		
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
+	
+	printf("Releasing <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
+
 	if( count != 0 ) CFDictionarySetValue( _PFRetainTable, object, (void *)(--count) );
 	
 	//if( _pf_IsMultiThreaded ) 

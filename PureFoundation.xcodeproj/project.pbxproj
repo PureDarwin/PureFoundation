@@ -15,6 +15,7 @@
 		170D22000F2E28880029901B /* PureFoundation.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D21FF0F2E28880029901B /* PureFoundation.m */; };
 		170D24AF0F2F093E0029901B /* NSException.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D24AE0F2F093E0029901B /* NSException.m */; };
 		170D270E0F2F624F0029901B /* NSData.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D270D0F2F624F0029901B /* NSData.m */; };
+		1713993D0F66E56A00DBE894 /* NSString_NSURLUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 1713993C0F66E56A00DBE894 /* NSString_NSURLUtilities.m */; };
 		171758C70F372E4200254BC9 /* NSCharacterSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 171758C60F372E4200254BC9 /* NSCharacterSet.m */; };
 		171758F30F374BE200254BC9 /* NSLocale.m in Sources */ = {isa = PBXBuildFile; fileRef = 171758F20F374BE200254BC9 /* NSLocale.m */; };
 		171759140F375F9C00254BC9 /* NSDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 171759130F375F9C00254BC9 /* NSDate.m */; };
@@ -215,6 +216,7 @@
 		170D21FF0F2E28880029901B /* PureFoundation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PureFoundation.m; sourceTree = "<group>"; };
 		170D24AE0F2F093E0029901B /* NSException.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSException.m; sourceTree = "<group>"; };
 		170D270D0F2F624F0029901B /* NSData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSData.m; sourceTree = "<group>"; };
+		1713993C0F66E56A00DBE894 /* NSString_NSURLUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NSURLUtilities.m; sourceTree = "<group>"; };
 		171758C60F372E4200254BC9 /* NSCharacterSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSCharacterSet.m; sourceTree = "<group>"; };
 		171758F20F374BE200254BC9 /* NSLocale.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSLocale.m; sourceTree = "<group>"; };
 		171759130F375F9C00254BC9 /* NSDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDate.m; sourceTree = "<group>"; };
@@ -724,6 +726,7 @@
 				170D20FB0F2DEB740029901B /* NSSet.m */,
 				1717F00F0F31EDB400C71245 /* NSStream.m */,
 				172C500F0F290BFD0000C0B4 /* NSString.m */,
+				1713993C0F66E56A00DBE894 /* NSString_NSURLUtilities.m */,
 				17175A250F379EDD00254BC9 /* NSTimer.m */,
 				171759F30F3788C700254BC9 /* NSTimeZone.m */,
 				1717F0AE0F32445500C71245 /* NSURL.m */,
@@ -1002,6 +1005,7 @@
 				17B120C40F4C037B008D395B /* NSCountedSet.m in Sources */,
 				17B1212F0F4C2247008D395B /* NSRunLoop.m in Sources */,
 				179ABAAB0F58321E0075286B /* PFFileHandle.m in Sources */,
+				1713993D0F66E56A00DBE894 /* NSString_NSURLUtilities.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

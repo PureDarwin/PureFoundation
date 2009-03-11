@@ -39,10 +39,10 @@
  set the values.
  
  NAME OF ENV. VARIABLE		       DEFAULT	SET TO...
- NSDebugEnabled				  NO	"YES"
- NSZombieEnabled				  NO	"YES"
- NSDeallocateZombies			  NO	"YES"
- NSHangOnUncaughtException		  NO	"YES"
+ NSDebugEnabled						NO		"YES"
+ NSZombieEnabled					NO		"YES"
+ NSDeallocateZombies				NO		"YES"
+ NSHangOnUncaughtException			NO		"YES"
  
  NSEnableAutoreleasePool			 YES	"NO"
  NSAutoreleaseFreedObjectCheckEnabled	  NO	"YES"
@@ -50,6 +50,22 @@
  NSAutoreleaseHighWaterResolution	  0	non-negative integer
  
  */
+
+/*
+ *	Function called from +[NSObject load] to set up debugging according
+ *	to the local environment
+ */
+void _pfDebugInit( void )
+{
+	NSDictionary *env = [[NSProcessInfo processInfo] environment];
+	if( env != nil )
+	{
+		
+		
+		
+		
+	}
+}
 
 /****************	General		****************/
 

@@ -2443,6 +2443,37 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 
 /** END OF COCOTRON ADDITIONS **/
 
+/** DEPRECATED METHODS (for reasons of compatability) **/
+
+// for dscl DSoException
+- (const char *)cString
+{
+	return [self cStringUsingEncoding: NSASCIIStringEncoding];
+}
+
+- (const char *)lossyCString { };
+- (NSUInteger)cStringLength { };
+- (void)getCString:(char *)bytes { };
+- (void)getCString:(char *)bytes maxLength:(NSUInteger)maxLength { };
+- (void)getCString:(char *)bytes maxLength:(NSUInteger)maxLength range:(NSRange)aRange remainingRange:(NSRangePointer)leftoverRange  { };
+
+- (BOOL)writeToFile:(NSString *)path atomically:(BOOL)useAuxiliaryFile { };
+- (BOOL)writeToURL:(NSURL *)url atomically:(BOOL)atomically { };
+
+- (id)initWithContentsOfFile:(NSString *)path { };
+- (id)initWithContentsOfURL:(NSURL *)url { };
++ (id)stringWithContentsOfFile:(NSString *)path { };
++ (id)stringWithContentsOfURL:(NSURL *)url { };
+
+- (id)initWithCStringNoCopy:(char *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)freeBuffer  { };
+- (id)initWithCString:(const char *)bytes length:(NSUInteger)length { };
+- (id)initWithCString:(const char *)bytes  { };
++ (id)stringWithCString:(const char *)bytes length:(NSUInteger)length { };
++ (id)stringWithCString:(const char *)bytes {};
+
+
+
+
 @end
 
 

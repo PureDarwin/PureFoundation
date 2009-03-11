@@ -9,6 +9,7 @@
  */
 
 #import "PFEnumerator.h"
+#import "PureFoundation.h"
 
 /*
  *	A generic forward-moving object enumerator
@@ -108,7 +109,7 @@
 {
 	if( _position == _count )
 		return [NSArray array];
-	CFArrayRef array = CFArrayCreate( kCFAllocatorDefault, (const void**)_location, (_count - _position), &kCFTypeArrayCallBacks );
+	CFArrayRef array = CFArrayCreate( kCFAllocatorDefault, (const void**)_location, (_count - _position), (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	_position = _count;
 	PF_RETURN_TEMP(array)
 }
@@ -196,7 +197,7 @@
 	while( num-- )
 		*ptr++ = *--_location;
 	
-	CFArrayRef array = CFArrayCreate( kCFAllocatorDefault, (const void**)buffer, (_count - _position), &kCFTypeArrayCallBacks );
+	CFArrayRef array = CFArrayCreate( kCFAllocatorDefault, (const void**)buffer, (_count - _position), (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	
 	_position = _count;
 	NSZoneFree( nil, buffer );
