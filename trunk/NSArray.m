@@ -126,7 +126,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 {
 	PF_HELLO("")
 
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, &_PFCollectionCallBacks );
+	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	PF_RETURN_TEMP(new)
 }
 
@@ -291,7 +291,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 + (id)arrayWithCapacity:(NSUInteger)numItems
 {
 	PF_HELLO("")
-	CFMutableArrayRef array = CFArrayCreateMutable( kCFAllocatorDefault, 0, &_PFCollectionCallBacks );
+	CFMutableArrayRef array = CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	// CF:ForFoundationOnly.h line #399
 	_CFArraySetCapacity(array, numItems);
 	PF_RETURN_TEMP(array)
@@ -304,7 +304,8 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 + (id)array
 {
 	PF_HELLO("")
-	return [(id)CFArrayCreateMutable( kCFAllocatorDefault, 0, &_PFCollectionCallBacks ) autorelease];
+	CFMutableArrayRef array = CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
+	PF_RETURN_TEMP(array);
 }
 
 /*
@@ -314,7 +315,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 {
 	PF_HELLO("")
 
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, &_PFCollectionCallBacks );
+	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	CFArrayRef newer = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, new );
 	[(id)new release]; // saves going through CFRelease()
 	PF_RETURN_TEMP(newer)
@@ -587,7 +588,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	else if( self != (id)&_PFNSCFMutableArrayClass )
 		[self autorelease];
 	
-	self = (id)CFArrayCreateMutable( kCFAllocatorDefault, 0, &_PFCollectionCallBacks );
+	self = (id)CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	// from ForFoundationOnly.h line #399
 	_CFArraySetCapacity((CFMutableArrayRef)self, numItems);
 	PF_RETURN_NEW(self)
@@ -602,18 +603,17 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	PF_HELLO("")
 	PF_DUMMY_ARR(self)
 
-	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)objects, (CFIndex)cnt, &_PFCollectionCallBacks );
+	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)objects, (CFIndex)cnt, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 	PF_RETURN_ARRAY_INIT
 }
 
 - (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
 {
-	PF_TODO
+	//printf("array initWithObjects:\n");
 	PF_NIL_ARG(firstObj)
 	PF_DUMMY_ARR(self)
 
 	id *ptr;
-	//void **t_ptr;
 	
 	va_list args;
 	va_start( args, firstObj );
@@ -631,15 +631,15 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	else
 	{	
 		ptr = calloc(count, sizeof(id));
-		//t_ptr = ptr;
+		id *t_ptr = ptr;
 	
 		va_start( args, firstObj );
-		*ptr++ = firstObj;
+		*t_ptr++ = firstObj;
 		while( (temp = va_arg( args, void* )) != nil)
-			*ptr++ = temp;
+			*t_ptr++ = temp;
 	}
 	
-	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, &_PFCollectionCallBacks );
+	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
 
 	if( count != 1 ) free(ptr);
 	va_end( args );
@@ -868,9 +868,12 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	PF_HELLO("Test this")
 	PF_NIL_ARG(anObject)
 	
-	CFIndex count = (CFIndex)[self count];
-	if( count == 0 ) return [NSArray arrayWithObject: anObject];
+	CFIndex count = CFArrayGetCount((CFArrayRef)self); //(CFIndex)[self count];
+	if( count == 0 ) return [NSArray arrayWithObject: anObject]; // leaks?
 	
+	/*
+	 *	??? allocate this on the stack ???
+	 */
 	id *ptr = calloc((count + 1), sizeof(id));
 	CFRange range = CFRangeMake( 0, count );
 	CFArrayGetValues( (CFArrayRef)self, range, (const void **)ptr );
@@ -888,7 +891,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	PF_HELLO("test this")
 	PF_NIL_ARG(otherArray)
 	
-	CFIndex count1 = [self count];
+	CFIndex count1 = CFArrayGetCount((CFArrayRef)self); //[self count];
 	CFIndex count2 = [otherArray count];
 	
 	if( count1 == 0 )
@@ -932,7 +935,7 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 {
 	PF_HELLO("")
 	
-	NSUInteger count = [self count];
+	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
 	if( count == 0 ) return NO;
 
 	CFRange range = CFRangeMake( 0, count );
@@ -1148,14 +1151,14 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	
 	// get some quick cases out of the way
 	CFIndex count = CFArrayGetCount((CFArrayRef)self);
-	if( count == 0 ) return [NSArray array];
-	if( count == 1 ) return [self copyWithZone: nil];
+	if( count == 0 ) return [NSArray array]; // autoreleased
+	if( count == 1 ) PF_RETURN_TEMP([self copyWithZone: nil]) // just one way of doing it...
 	
 	// create a mutable copy to work on
 	CFMutableArrayRef array = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self ); //[self mutableCopyWithZone: nil];
 	CFRange range = CFRangeMake( 0, count);
 	CFArraySortValues( array, range, _PFArraySortUsingSelector, (void *)comparator );
-	PF_RETURN_NEW(array)
+	PF_RETURN_TEMP(array)
 }
 
 /*

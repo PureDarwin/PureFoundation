@@ -9,15 +9,19 @@
  */
 
 #import "NSAutoreleasePool.h"
+#import "NSDebug.h"
 
 #import <objc/runtime.h>
+#import <pthread.h>
 
 /*
  *	Pointer to currently-active autorelease pool. Once we've got around to doing threads, we will
  *	either start storing this info in the individual thread's dictionary, or use this variable to
  *	store a dictionary of pools keyed on thread id
  */
-static NSAutoreleasePool *_PFCurrentPool = nil;
+static pthread_key_t poolKey;
+
+//static NSAutoreleasePool *_PFCurrentPool = nil;
 
 /*
  *	Function passed to CFDictionaryApplyFunction and in turn passed each key-value pair it contains.
@@ -48,20 +52,27 @@ static void _PFDrain(const void *key, const void *value, void *context)
  *		_reserved2 -> the previous NSAutoreleasePool
  *		_reserved3 -> this pools dictionary of objects
  */
-
++ (void)initialize
+{
+	//printf("autorelease pool class init called\n");
+	if( self == [NSAutoreleasePool class] )
+	{
+		pthread_key_create(&poolKey, NULL);
+	}
+}
 
 /*
  *	Called by each new autorelease pool from their -init method to set them as the main pool for the
  *	current thread. Returns the existing pool, which they should hold on to.
  */
-+(NSAutoreleasePool *)__hello:(NSAutoreleasePool *)pool
-{
-	PF_HELLO("")
-	
-	NSAutoreleasePool *temp = _PFCurrentPool;
-	_PFCurrentPool = pool;
-	return temp;
-}
+//+(NSAutoreleasePool *)__hello:(NSAutoreleasePool *)pool
+//{
+//	PF_HELLO("")
+//	
+//	NSAutoreleasePool *temp = _PFCurrentPool;
+//	_PFCurrentPool = pool;
+//	return temp;
+//}
 
 
 /*
@@ -69,12 +80,12 @@ static void _PFDrain(const void *key, const void *value, void *context)
  *	the current autorelease pool. It passes back the pointer to the pool which it replaced when it
  *	was -init'd. This could be nil, if this was the first pool created for this thread.
  */
-+(void)__goodbye:(NSAutoreleasePool *)pool
-{
-	PF_HELLO("")
-	
-	_PFCurrentPool = pool;
-}
+//+(void)__goodbye:(NSAutoreleasePool *)pool
+//{
+//	PF_HELLO("")
+//	
+//	_PFCurrentPool = pool;
+//}
 
 
 /*
@@ -85,23 +96,24 @@ static void _PFDrain(const void *key, const void *value, void *context)
 {
 	PF_HELLO("")
 	
-	//printf("pool asked to add <%s 0x%X>\n", class_getName(*(Class *)anObject), anObject);
+	//if( NSDebugEnabled ) 
+	//	printf("pool asked to add <%s 0x%X>\n", class_getName(*(Class *)anObject), anObject);
 	
 	if( anObject == nil ) return;
 	
-	NSAutoreleasePool *pool = _PFCurrentPool;
+	NSAutoreleasePool *pool = pthread_getspecific(poolKey); //_PFCurrentPool;
 	
 	if( pool != nil )
 		[pool addObject: anObject];
 	else
-		PF_DEBUG("\tThere is no current autorelease pool.\n");
+		if( NSDebugEnabled ) _NSAutoreleaseNoPool(anObject);
 }
 
 
 
 /*
- *	Initialise the pool by setting it as the current pool for this thread. We'll lazy-create the dictionary
- *	used to store release counts the first time we need to store an object.
+ *	Initialise the pool by setting it as the current pool for this thread and creating the dictionary
+ *	used to store release counts.
  */
 -(id)init
 {
@@ -109,7 +121,9 @@ static void _PFDrain(const void *key, const void *value, void *context)
 	
 	if( self = [super init] )
 	{
-		_reserved2 = [NSAutoreleasePool __hello: self];
+		_reserved2 = pthread_getspecific(poolKey);
+		pthread_setspecific(poolKey, self);
+		//[NSAutoreleasePool __hello: self];
 		_reserved3 = CFDictionaryCreateMutable( kCFAllocatorDefault, 0, NULL, NULL );
 	}
 	return self;
@@ -126,7 +140,7 @@ static void _PFDrain(const void *key, const void *value, void *context)
 	
 	/*	Quickly check on the contents of the pool dictionary */
 	NSUInteger count = (NSUInteger)CFDictionaryGetCount(_reserved3);
-	PF_DEBUG_F("\tAutorelease pool contains %d objects.\n", count)
+	//PF_DEBUG_F("\tAutorelease pool contains %d objects.\n", count)
 	
 	/*	Retrieve the count of the number of times anObject has alread been added to the autorelease 
 		pool. If it has never been added then this will return NULL, which is also correct */
@@ -149,7 +163,8 @@ static void _PFDrain(const void *key, const void *value, void *context)
 	
 	/*	Say __goodbye to the NSAutoreleasePool class, which will replace this pool with whichever pool
 	 we were passed when we said hello. Then zero _reserved2 for good measure. */
-	[NSAutoreleasePool __goodbye: _reserved2];
+	//[NSAutoreleasePool __goodbye: _reserved2];
+	pthread_setspecific(poolKey, _reserved2);
 	_reserved2 = nil;
 	
 	NSUInteger count = (NSUInteger)CFDictionaryGetCount( (CFDictionaryRef)_reserved3 );
@@ -159,6 +174,8 @@ static void _PFDrain(const void *key, const void *value, void *context)
 	// apply the _PFDrain function to each object in the dictionary/pool
 	if( count != 0 )
 		CFDictionaryApplyFunction( (CFDictionaryRef)_reserved3, _PFDrain, NULL );
+	
+	//printf("pool drain completed\n");
 }
 
 /*
@@ -169,7 +186,8 @@ static void _PFDrain(const void *key, const void *value, void *context)
 	PF_HELLO("")
 	
 	// free the dictionary with CFRelease
-	[(id)_reserved3 release];
+	CFRelease(_reserved3);
+	//[(id)_reserved3 release];
 	_reserved3 = nil;
 	
 	[super dealloc];

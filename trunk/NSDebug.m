@@ -10,6 +10,8 @@
 
 #import "NSDebug.h"
 
+#import <objc/runtime.h>
+
 /**	TODO:
  *		The more I think about, the more important it seems to get all of these
  *	implemented. Either that or patch gdb to work on Darwin. Or both.
@@ -129,9 +131,13 @@ NSUInteger NSCountFrames(void) { return 0; }
 /****************	Autorelease pool debugging	****************/
 
 // Functions used as interesting breakpoints in a debugger
-void _NSAutoreleaseNoPool(void *object) { }
+
 // Called to log the "Object X of class Y autoreleased with no
 // pool in place - just leaking" message.
+void _NSAutoreleaseNoPool(void *object) 
+{ 
+	NSLog( @"*** Tried to autorelease object <%s 0x%X> with no pool in place.", class_getName([(id)object class]), object );
+}
 
 void _NSAutoreleaseFreedObject(void *freedObject) { }
 // Called when a previously freed object would be released

@@ -457,11 +457,12 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
 -(NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
-// "Returns the receiver."
+// "Returns the receiver." We give it an extra retain because CF functions will expect
+//	a copy
 -(NSString *)description
 {
 	PF_HELLO("")
-	return CFRetain((CFTypeRef)self);
+	return (NSString *)CFRetain((CFTypeRef)self);
 	//(NSString *)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ); //CFCopyDescription((CFTypeRef)self);
 }
 
@@ -484,7 +485,8 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  */
 - (id)mutableCopyWithZone:(NSZone *)zone
 {
-	PF_HELLO("")
+	//PF_HELLO("")
+	//NSLog( @"Copying '%@'", self );
 	PF_RETURN_NEW(CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)self ))
 }
 
@@ -938,7 +940,9 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 	PF_HELLO("")
 	
 	// should check that aRange is valid and raise NSRangeException if it isn't
-	NSUInteger length = [self length];
+	NSUInteger length = CFStringGetLength((CFStringRef)self); //[self length];
+	if( length == 0 ) return;
+	
 	if( (aRange.location >= length) || ((aRange.location+aRange.length) > length) )
 		[NSException raise: NSRangeException format: [NSString stringWithCString: "Substring out of range" encoding: NSUTF8StringEncoding]];
 	
@@ -1198,8 +1202,11 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 		[NSException raise: NSInvalidArgumentException format: nil];
 	
 	// check that searchRange is valid
-	NSUInteger length = [self length];
-	if( (searchRange.location >= length) || ((searchRange.location+searchRange.length) >= length) )
+	NSUInteger length = CFStringGetLength((CFStringRef)self); //[self length];
+	if( length == 0 ) 
+		return NSMakeRange( NSNotFound, 0 );
+	
+	if( (searchRange.location >= length) || ((searchRange.location+searchRange.length) > length) )
 		[NSException raise: NSRangeException format: nil];
 	
 	CFRange range = CFRangeMake( searchRange.location, searchRange.length );
@@ -2078,20 +2085,23 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 								 options:(NSStringCompareOptions)options 
 								   range:(NSRange)searchRange
 {
-	PF_HELLO("")
+	//printf("replaceOccurencesOfString...\n");
 	PF_CHECK_STR_MUTABLE(self)
 	
 	if( (target == nil) || (replacement == nil) ) 
 		[NSException raise: NSInvalidArgumentException format: nil];
 	
 	NSUInteger length = CFStringGetLength((CFStringRef)self);
-	if( (searchRange.location >= length) || ((searchRange.location+searchRange.length) >= length) )
+	if( length == 0 ) return 0;
+	
+	if( (searchRange.location >= length) || ((searchRange.location+searchRange.length) > length) )
 		[NSException raise: NSRangeException format: nil];
+	
 	CFRange range = CFRangeMake( searchRange.location, searchRange.length );
 
 	// I think these are the only allowable options
 	options &= (NSBackwardsSearch | NSAnchoredSearch | NSLiteralSearch | NSCaseInsensitiveSearch);
-	
+
 	return CFStringFindAndReplace( (CFMutableStringRef)self, (CFStringRef)target, (CFStringRef)replacement, range, options );
 }
 
@@ -2466,9 +2476,13 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 + (id)stringWithContentsOfFile:(NSString *)path { };
 + (id)stringWithContentsOfURL:(NSURL *)url { };
 
+
 - (id)initWithCStringNoCopy:(char *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)freeBuffer  { };
 - (id)initWithCString:(const char *)bytes length:(NSUInteger)length { };
-- (id)initWithCString:(const char *)bytes  { };
+
+// also for dscl: DSoNodeConfig
+- (id)initWithCString:(const char *)bytes { return [self initWithCString: bytes encoding: NSASCIIStringEncoding]; }
+
 + (id)stringWithCString:(const char *)bytes length:(NSUInteger)length { };
 + (id)stringWithCString:(const char *)bytes {};
 

@@ -73,7 +73,8 @@ static void default_throw(id value) {
 	//printf("default_throw\n");
 
     if (value == nil) {
-        //printf("EXCEPTIONS: objc_exception_throw with nil value\n");
+		// Hmmm... maybe we should throw our own NSInvalidArgumentException ;)
+        printf("EXCEPTIONS: objc_exception_throw with nil value\n");
         return;
     }
 	
@@ -174,6 +175,7 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
  */
 + (void)raise:(NSString *)name format:(NSString *)format, ...
 {
+	//printf("raise:format:\n");
 	va_list argList;
 	va_start( argList, format );
 	[self raise: name format: format arguments: argList];
@@ -182,20 +184,28 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 
 + (void)raise:(NSString *)name format:(NSString *)format arguments:(va_list)argList
 {
-	NSString *reason = [[NSString alloc] initWithFormat: format arguments: argList];
-	[[self exceptionWithName: name reason: reason userInfo: nil] raise];
+	//printf("raise:format:arguments:\n");
+	//NSString *reason = [[NSString alloc] initWithFormat: format arguments: argList];
+	CFStringRef reason;
+	if( format == nil )
+		reason = nil;
+	else
+		reason = CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
+	//printf("reason = %p\n", reason);
+	[[self exceptionWithName: name reason: (NSString *)reason userInfo: nil] raise];
 }
 
 + (NSException *)exceptionWithName:(NSString *)name reason:(NSString *)reason userInfo:(NSDictionary *)userInfo
 {
-	return [[NSException alloc] initWithName: name reason: reason userInfo: userInfo];
+	//printf("exceptionWithName:reason:userInfo:\n");
+	return [[self alloc] initWithName: name reason: reason userInfo: userInfo];
 }
 
 - (id)initWithName:(NSString *)aName reason:(NSString *)aReason userInfo:(NSDictionary *)aUserInfo
 {
 	if( self = [super init] )
 	{
-		NSLog(@"NSException initWithName: %@ reason: %@", aName, aReason);
+		//NSLog(@"NSException initWithName: %@ reason: %@", aName, aReason);
 		name = [aName retain];
 		reason = [aReason retain];
 		userInfo = [aUserInfo retain];
@@ -211,7 +221,7 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
 - (NSString *)reason
 {
 	//NSLog( reason );
-	printf("NSException -reason\n");
+	//printf("NSException -reason\n");
 	return reason;
 }
 
@@ -230,7 +240,7 @@ NSString * const NSOldStyleException	= @"NSOldStyleException";
  */
 - (void)raise
 {
-	printf("Exception raise: is this getting through?\n");
+	//printf("Exception raise: is this getting through?\n");
 	//NSLog(@"Exception: %@ (%@)", [self name], [self reason]);
 	@throw self;
 }
