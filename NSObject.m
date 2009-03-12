@@ -563,6 +563,8 @@ id NSAllocateObject(Class aClass, NSUInteger extraBytes, NSZone *zone)
 	// amount of memory to allocate
 	NSUInteger size = extraBytes + class_getInstanceSize(aClass);
 
+	//printf("asked to allocate %d bytes for %s\n", size, class_getName(aClass));
+	
 	// this version uses a function from the runtime
 	void *object = NSZoneMalloc( nil, size );
 	
@@ -592,7 +594,7 @@ void NSDeallocateObject(id object)
 	
 	if(NSZombieEnabled)
 	{
-		printf("Turning <%s 0x%X> into a zombie\n", object_getClassName(object), object);
+		//NSLog(@"Turning <%s 0x%X> into a zombie\n", object_getClassName(object), object);
 		object_setClass(object, objc_getClass("_NSZombie_"));
 	}
 	else
@@ -644,7 +646,7 @@ void NSIncrementExtraRefCount(id object)
 	
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
 	
-	printf("Retaining <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
+	//printf("Retaining <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
 
 	
 	
@@ -668,9 +670,9 @@ BOOL NSDecrementExtraRefCountWasZero(id object)
 		
 	CFIndex count = (CFIndex)CFDictionaryGetValue( _PFRetainTable, object );
 	
-	printf("Releasing <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
+	//printf("Releasing <%s 0x%X>, current count = %d\n", object_getClassName(object), object, count);
 
-	if( count != 0 ) CFDictionarySetValue( _PFRetainTable, object, (void *)(--count) );
+	if( count != 0 ) CFDictionarySetValue( _PFRetainTable, object, (void *)(count-1) );
 	
 	//if( _pf_IsMultiThreaded ) 
 	pthread_mutex_unlock(&_pf_retm);

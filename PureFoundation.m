@@ -10,6 +10,8 @@
 
 #import "PureFoundation.h"
 
+#import <objc/runtime.h>
+
 // default state of multi-thread flag
 BOOL _pf_IsMultiThreaded = YES;
 
@@ -30,7 +32,7 @@ Boolean _PFEqualsCallBack( const void *value1, const void *value2 ) { return [(i
 CFHashCode _PFHashCallBack( const void *value ) { return (CFHashCode)[(id)value hash]; }
 const void *_PFRetainCallBack( CFAllocatorRef allocator, const void *value ) 
 {
-	printf("collection retain called on <%s 0X%X>\n", object_getClassName(value), value); 
+	//printf("collection retain called on <%s 0X%X>\n", object_getClassName(value), value); 
 	if( *(uintptr_t *)value == 0 )
 		return CFRetain((CFTypeRef)value);
 	return (const void *)[(id)value retain]; 
@@ -38,11 +40,11 @@ const void *_PFRetainCallBack( CFAllocatorRef allocator, const void *value )
 
 void _PFReleaseCallBack( CFAllocatorRef allocator, const void *value ) 
 {
-	printf("collection release called on <%s 0x%X>\n", object_getClassName(value), value); 
+	//printf("collection release called on <%s 0x%X>\n", object_getClassName(value), value); 
 	if( *(uintptr_t *)value == 0 )
 		CFRelease((CFTypeRef)value);
 	else
-		[(id)value autorelease]; 
+		[(id)value release]; // this was autorelease...
 }
 
 // and the callback structure
@@ -61,5 +63,5 @@ CFSetCallBacks _PFCollectionCallBacks = { 0, _PFRetainCallBack, _PFReleaseCallBa
 void NSRequestConcreteImplementation( id anObject, SEL sel, Class cls )
 {
 	PF_HELLO("")
-	[NSException raise: NSInvalidArgumentException format: @"Request a Concrete Implementation"];
+	[NSException raise: NSInvalidArgumentException format: @"*** %s cannot be sent to an abstract object of class %s: Create a concrete instance!", sel_getName(sel), class_getName(cls)];
 }

@@ -950,7 +950,7 @@ void _PFKeysForObject( const void *key, const void *value, void *context )
  */
 - (void)addEntriesFromDictionary:(NSDictionary *)otherDictionary 
 {
-	PF_TODO
+	PF_HELLO("")
 	PF_CHECK_DICT_MUTABLE(self)
 	PF_NIL_ARG(otherDictionary)
 	

@@ -93,12 +93,14 @@
 - (void)dealloc
 {
 	NSZoneFree( nil, _storage );
-	[_collection autorelease];
+	[_collection release]; //was [_collection autorelease];
 	[super dealloc];
 }
 
 - (id)nextObject
 {
+	//printf("<enumerator 0x%X> nextObject\n", self);
+
 	if( _position == _count ) 
 		return nil;
 	_position++;
@@ -147,7 +149,7 @@
 
 
 /*
- *	A backwards-moving object enumerator, optomised for fat set-up and normal 
+ *	A backwards-moving object enumerator, optomised for fast set-up and normal 
  *	-nextObject useage
  */
 @implementation PFReverseEnumerator
@@ -179,6 +181,8 @@
 - (id)nextObject
 {
 	//PF_HELLO("")
+	//printf("<reverseEnumerator 0x%X> nextObject\n", self);
+	
 	if( _position == _count ) 
 		return nil;
 	_position++;

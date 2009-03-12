@@ -84,7 +84,9 @@ void *NSZoneMalloc(NSZone *zone, NSUInteger size)
 {
 //	if( zone == nil ) zone = NSDefaultMallocZone();
 	//CFAllocatorRef allocator = CFAllocatorGetDefault(); // zone->allocator;
-	return CFAllocatorAllocate( kCFAllocatorDefault, (CFIndex)size, 0);
+	void *ptr = CFAllocatorAllocate( kCFAllocatorDefault, (CFIndex)size, 0);
+	for( int i = 0; i < size; i++ ) ((UInt8 *)ptr)[i] = 0;
+	return ptr;
 }
 
 // Allocates enough memory from zone for numElems elements, each with a size numBytes bytes, and returns a pointer to the allocated memory. The memory is initialized with zeros. This function returns NULL if it was unable to allocate the requested memory.
