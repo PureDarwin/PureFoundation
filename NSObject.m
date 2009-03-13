@@ -23,6 +23,7 @@
 #import <stdio.h>	// we're going to be doing some diagnostic printing!
 #include <pthread.h>
 
+extern void _pfInitDebug(void);
 extern void _pfInitExceptions(void);
 
 /*
@@ -83,6 +84,7 @@ extern NSZone _PFDefaultZone;
 	PF_HELLO("")
 	if( self == [NSObject class] )
 	{
+		_pfInitDebug();
 		_PFRetainTable = CFDictionaryCreateMutable( kCFAllocatorDefault, 0, NULL, NULL );
 		
 	}
@@ -594,11 +596,13 @@ void NSDeallocateObject(id object)
 	
 	if(NSZombieEnabled)
 	{
+		//NSLog( @"zombie" );
 		//NSLog(@"Turning <%s 0x%X> into a zombie\n", object_getClassName(object), object);
 		object_setClass(object, objc_getClass("_NSZombie_"));
 	}
 	else
 	{
+		//NSLog( @"no zombie" );
 		//printf("Deallocating <%s 0x%X>\n", object_getClassName(object), object);
 		
 		//if( [object _cfTypeID] != 0 ) // free bridged objects via CF
@@ -706,6 +710,9 @@ NSUInteger NSExtraRefCount(id object)
 @end
 
 @implementation _NSZombie_
+// this simply stops the spurious "zombie class sent initialize" message
++ (void)initialize { }
+
 - (id)retain 
 { 
 	fprintf(stderr, "<_NSZombie_ 0x%X> in %s sent -retain\n", self, getprogname()); 

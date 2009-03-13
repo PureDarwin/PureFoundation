@@ -8,8 +8,9 @@
  *	LGPL'd. See LICENCE.txt for copyright information.
  */
 
-#import <Foundation/NSException.h>
-#import <Foundation/NSString.h>
+#import "NSException.h"
+#import "NSString.h"
+#import "NSDebug.h"
 
 /*
  *	Application-specific uncaught exception handler
@@ -84,6 +85,7 @@ static void default_throw(id value) {
         //printf("EXCEPTIONS: No handler in place!\n");
 		if( uncaughtHandler != NULL ) uncaughtHandler(value);
 		__defaultUncaughtHandler(value);
+		if(NSHangOnUncaughtException) while(TRUE) {} // not sure if this is what they meant by "hang"
 		exit(0);
     }
 	
