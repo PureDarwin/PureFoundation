@@ -287,7 +287,7 @@
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 2659}, {205, 773}}</string>
+							<string>{{0, 2688}, {205, 773}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -336,7 +336,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>17098CC00F68451C00D95F89</string>
+										<string>1720D8360F6AA3F000183195</string>
 										<key>history</key>
 										<array>
 											<string>170D221D0F2E29BC0029901B</string>
@@ -373,7 +373,6 @@
 											<string>179AB9400F56CB530075286B</string>
 											<string>179AB9440F56CB530075286B</string>
 											<string>179AB9450F56CB530075286B</string>
-											<string>179AB9490F56CB530075286B</string>
 											<string>179AB94C0F56CB530075286B</string>
 											<string>179AB94E0F56CB530075286B</string>
 											<string>179AB94F0F56CB530075286B</string>
@@ -404,20 +403,21 @@
 											<string>179F48330F66CFE20012FEDD</string>
 											<string>179F48360F66CFE20012FEDD</string>
 											<string>171399510F67CE9D00DBE894</string>
-											<string>171399520F67CE9D00DBE894</string>
 											<string>171399530F67CE9D00DBE894</string>
 											<string>171399550F67CE9D00DBE894</string>
 											<string>171399560F67CE9D00DBE894</string>
 											<string>171399580F67CE9D00DBE894</string>
-											<string>171399590F67CE9D00DBE894</string>
-											<string>171399930F67E15A00DBE894</string>
-											<string>171399EB0F67FA0100DBE894</string>
 											<string>171399FF0F68039400DBE894</string>
 											<string>173C7D6E0F682D93001F76F1</string>
 											<string>173C7D880F683821001F76F1</string>
-											<string>173C7D890F683821001F76F1</string>
-											<string>173C7D8A0F683821001F76F1</string>
-											<string>173C7D930F683821001F76F1</string>
+											<string>1752C6F60F6A59B70094E47C</string>
+											<string>1752C6F70F6A59B70094E47C</string>
+											<string>1752C6F80F6A59B70094E47C</string>
+											<string>1752C6F90F6A59B70094E47C</string>
+											<string>1752C6FA0F6A59B70094E47C</string>
+											<string>1752C6FB0F6A59B70094E47C</string>
+											<string>1752C6FC0F6A59B70094E47C</string>
+											<string>1752C70A0F6A59B70094E47C</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -557,9 +557,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>17098CA10F68399A00D95F89</string>
+				<string>1720D8370F6AA3F000183195</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>17098CA20F68399A00D95F89</string>
+				<string>1720D8380F6AA3F000183195</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -693,7 +693,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>17CD9B710F162E0E00A925B3</string>
 		<string>/Users/stuart/darwin/pf/svn/trunk/PureFoundation.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
@@ -774,7 +773,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>17CD9B710F162E0E00A925B3</string>
-				<string>17098CB40F68427100D95F89</string>
+				<string>1752C70D0F6A59B70094E47C</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
