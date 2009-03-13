@@ -13,8 +13,8 @@
 /*
  *	Constants
  */
-NSString * const NSDefaultRunLoopMode = @"";
-NSString * const NSRunLoopCommonModes = @"";
+NSString * const NSDefaultRunLoopMode = @"kCFRunLoopDefaultMode";
+NSString * const NSRunLoopCommonModes = @"kCFRunLoopCommonModes";
 
 
 NSRunLoop *_pfMainRunLoop = nil;
@@ -81,30 +81,64 @@ NSRunLoop *_pfMainRunLoop = nil;
 /*
  *	Runloop instance methods
  */
-- (NSString *)currentMode { }
+- (NSString *)currentMode { PF_RETURN_TEMP(CFRunLoopCopyCurrentMode((CFRunLoopRef)_rl)) }
 
 - (CFRunLoopRef)getCFRunLoop { return (CFRunLoopRef)_rl; }
 
-- (void)addTimer:(NSTimer *)timer forMode:(NSString *)mode {}
+- (void)addTimer:(NSTimer *)timer forMode:(NSString *)mode 
+{
+	CFRetain((CFTypeRef)timer);
+	CFRunLoopAddTimer((CFRunLoopRef)_rl, (CFRunLoopTimerRef)timer, (CFStringRef)mode);
+}
 
-- (void)addPort:(NSPort *)aPort forMode:(NSString *)mode {}
+- (void)addPort:(NSPort *)aPort forMode:(NSString *)mode 
+{
+
+
+}
 
 - (void)removePort:(NSPort *)aPort forMode:(NSString *)mode {}
 
-- (NSDate *)limitDateForMode:(NSString *)mode {}
+- (NSDate *)limitDateForMode:(NSString *)mode 
+{
+	CFAbsoluteTime next = CFRunLoopGetNextTimerFireDate((CFRunLoopRef)_rl, (CFStringRef)mode);
+	PF_RETURN_TEMP(CFDateCreate( kCFAllocatorDefault, next ))
+}
 
-- (void)acceptInputForMode:(NSString *)mode beforeDate:(NSDate *)limitDate {}
+- (void)acceptInputForMode:(NSString *)mode beforeDate:(NSDate *)limitDate 
+{
+	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
+	CFRunLoopRunInMode((CFStringRef)mode, length, TRUE);
+}
 
 @end
 
 @implementation NSRunLoop (NSRunLoopConveniences)
 
-- (void)run { CFRunLoopRun(); }
+- (void)run 
+{ 
+	/*	This implementation is strictly correct, since the docs say it should repeatedly call
+	 *	runMode:beforeDate:. However, as far as I can tell it achieves the same result 
+	 */
+	CFRunLoopRun(); 
+}
 
-- (void)runUntilDate:(NSDate *)limitDate {}
-- (BOOL)runMode:(NSString *)mode beforeDate:(NSDate *)limitDate {}
+- (void)runUntilDate:(NSDate *)limitDate 
+{
+	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
+	// docs don't say what mode it should be run in, so we'll assume the common modes
+	CFRunLoopRunInMode(kCFRunLoopCommonModes, length, FALSE);
+}
+
+- (BOOL)runMode:(NSString *)mode beforeDate:(NSDate *)limitDate 
+{
+	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
+	SInt32 result = CFRunLoopRunInMode((CFStringRef)mode, length, TRUE);
+	return (result == kCFRunLoopRunFinished) ? NO : YES;
+}
 
 // DEPRECATED_IN_MAC_OS_X_VERSION_10_5_AND_LATER;
+// "Deprecated. Does nothing."
 - (void)configureAsServer {}
 
 @end
