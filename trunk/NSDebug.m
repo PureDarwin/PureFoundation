@@ -17,6 +17,11 @@
  *	implemented. Either that or patch gdb to work on Darwin. Or both.
  */
 
+// set the default values of the debug flags
+BOOL NSDebugEnabled = NO;
+BOOL NSZombieEnabled = NO;
+BOOL NSDeallocateZombies = NO;
+BOOL NSHangOnUncaughtException = NO;
 
 /* The environment component of this API
  
@@ -54,50 +59,26 @@
  */
 
 /*
- *	Function called from +[NSObject load] to set up debugging according
- *	to the local environment
+ *	Function called from +[NSObject load] to set up debugging according to the 
+ *	local environment, which we'll have to process by hand since the runtime
+ *	hasn't been fully set-up yet.
+ *
+ *	We only look for the first four variables above here, leaving the pool ones
+ *	for its own class initialize method.
  */
-void _pfDebugInit( void )
+void _pfInitDebug( void )
 {
-	NSDictionary *env = [[NSProcessInfo processInfo] environment];
-	if( env != nil )
-	{
-		
-		
-		
-		
-	}
+	//printf("_pfInitDebug()\n");
+	
+	if( getenv("NSDebugEnabled") != NULL ) NSDebugEnabled = YES;
+	if( getenv("NSZombieEnabled") != NULL ) NSZombieEnabled = YES;
+	if( getenv("NSDeallocateZombies") != NULL ) NSDeallocateZombies = YES;
+	if( getenv("NSHangOnUncaughtException") != NULL ) NSHangOnUncaughtException = YES;
+	
 }
 
 /****************	General		****************/
 
-BOOL NSDebugEnabled = NO;
-// General-purpose global boolean. Applications and frameworks
-// may choose to do some extra checking, or use different
-// algorithms, or log informational messages, or whatever, if
-// this variable is true (ex: if (NSDebugEnabled) { ... }).
-
-BOOL NSZombieEnabled = YES;
-// Enable object zombies. When an object is deallocated, its isa
-// pointer is modified to be that of a "zombie" class (whether or
-// not the storage is then freed can be controlled by the
-// NSDeallocateZombies variable). Messages sent to the zombie
-// object cause logged messages and can be broken on in a debugger.
-// The default is NO.
-
-BOOL NSDeallocateZombies = NO;
-// Determines whether the storage of objects that have been
-// "zombified" is then freed or not. The default value (NO)
-// is most suitable for debugging messages sent to zombie
-// objects. And since the memory is never freed, storage
-// allocated to an object will never be reused, either (which
-// is sometimes useful otherwise).
-
-BOOL NSHangOnUncaughtException = NO;
-// If set to YES, causes the process to hang after logging the
-// "*** Uncaught exception:" message. A backtrace can be gotten
-// from the process with the 'sample' utility, or the process can
-// be attached to with a debugger. The default is NO.
 
 BOOL NSIsFreedObject(id anObject) { return NO; }
 // Returns YES if the value passed as the parameter is a pointer
