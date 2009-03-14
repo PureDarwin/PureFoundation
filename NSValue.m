@@ -8,140 +8,199 @@
  *	LGPL'd. See LICENCE.txt for copyright information.
  */
 
-
 #import "NSValue.h"
+#import "PFValues.h"
+#import "PFObjCTypeTools.h"
+
+static Class _NSValueClass = nil;
 
 /*
- *	Subclass of NSValue which does all the heavy lifting
- *
- *	I wonder if we don't need some others to deal with larger object sizes
- *		eg. NSConcreteStruct
+ *	NSValue, which acts as a factory for its concrete subclasses, which in this 
+ *	implementation at least includes NSNumber/NSCFNumber objects
  */
-@interface NSConcreteValue : NSValue
-{
-	void *_type;
-	void *_value;
-}
-@end
-
-
-
-
-/************
- *	NSValue, which acts as a factory for NSConcreteValue objects
- ************/
 @implementation NSValue
+
++(void)initialize
+{
+	if( self == [NSValue class] )
+		_NSValueClass = objc_getClass("NSValue");
+}
 
 +(id)alloc
 {
-	// should this be locked to NSValue class only?
 	if( self == [NSValue class] )
-		return [NSConcreteValue alloc];
+		return (id)&_NSValueClass;
 	return [super alloc];
 }
 
-// NSValueCreation
-+ (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type
-{
-	return [[[NSValue alloc] initWithBytes: value objCType: type] autorelease];
-}
-
-+ (NSValue *)value:(const void *)value withObjCType:(const char *)type
-{
-	PF_HELLO("")
-	return [NSValue valueWithBytes: value objCType: type];
-}
-
-// NSValueExtensionMethods
-+ (NSValue *)valueWithNonretainedObject:(id)anObject
-{
-	return [NSValue valueWithBytes: (void *)anObject objCType: @encode(id)];
-}
-
-+ (NSValue *)valueWithPointer:(const void *)pointer
-{
-	return [NSValue valueWithBytes: (void *)pointer objCType: @encode(const void *)];
-}
-
-
-// NSValus instance methods (for the compiler)
+// NSValue instance methods (for the compiler). We should make these more meaningful.
 - (void)getValue:(void *)value { }
 - (const char *)objCType { return NULL; }
 
 // NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-	return nil;
-}
+- (id)copyWithZone:(NSZone *)zone { return nil; }
 
 // NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
-
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
-}
+- (void)encodeWithCoder:(NSCoder *)aCoder { }
+- (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
 
 @end
 
+@implementation NSValue (NSValueCreation)
 
++ (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type
+{
+	return [[(NSValue *)_NSValueClass initWithBytes: value objCType: type] autorelease];
+}
+
++ (NSValue *)value:(const void *)value withObjCType:(const char *)type
+{
+	return [[(NSValue *)_NSValueClass initWithBytes: value objCType: type] autorelease];
+}
 
 /*
- *	NSValue subclass which actually stores passed values
+ *	Create the NSValue subclass for the given type. If the type is a number, return a
+ *	CFNumber instead.
  */
-@implementation NSConcreteValue
-
-// NSValueCreation
 - (id)initWithBytes:(const void *)value objCType:(const char *)type
 {
-	PF_TODO
+	NSUInteger size;
+	CFNumberType nType = 0;
+	self = nil;
 	
-	if( self = [super init] )
-	{
-		// this is going to need our sizeof_objc_type code
-		//size = sizeof(type);
-		// if size > sizeof(void *), allocate storage space
-		// save type
-		// bytecopy across the value
+	if( (value == NULL) || (type == NULL) || (type[0] == '\0') ) return nil;
+
+	type = pfenc_skip(type);
+
+	switch (*type) {
+		case _C_STRUCT_B: // could be an NSPoint, NSRange, NSSize or NSRect...
+			if( 0 == strncmp(type, "{NSPoint=", 9) )
+			{
+				self = NSAllocateObject([PFPointValue class], 0, nil);
+				((PFPointValue *)self)->_point = *(NSPoint *)value;
+				break;
+			}
+			else if( 0 == strncmp(type, "{NSRange=", 9) )
+			{
+				self = NSAllocateObject([PFRangeValue class], 0, nil);
+				((PFRangeValue *)self)->_range = *(NSRange *)value;
+				break;
+			}
+			else if( 0 == strncmp(type, "{NSSize=", 8) )
+			{
+				self = NSAllocateObject([PFSizeValue class], 0, nil);
+				((PFSizeValue *)self)->_size = *(NSSize *)value;
+				break;
+			}
+			else if( 0 == strncmp(type, "{NSRect=", 8) )
+			{
+				self = NSAllocateObject([PFRectValue class], 0, nil);
+				((PFRectValue *)self)->_rect = *(NSRect *)value;
+				break;
+			}
+
+			// ...or just a normal struct
+		case _C_ARY_B: // these are also stored in a PFStructValue
+		case _C_UNION_B:
+			self = NSAllocateObject([PFStructValue class], 0, nil);
+			((PFStructValue *)self)->_type = pfenc_copy(type);
+			pfenc_size_align(type, &size, NULL);
+			void *ptr = malloc(size);
+			memcpy(ptr, value, size);
+			((PFStructValue *)self)->_size = size;
+			((PFStructValue *)self)->_struct = ptr;
+			break;
+		
+		case _C_ID:
+			self = NSAllocateObject([PFObjectValue class], 0, nil);
+			((PFObjectValue *)self)->_object = *(id *)value;
+			break;
+			
+		case _C_PTR:
+			self = NSAllocateObject([PFPointerValue class], 0, nil);
+			((PFPointerValue *)self)->_pointer = (void *)value;
+			break;
+			
+		// this needs to be expanded to cover all possible types...
+		case _C_CHR: nType = kCFNumberCharType; break;
+		case _C_SHT: nType = kCFNumberShortType; break;
+		case _C_INT: nType = kCFNumberIntType; break;
+			
+		case _C_LNG: nType = kCFNumberLongType; break;
+		case _C_LNG_LNG: nType = kCFNumberLongLongType; break;
+			
+		case _C_FLT: nType = kCFNumberFloatType; break;
+		case _C_DBL: nType = kCFNumberDoubleType; break;
 	}
-	return nil;
-}
-
-// NSValue instance methods
-- (void)getValue:(void *)value 
-{
-	// look up type's size, then byte copy it into the destination
-}
-
-- (const char *)objCType
-{
-	// return it from storage
-}
-
-// NSValueExtension methods
-- (id)nonretainedObjectValue
-{
 	
-}
+	if(nType)
+		self = (NSValue *)CFNumberCreate( kCFAllocatorDefault, nType, value);
 
-- (void *)pointerValue
-{
-	
-}
-
-- (BOOL)isEqualToValue:(NSValue *)value
-{
-	PF_HELLO("")
-	
-	if( self == value ) return YES;
-	if( value == nil ) return NO;
-	// compare type marker and contents
+	PF_RETURN_NEW(self)
 }
 
 @end
 
+@implementation NSValue (NSValueExtensionMethods)
 
++ (NSValue *)valueWithNonretainedObject:(id)anObject
+{
+	PFObjectValue *new = NSAllocateObject([PFObjectValue class], 0, nil);
+	new->_object = anObject;
+	PF_RETURN_TEMP(new)
+}
 
++ (NSValue *)valueWithPointer:(const void *)pointer
+{
+	PFPointerValue *new = NSAllocateObject([PFPointerValue class], 0, nil);
+	new->_pointer = (void *)pointer;
+	PF_RETURN_TEMP(new)
+}
 
+- (id)nonretainedObjectValue { return nil; }
+- (void *)pointerValue { return NULL; }
+- (BOOL)isEqualToValue:(NSValue *)value { return NO; }
+
+@end
+
+@implementation NSValue (NSValueGeometryExtensions)
+
++ (NSValue *)valueWithPoint:(NSPoint)point
+{
+	PFPointValue *new = NSAllocateObject([PFPointValue class], 0, nil);
+	new->_point = point;
+	PF_RETURN_TEMP(new)
+}
+
++ (NSValue *)valueWithSize:(NSSize)size
+{
+	PFSizeValue *new = NSAllocateObject([PFSizeValue class], 0, nil);
+	new->_size = size;
+	PF_RETURN_TEMP(new)
+}
+
++ (NSValue *)valueWithRect:(NSRect)rect
+{
+	PFRectValue *new = NSAllocateObject([PFRectValue class], 0, nil);
+	new->_rect = rect;
+	PF_RETURN_TEMP(new)
+}
+
+- (NSPoint)pointValue { return NSZeroPoint; }
+- (NSSize)sizeValue { return NSZeroSize; }
+- (NSRect)rectValue { return NSZeroRect; }
+
+@end
+
+@implementation NSValue (NSValueRangeExtensions)
+
++ (NSValue *)valueWithRange:(NSRange)range
+{
+	PFRangeValue *new = NSAllocateObject([PFRangeValue class], 0, nil);
+	new->_range = range;
+	PF_RETURN_TEMP(new)
+}
+
+- (NSRange)rangeValue { return NSMakeRange(0,0); }
+
+@end

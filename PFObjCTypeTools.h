@@ -9,6 +9,7 @@
  */
 
 #include <ffi/ffi.h>
+#include <objc/runtime.h>
 
 /*
  *	obj-c method descriptor encodings apparently not exported from objc4
