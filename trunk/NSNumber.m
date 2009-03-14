@@ -167,6 +167,12 @@ Class _PFNSCFNumberClass = nil;
 
 
 
+@implementation NSNumber (NSDecimalNumberExtensions)
+
+- (NSDecimal)decimalValue { }
+
+@end
+
 
 /*
  *
@@ -576,5 +582,4 @@ Class _PFNSCFNumberClass = nil;
 //- (NSString *)descriptionWithLocale:(id)locale {}
 
 @end
-
 
