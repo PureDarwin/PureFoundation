@@ -58,6 +58,32 @@
 			PBXWorkspaceStateSaveDate = 258657505;
 		};
 		perUserProjectItems = {
+			170A43260F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43260F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43270F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43270F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43280F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43280F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43290F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43290F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A432A0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A432A0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A432B0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A432B0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A432C0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A432C0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A432D0F6BE23C00B73C4B /* PBXBookmark */ = 170A432D0F6BE23C00B73C4B /* PBXBookmark */;
+			170A432E0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A432E0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A432F0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A432F0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43300F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43300F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43310F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43310F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43320F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43320F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43330F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43330F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43340F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43340F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43350F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43350F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43360F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43360F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43370F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43370F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43380F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43380F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A43390F6BE23C00B73C4B /* PBXTextBookmark */ = 170A43390F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433A0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433A0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433B0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433B0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433C0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433C0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433D0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433D0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433E0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433E0F6BE23C00B73C4B /* PBXTextBookmark */;
+			170A433F0F6BE23C00B73C4B /* PBXTextBookmark */ = 170A433F0F6BE23C00B73C4B /* PBXTextBookmark */;
 			170D213B0F2DFE510029901B = 170D213B0F2DFE510029901B /* PBXTextBookmark */;
 			170D21480F2DFE510029901B = 170D21480F2DFE510029901B /* PBXTextBookmark */;
 			170D21700F2E124D0029901B = 170D21700F2E124D0029901B /* PBXTextBookmark */;
@@ -251,6 +277,274 @@
 			sepNavIntBoundsRect = "{{0, 0}, {838, 582}}";
 			sepNavSelRange = "{0, 0}";
 			sepNavVisRange = "{0, 44}";
+		};
+	};
+	170A43260F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 170D24AE0F2F093E0029901B /* NSException.m */;
+		name = "NSException.m: 88";
+		rLen = 0;
+		rLoc = 2517;
+		rType = 0;
+		vrLen = 802;
+		vrLoc = 7063;
+	};
+	170A43270F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB8280F56A3280075286B /* NSDebug.h */;
+		name = "NSDebug.h: 135";
+		rLen = 0;
+		rLoc = 5983;
+		rType = 0;
+		vrLen = 1839;
+		vrLoc = 2028;
+	};
+	170A43280F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 74";
+		rLen = 0;
+		rLoc = 2550;
+		rType = 0;
+		vrLen = 1620;
+		vrLoc = 1788;
+	};
+	170A43290F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 24";
+		rLen = 0;
+		rLoc = 610;
+		rType = 0;
+		vrLen = 1431;
+		vrLoc = 0;
+	};
+	170A432A0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB8550F56A3280075286B /* NSPort.h */;
+		name = "NSPort.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1167;
+		vrLoc = 4136;
+	};
+	170A432B0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB84A0F56A3280075286B /* NSNotification.h */;
+		name = "NSNotification.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1223;
+		vrLoc = 0;
+	};
+	170A432C0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17B11FC80F4B0D34008D395B /* NSScanner.m */;
+		name = "NSScanner.m: 13";
+		rLen = 0;
+		rLoc = 244;
+		rType = 0;
+		vrLen = 1472;
+		vrLoc = 746;
+	};
+	170A432D0F6BE23C00B73C4B /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 179AB82A0F56A3280075286B /* NSDecimalNumber.h */;
+	};
+	170A432E0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 74";
+		rLen = 0;
+		rLoc = 2550;
+		rType = 0;
+		vrLen = 1660;
+		vrLoc = 1863;
+	};
+	170A432F0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 170D24AE0F2F093E0029901B /* NSException.m */;
+		name = "NSException.m: 88";
+		rLen = 0;
+		rLoc = 2517;
+		rType = 0;
+		vrLen = 802;
+		vrLoc = 7063;
+	};
+	170A43300F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 24";
+		rLen = 0;
+		rLoc = 552;
+		rType = 0;
+		vrLen = 1538;
+		vrLoc = 216;
+	};
+	170A43310F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB8280F56A3280075286B /* NSDebug.h */;
+		name = "NSDebug.h: 135";
+		rLen = 0;
+		rLoc = 5983;
+		rType = 0;
+		vrLen = 1835;
+		vrLoc = 9762;
+	};
+	170A43320F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 68";
+		rLen = 0;
+		rLoc = 2111;
+		rType = 0;
+		vrLen = 1390;
+		vrLoc = 13312;
+	};
+	170A43330F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 24";
+		rLen = 0;
+		rLoc = 552;
+		rType = 0;
+		vrLen = 1461;
+		vrLoc = 216;
+	};
+	170A43340F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 89";
+		rLen = 0;
+		rLoc = 2694;
+		rType = 0;
+		vrLen = 976;
+		vrLoc = 1972;
+	};
+	170A43350F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 24";
+		rLen = 0;
+		rLoc = 552;
+		rType = 0;
+		vrLen = 1570;
+		vrLoc = 1211;
+	};
+	170A43360F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 89";
+		rLen = 0;
+		rLoc = 2694;
+		rType = 0;
+		vrLen = 1312;
+		vrLoc = 13521;
+	};
+	170A43370F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB8280F56A3280075286B /* NSDebug.h */;
+		name = "NSDebug.h: 135";
+		rLen = 0;
+		rLoc = 5983;
+		rType = 0;
+		vrLen = 1839;
+		vrLoc = 2028;
+	};
+	170A43380F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 78";
+		rLen = 0;
+		rLoc = 2573;
+		rType = 0;
+		vrLen = 1395;
+		vrLoc = 1822;
+	};
+	170A43390F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 605";
+		rLen = 0;
+		rLoc = 14481;
+		rType = 0;
+		vrLen = 1313;
+		vrLoc = 13521;
+	};
+	170A433A0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17E0E5100F456BEF00FF37C2 /* NSDebug.m */;
+		name = "NSDebug.m: 74";
+		rLen = 0;
+		rLoc = 2550;
+		rType = 0;
+		vrLen = 1620;
+		vrLoc = 1788;
+	};
+	170A433B0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
+		name = "NSObject.m: 24";
+		rLen = 0;
+		rLoc = 610;
+		rType = 0;
+		vrLen = 1431;
+		vrLoc = 0;
+	};
+	170A433C0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB8550F56A3280075286B /* NSPort.h */;
+		name = "NSPort.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1167;
+		vrLoc = 4136;
+	};
+	170A433D0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB84A0F56A3280075286B /* NSNotification.h */;
+		name = "NSNotification.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1223;
+		vrLoc = 0;
+	};
+	170A433E0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 17B11FC80F4B0D34008D395B /* NSScanner.m */;
+		name = "NSScanner.m: 13";
+		rLen = 0;
+		rLoc = 244;
+		rType = 0;
+		vrLen = 1472;
+		vrLoc = 746;
+	};
+	170A433F0F6BE23C00B73C4B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 179AB82A0F56A3280075286B /* NSDecimalNumber.h */;
+		name = "NSDecimalNumber.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1381;
+		vrLoc = 0;
+	};
+	170A43430F6BE25200B73C4B /* NSFormatter.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 699}}";
+			sepNavSelRange = "{300, 0}";
+			sepNavVisRange = "{0, 1467}";
+		};
+	};
+	170A43470F6BEC5300B73C4B /* NSNumberFormatter.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 5536}}";
+			sepNavSelRange = "{625, 0}";
+			sepNavVisRange = "{8806, 407}";
 		};
 	};
 	170D20FB0F2DEB740029901B /* NSSet.m */ = {
@@ -943,7 +1237,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 68";
 		rLen = 0;
-		rLoc = 1780;
+		rLoc = 2111;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 1330;
@@ -993,7 +1287,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 149";
 		rLen = 17;
-		rLoc = 3549;
+		rLoc = 3882;
 		rType = 0;
 		vrLen = 1325;
 		vrLoc = 232;
@@ -1013,7 +1307,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 69";
 		rLen = 0;
-		rLoc = 1797;
+		rLoc = 2112;
 		rType = 0;
 		vrLen = 1333;
 		vrLoc = 558;
@@ -1123,7 +1417,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 68";
 		rLen = 0;
-		rLoc = 1780;
+		rLoc = 2111;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 1330;
@@ -1143,7 +1437,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 68";
 		rLen = 0;
-		rLoc = 1780;
+		rLoc = 2111;
 		rType = 0;
 		vrLen = 1044;
 		vrLoc = 1330;
@@ -1173,7 +1467,7 @@
 		fRef = 17CD9C070F165A9A00A925B3 /* NSObject.m */;
 		name = "NSObject.m: 68";
 		rLen = 0;
-		rLoc = 1780;
+		rLoc = 2111;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 1330;
@@ -1468,7 +1762,14 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {882, 4016}}";
 			sepNavSelRange = "{5983, 0}";
-			sepNavVisRange = "{9762, 1835}";
+			sepNavVisRange = "{2028, 1839}";
+		};
+	};
+	179AB82A0F56A3280075286B /* NSDecimalNumber.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 2560}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{0, 1381}";
 		};
 	};
 	179AB8310F56A3280075286B /* NSException.h */ = {
@@ -1478,11 +1779,39 @@
 			sepNavVisRange = "{2675, 1588}";
 		};
 	};
+	179AB8350F56A3280075286B /* NSFormatter.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 699}}";
+			sepNavSelRange = "{1233, 0}";
+			sepNavVisRange = "{0, 1233}";
+		};
+	};
 	179AB8370F56A3280075286B /* NSGeometry.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {882, 3600}}";
 			sepNavSelRange = "{0, 0}";
 			sepNavVisRange = "{0, 1081}";
+		};
+	};
+	179AB84A0F56A3280075286B /* NSNotification.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 752}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{0, 1223}";
+		};
+	};
+	179AB84D0F56A3280075286B /* NSNumberFormatter.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 4688}}";
+			sepNavSelRange = "{8666, 0}";
+			sepNavVisRange = "{7848, 1412}";
+		};
+	};
+	179AB8550F56A3280075286B /* NSPort.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {882, 2528}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{4136, 1167}";
 		};
 	};
 	179AB86F0F56A3280075286B /* NSString.h */ = {
@@ -2299,9 +2628,9 @@
 	};
 	17B11DB90F48B756008D395B /* NSBundle.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {882, 7016}}";
-			sepNavSelRange = "{197, 0}";
-			sepNavVisRange = "{0, 1545}";
+			sepNavIntBoundsRect = "{{0, 0}, {882, 6544}}";
+			sepNavSelRange = "{200, 0}";
+			sepNavVisRange = "{0, 1349}";
 		};
 	};
 	17B11E1C0F499A1E008D395B /* PBXTextBookmark */ = {
@@ -2401,9 +2730,9 @@
 	};
 	17B11FC80F4B0D34008D395B /* NSScanner.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {882, 1344}}";
+			sepNavIntBoundsRect = "{{0, 0}, {882, 1296}}";
 			sepNavSelRange = "{244, 0}";
-			sepNavVisRange = "{0, 1105}";
+			sepNavVisRange = "{746, 1472}";
 		};
 	};
 	17B11FCF0F4B0FF5008D395B /* CTScanner.h */ = {
@@ -2519,9 +2848,9 @@
 	};
 	17CD9C070F165A9A00A925B3 /* NSObject.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {882, 11792}}";
-			sepNavSelRange = "{1780, 0}";
-			sepNavVisRange = "{13312, 1390}";
+			sepNavIntBoundsRect = "{{0, 0}, {882, 12032}}";
+			sepNavSelRange = "{610, 0}";
+			sepNavVisRange = "{0, 1431}";
 		};
 	};
 	17DABE9C0F1CD7DF00F858BB /* NSObjCRuntime.m */ = {
@@ -2570,9 +2899,9 @@
 	};
 	17E0E5100F456BEF00FF37C2 /* NSDebug.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {882, 2928}}";
-			sepNavSelRange = "{552, 0}";
-			sepNavVisRange = "{216, 1684}";
+			sepNavIntBoundsRect = "{{0, 0}, {882, 2880}}";
+			sepNavSelRange = "{2550, 0}";
+			sepNavVisRange = "{1788, 1620}";
 		};
 	};
 	17E0E5500F456F9600FF37C2 /* PBXTextBookmark */ = {
