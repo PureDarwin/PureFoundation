@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		170A43440F6BE25200B73C4B /* NSFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 170A43430F6BE25200B73C4B /* NSFormatter.m */; };
+		170A43480F6BEC5300B73C4B /* NSNumberFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 170A43470F6BEC5300B73C4B /* NSNumberFormatter.m */; };
+		170A43520F6C01E400B73C4B /* NSDateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 170A43510F6C01E400B73C4B /* NSDateFormatter.m */; };
 		170D20FC0F2DEB740029901B /* NSSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D20FB0F2DEB740029901B /* NSSet.m */; };
 		170D21250F2DF7BD0029901B /* NSArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D21240F2DF7BD0029901B /* NSArray.m */; };
 		170D215F0F2DFE970029901B /* NSDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = 170D215E0F2DFE970029901B /* NSDictionary.m */; };
@@ -208,6 +211,9 @@
 
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		170A43430F6BE25200B73C4B /* NSFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSFormatter.m; sourceTree = "<group>"; };
+		170A43470F6BEC5300B73C4B /* NSNumberFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSNumberFormatter.m; sourceTree = "<group>"; };
+		170A43510F6C01E400B73C4B /* NSDateFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDateFormatter.m; sourceTree = "<group>"; };
 		170D20FB0F2DEB740029901B /* NSSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSSet.m; sourceTree = "<group>"; };
 		170D21240F2DF7BD0029901B /* NSArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSArray.m; sourceTree = "<group>"; };
 		170D215E0F2DFE970029901B /* NSDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDictionary.m; sourceTree = "<group>"; };
@@ -470,8 +476,10 @@
 				17FC48390F399E3000AD37F1 /* GNUStep */,
 				1714E6820F3A32460039B3D4 /* PureFoundation */,
 				17B11E230F499A3F008D395B /* Files, etc. */,
+				170A43220F6AD9A200B73C4B /* Ports */,
 				17B11E130F4999FE008D395B /* Threads, etc. */,
 				17B11E240F499A7F008D395B /* Runtime */,
+				170A43250F6BE23400B73C4B /* Formatters */,
 				32BAE0B70371A74B00C91783 /* PureFoundation_Prefix.pch */,
 				170D21EC0F2E25470029901B /* PureFoundation.h */,
 				170D21FF0F2E28880029901B /* PureFoundation.m */,
@@ -490,6 +498,23 @@
 				1717EF570F3120C200C71245 /* NSValue.m */,
 			);
 			name = Source;
+			sourceTree = "<group>";
+		};
+		170A43220F6AD9A200B73C4B /* Ports */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Ports;
+			sourceTree = "<group>";
+		};
+		170A43250F6BE23400B73C4B /* Formatters */ = {
+			isa = PBXGroup;
+			children = (
+				170A43430F6BE25200B73C4B /* NSFormatter.m */,
+				170A43470F6BEC5300B73C4B /* NSNumberFormatter.m */,
+				170A43510F6C01E400B73C4B /* NSDateFormatter.m */,
+			);
+			name = Formatters;
 			sourceTree = "<group>";
 		};
 		1714E6820F3A32460039B3D4 /* PureFoundation */ = {
@@ -1006,6 +1031,9 @@
 				17B1212F0F4C2247008D395B /* NSRunLoop.m in Sources */,
 				179ABAAB0F58321E0075286B /* PFFileHandle.m in Sources */,
 				1713993D0F66E56A00DBE894 /* NSString_NSURLUtilities.m in Sources */,
+				170A43440F6BE25200B73C4B /* NSFormatter.m in Sources */,
+				170A43480F6BEC5300B73C4B /* NSNumberFormatter.m in Sources */,
+				170A43520F6C01E400B73C4B /* NSDateFormatter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

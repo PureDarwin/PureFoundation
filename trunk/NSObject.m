@@ -17,6 +17,13 @@
 
 #import <objc/runtime.h>
 #import <objc/message.h>
+/*
+ *	I'd like to move us to using the objc/NXMapTable for storing retain counts
+ *	both here and in NSAutoreleasePool -- on the assumption that it is slightly
+ *	more light weight than CFDictionaries -- but it would mean bodging a reference 
+ *	to the header file which is only in the objc4 project
+ */
+//#import <objc/maptable.h>
 
 //#import <Foundation/NSZone.h>
 
