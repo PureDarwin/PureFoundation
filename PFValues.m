@@ -111,6 +111,12 @@
 
 - (void *)pointerValue { return _pointer; }
 
+-(void)dealloc
+{
+	self->_pointer = NULL;
+	[super dealloc];
+}
+
 // NSCopying
 - (id)copyWithZone:(NSZone *)zone
 {
@@ -132,6 +138,12 @@
 - (void)getValue:(void *)value { *(id *)value = _object; }
 
 - (id)nonretainedObjectValue { return _object; }
+
+-(void)dealloc
+{
+	self->_object = nil;
+	[super dealloc];
+}
 
 // NSCopying
 - (id)copyWithZone:(NSZone *)zone
@@ -161,6 +173,15 @@
 	copy->_size = _size;
 	copy->_struct = _struct;
 	return copy;
+}
+
+- (void)dealloc
+{
+	free((void *)self->_type);
+	free(self->_struct);
+	self->_type = NULL;
+	self->_struct = NULL;
+	[super dealloc];
 }
 
 // NSCoding

@@ -50,12 +50,12 @@ static Class _NSValueClass = nil;
 
 + (NSValue *)valueWithBytes:(const void *)value objCType:(const char *)type
 {
-	return [[(NSValue *)_NSValueClass initWithBytes: value objCType: type] autorelease];
+	return [[(NSValue *)&_NSValueClass initWithBytes: value objCType: type] autorelease];
 }
 
 + (NSValue *)value:(const void *)value withObjCType:(const char *)type
 {
-	return [[(NSValue *)_NSValueClass initWithBytes: value objCType: type] autorelease];
+	return [[(NSValue *)&_NSValueClass initWithBytes: value objCType: type] autorelease];
 }
 
 /*
@@ -74,25 +74,25 @@ static Class _NSValueClass = nil;
 
 	switch (*type) {
 		case _C_STRUCT_B: // could be an NSPoint, NSRange, NSSize or NSRect...
-			if( 0 == strncmp(type, "{NSPoint=", 9) )
+			if( 0 == strncmp(type, "{_NSPoint=", 10) )
 			{
 				self = NSAllocateObject([PFPointValue class], 0, nil);
 				((PFPointValue *)self)->_point = *(NSPoint *)value;
 				break;
 			}
-			else if( 0 == strncmp(type, "{NSRange=", 9) )
+			else if( 0 == strncmp(type, "{_NSRange=", 10) )
 			{
 				self = NSAllocateObject([PFRangeValue class], 0, nil);
 				((PFRangeValue *)self)->_range = *(NSRange *)value;
 				break;
 			}
-			else if( 0 == strncmp(type, "{NSSize=", 8) )
+			else if( 0 == strncmp(type, "{_NSSize=", 9) )
 			{
 				self = NSAllocateObject([PFSizeValue class], 0, nil);
 				((PFSizeValue *)self)->_size = *(NSSize *)value;
 				break;
 			}
-			else if( 0 == strncmp(type, "{NSRect=", 8) )
+			else if( 0 == strncmp(type, "{_NSRect=", 9) )
 			{
 				self = NSAllocateObject([PFRectValue class], 0, nil);
 				((PFRectValue *)self)->_rect = *(NSRect *)value;
@@ -120,17 +120,15 @@ static Class _NSValueClass = nil;
 			self = NSAllocateObject([PFPointerValue class], 0, nil);
 			((PFPointerValue *)self)->_pointer = (void *)value;
 			break;
-			
+
 		// this needs to be expanded to cover all possible types...
-		case _C_CHR: nType = kCFNumberCharType; break;
-		case _C_SHT: nType = kCFNumberShortType; break;
-		case _C_INT: nType = kCFNumberIntType; break;
-			
-		case _C_LNG: nType = kCFNumberLongType; break;
-		case _C_LNG_LNG: nType = kCFNumberLongLongType; break;
-			
-		case _C_FLT: nType = kCFNumberFloatType; break;
-		case _C_DBL: nType = kCFNumberDoubleType; break;
+		case _C_CHR: nType = kCFNumberSInt8Type; break;
+		case _C_SHT: nType = kCFNumberSInt16Type; break;
+		case _C_INT: nType = kCFNumberSInt32Type; break;
+		case _C_LNG: nType = kCFNumberSInt32Type; break;
+		case _C_LNG_LNG: nType = kCFNumberSInt64Type; break;
+		case _C_FLT: nType = kCFNumberFloat32Type; break;
+		case _C_DBL: nType = kCFNumberFloat64Type; break;
 	}
 	
 	if(nType)

@@ -9,16 +9,14 @@
  */
 
 #import "NSValue.h"
+#import <objc/runtime.h> // for variable types
 
 /*
- *	Class bridged to CFNumber
+ *	Classes bridged to CFNumber and CFBoolean
  */
 @interface NSCFNumber : NSNumber
 @end
 
-/*
- *	Class bridged to CFBoolean
- */
 @interface NSCFBoolean : NSNumber
 @end
 
@@ -219,8 +217,6 @@ Class _PFNSCFNumberClass = nil;
 	return (NSString *)CFCopyDescription((CFTypeRef)self);
 }
 
-// (NSValueCreation is caught by superclass and passed to NSConcreteValue)
-
 /*
  *	NSNumberCreation
  *
@@ -307,14 +303,14 @@ Class _PFNSCFNumberClass = nil;
 - (id)initWithDouble:(double)value
 {
 	PF_HELLO("")
-	CFNumberRef new = CFNumberCreate( kCFAllocatorDefault, kCFNumberFloatType, &value );
+	CFNumberRef new = CFNumberCreate( kCFAllocatorDefault, kCFNumberDoubleType, &value );
 	PF_RETURN_NEW(new)
 }
 
 - (id)initWithBool:(BOOL)value
 {
 	PF_HELLO("")
-	return value ? (id)kCFBooleanTrue : (id)kCFBooleanFalse;
+	return (value) ? (id)kCFBooleanTrue : (id)kCFBooleanFalse;
 	//CFNumberRef new = CFNumberCreate( kCFAllocatorDefault, kCFNumberBo, &value );
 	//PF_RETURN_NEW(new)
 }
@@ -334,8 +330,35 @@ Class _PFNSCFNumberClass = nil;
 }	
 
 // NSValue instance methods
-- (void)getValue:(void *)value {}
-- (const char *)objCType { return 0; }
+- (void)getValue:(void *)value { CFNumberGetValue((CFNumberRef)self, CFNumberGetType((CFNumberRef)self), value); }
+
+- (const char *)objCType 
+{ 
+	switch( CFNumberGetType((CFNumberRef)self) ) {
+		case kCFNumberCharType:
+		case kCFNumberSInt8Type: return "c";
+
+		case kCFNumberShortType:
+		case kCFNumberSInt16Type: return "s";
+
+		case kCFNumberIntType:
+		case kCFNumberLongType:
+		case kCFNumberCFIndexType:
+		case kCFNumberNSIntegerType:
+		case kCFNumberSInt32Type: return "i";
+
+		case kCFNumberLongLongType:
+		case kCFNumberSInt64Type: return "q";
+
+		case kCFNumberFloatType:
+		case kCFNumberCGFloatType:
+		case kCFNumberFloat32Type: return "f";
+
+		case kCFNumberDoubleType:
+		case kCFNumberFloat64Type: return "d";
+	}
+	return "?"; 
+}
 
 // NSNumber instance methods
 - (char)charValue 
@@ -460,12 +483,58 @@ Class _PFNSCFNumberClass = nil;
 	return value;		
 }
 
+/*
+ *	These two string menthods don't work exactly as described in the docs, mainly
+ *	because of the limited number of types stored (6)
+ */
 - (NSString *)stringValue 
 { 
-	PF_TODO
-	// check if its a float type, then get the vlaue and run throug a formatter
-	return nil;
-#warning still to do!
+	return [self descriptionWithLocale: nil];
+}
+
+- (NSString *)descriptionWithLocale:(id)locale 
+{
+	SInt8 i8;
+	SInt16 i16;
+	SInt32 i32;
+	SInt64 i64;
+	Float32 f32;
+	Float64 f64;
+	CFStringRef string;
+	
+	// and here we should check for "special" number values eg. NaN, Inf
+	
+	// this is a bit long-winded, but I wanted to be sure...
+	switch(CFNumberGetType((CFNumberRef)self)) {
+		case kCFNumberSInt8Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberSInt8Type, &i8);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%hhi"), i8 );
+			break;
+		case kCFNumberSInt16Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberSInt16Type, &i16);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%hi"), i16 );			
+			break;
+		case kCFNumberSInt32Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberSInt32Type, &i32);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%i"), i32 );			
+			break;
+		case kCFNumberSInt64Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberSInt64Type, &i64);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%lli"), i64 );			
+			break;
+		case kCFNumberFloat32Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberFloat32Type, &f32);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%.3f"), f32 );			
+			break;
+		case kCFNumberFloat64Type:
+			CFNumberGetValue((CFNumberRef)self, kCFNumberFloat64Type, &f64);
+			string = CFStringCreateWithFormat( kCFAllocatorDefault, (CFDictionaryRef)locale, CFSTR("%.8lf"), f64 );			
+			break;
+			
+		default:
+			return @"";
+	}
+	PF_RETURN_TEMP(string)
 }
 
 - (NSComparisonResult)compare:(NSNumber *)otherNumber 
@@ -482,11 +551,8 @@ Class _PFNSCFNumberClass = nil;
 	return ([self compare: number] == NSOrderedSame);
 }
 
-- (NSString *)descriptionWithLocale:(id)locale 
-{
-	PF_TODO
-	return nil;
-}
+
+- (NSDecimal)decimalValue { }
 
 @end
 
@@ -580,6 +646,8 @@ Class _PFNSCFNumberClass = nil;
 
 //- (BOOL)isEqualToNumber:(NSNumber *)number {}
 //- (NSString *)descriptionWithLocale:(id)locale {}
+
+- (NSDecimal)decimalValue { }
 
 @end
 

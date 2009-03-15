@@ -491,6 +491,7 @@
 				170A445C0F6C75AE00B73C4B /* URL */,
 				170A445B0F6C74A900B73C4B /* XML */,
 				170A445D0F6C76C800B73C4B /* Coders */,
+				170A445E0F6C7A8500B73C4B /* Predicates */,
 				17B11DB90F48B756008D395B /* NSBundle.m */,
 				17B120C30F4C037B008D395B /* NSCountedSet.m */,
 				179DDC640F3A6F70008E838A /* NSEnumerator.m */,
@@ -553,6 +554,13 @@
 			children = (
 			);
 			name = Coders;
+			sourceTree = "<group>";
+		};
+		170A445E0F6C7A8500B73C4B /* Predicates */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Predicates;
 			sourceTree = "<group>";
 		};
 		1714E6820F3A32460039B3D4 /* PureFoundation */ = {
