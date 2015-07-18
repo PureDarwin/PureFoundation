@@ -1,6 +1,6 @@
 #PureFoundation
 
-PureFoundation is a binary-compatible clone of the Foundation framework created exclusively for Darwin using Apple's open source Objective-C 2.0 runtime, AutoZone garbage collector and CFLite library. It's primary purpose is to support the PureDarwin effort to build a fully-functional Darwin distribution, by providing the support library which certain components require.
+PureFoundation is a binary-compatible clone of the Foundation framework created exclusively for Darwin using Apple's open source Objective-C 2.0 runtime, AutoZone garbage collector and CFLite library. It's primary purpose is to support the [PureDarwin](https://github.com/PureDarwin) effort to build a fully-functional Darwin distribution, by providing the support library which certain components require.
 
 For installation instructions, see the wiki.
 
