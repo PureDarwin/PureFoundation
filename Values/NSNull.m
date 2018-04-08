@@ -1,57 +1,48 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
- *	NSNull.m
+ *  PureFoundation -- http://www.puredarwin.org
+ *  NSNull.m
  *
- *	NSNull
+ *  NSNull
+ *  Bridged to CFNull
  *
- *	Created by Stuart Crook on 29/01/2009.
- *	LGPL'd. See LICENCE.txt for copyright information.
+ *  Created by Stuart Crook on 29/01/2009.
+ *  LGPL'd. See LICENCE.txt for copyright information.
  */
 
 #import "NSNull.h"
 
-
-/*
- *	We implement NSNull's singelton in the same way as our bridged class dummies
- */
-static Class _PFNull = nil;
-
 @implementation NSNull
 
-+(void)initialize
-{
-	if( self == [NSNull class] )
-		_PFNull = [NSNull class];
++ (instancetype)alloc {
+    return (id)kCFNull;
 }
 
-+(id)alloc
-{
-	return (id)&_PFNull;
++ (NSNull *)null {
+    return (id)kCFNull;
 }
 
-+(NSNull *)null
-{
-	return (id)&_PFNull;
-}
-
--(NSString *)description
-{
+- (NSString *)description {
 	return @"<null>";
 }
 
--(id)copyWithZone:(NSZone *)zone
-{
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone {
 	return self;
 }
 
-/**	NSCoding COMPLIANCE **/
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
+#pragma mark - NSSecureCoding
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    PF_TODO
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
+	return self;
 }
 
 @end
