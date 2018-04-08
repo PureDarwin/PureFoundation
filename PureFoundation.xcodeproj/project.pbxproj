@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		17A6FAD6207A3D2F0002EEAA /* NSZombie.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD4207A3D2F0002EEAA /* NSZombie.m */; };
+		17A6FADA207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */; };
 		17CD9B650F162D1A00A925B3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */; };
 		17F9928B1F93C27100F37DF9 /* CTScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992891F93C27100F37DF9 /* CTScanner.h */; };
 		17F9928C1F93C27100F37DF9 /* CTScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9928A1F93C27100F37DF9 /* CTScanner.m */; };
@@ -52,7 +54,6 @@
 		17F992E81F93C4D200F37DF9 /* NSInvocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E01F93C4D200F37DF9 /* NSInvocation.m */; };
 		17F992E91F93C4D200F37DF9 /* NSMethodSignature.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */; };
 		17F992EA1F93C4D200F37DF9 /* NSObjCRuntime.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */; };
-		17F992EB1F93C4D200F37DF9 /* NSObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E31F93C4D200F37DF9 /* NSObject.m */; };
 		17F992EC1F93C4D200F37DF9 /* NSZone.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E41F93C4D200F37DF9 /* NSZone.m */; };
 		17F992F01F93C55600F37DF9 /* NSDateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992ED1F93C55600F37DF9 /* NSDateFormatter.m */; };
 		17F992F11F93C55600F37DF9 /* NSFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992EE1F93C55600F37DF9 /* NSFormatter.m */; };
@@ -88,6 +89,8 @@
 
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		17A6FAD4207A3D2F0002EEAA /* NSZombie.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = NSZombie.m; path = Runtime/NSZombie.m; sourceTree = "<group>"; };
+		17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "NSObject+NSDeprecatedMethods.m"; path = "Runtime/NSObject+NSDeprecatedMethods.m"; sourceTree = "<group>"; };
 		17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		17F992871F93B90C00F37DF9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		17F992891F93C27100F37DF9 /* CTScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CTScanner.h; path = Cocotron/CTScanner.h; sourceTree = "<group>"; };
@@ -134,7 +137,7 @@
 		17F992E01F93C4D200F37DF9 /* NSInvocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSInvocation.m; path = Runtime/NSInvocation.m; sourceTree = "<group>"; };
 		17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSMethodSignature.m; path = Runtime/NSMethodSignature.m; sourceTree = "<group>"; };
 		17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSObjCRuntime.m; path = Runtime/NSObjCRuntime.m; sourceTree = "<group>"; };
-		17F992E31F93C4D200F37DF9 /* NSObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSObject.m; path = Runtime/NSObject.m; sourceTree = "<group>"; };
+		17F992E31F93C4D200F37DF9 /* NSObject+NSCoderMethods.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+NSCoderMethods.m"; path = "Runtime/NSObject+NSCoderMethods.m"; sourceTree = "<group>"; };
 		17F992E41F93C4D200F37DF9 /* NSZone.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSZone.m; path = Runtime/NSZone.m; sourceTree = "<group>"; };
 		17F992ED1F93C55600F37DF9 /* NSDateFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSDateFormatter.m; path = Formatters/NSDateFormatter.m; sourceTree = "<group>"; };
 		17F992EE1F93C55600F37DF9 /* NSFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSFormatter.m; path = Formatters/NSFormatter.m; sourceTree = "<group>"; };
@@ -368,7 +371,9 @@
 				17F993031F93C73300F37DF9 /* NSKeyValueObserving.m */,
 				17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */,
 				17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */,
-				17F992E31F93C4D200F37DF9 /* NSObject.m */,
+				17F992E31F93C4D200F37DF9 /* NSObject+NSCoderMethods.m */,
+				17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */,
+				17A6FAD4207A3D2F0002EEAA /* NSZombie.m */,
 				17F992E41F93C4D200F37DF9 /* NSZone.m */,
 			);
 			name = Runtime;
@@ -602,16 +607,17 @@
 				17F992B81F93C3B900F37DF9 /* NSData.m in Sources */,
 				17F992971F93C29000F37DF9 /* GSNextRuntime.m in Sources */,
 				17F992CC1F93C41600F37DF9 /* NSPathUtilities.m in Sources */,
-				17F992EB1F93C4D200F37DF9 /* NSObject.m in Sources */,
 				17F992FA1F93C65500F37DF9 /* NSNull.m in Sources */,
 				17F993191F93C86C00F37DF9 /* NSHFSFileTypes.m in Sources */,
 				17F992F01F93C55600F37DF9 /* NSDateFormatter.m in Sources */,
 				17F992DA1F93C48200F37DF9 /* NSRecursiveLock.m in Sources */,
 				17F992F81F93C59100F37DF9 /* PFValues.m in Sources */,
+				17A6FADA207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m in Sources */,
 				17F992E61F93C4D200F37DF9 /* NSDebug.m in Sources */,
 				17F9931D1F93C8D200F37DF9 /* NSProcessInfo.m in Sources */,
 				17F992D71F93C48200F37DF9 /* NSConditionLock.m in Sources */,
 				17F992D61F93C48200F37DF9 /* NSCondition.m in Sources */,
+				17A6FAD6207A3D2F0002EEAA /* NSZombie.m in Sources */,
 				17F992E71F93C4D200F37DF9 /* NSException.m in Sources */,
 				17F993131F93C82500F37DF9 /* NSGeometry.m in Sources */,
 				17F992C21F93C3B900F37DF9 /* NSTimer.m in Sources */,
@@ -658,6 +664,7 @@
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = DYNAMIC;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
 				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
@@ -692,6 +699,7 @@
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = DYNAMIC;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
 				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (

@@ -321,12 +321,14 @@ void *_pfThreadRun( void *parameter ) { return objc_msgSend((id)parameter, @sele
 					  waitUntilDone:(BOOL)wait 
 							  modes:(NSArray *)array
 {
+    PF_TODO
 }
 
 - (void)performSelectorOnMainThread:(SEL)aSelector 
 						 withObject:(id)arg 
 					  waitUntilDone:(BOOL)wait
 {
+    PF_TODO
 }
 
 - (void)performSelector:(SEL)aSelector 
@@ -334,6 +336,7 @@ void *_pfThreadRun( void *parameter ) { return objc_msgSend((id)parameter, @sele
 			 withObject:(id)arg waitUntilDone:(BOOL)wait 
 				  modes:(NSArray *)array
 {
+    PF_TODO
 }
 
 - (void)performSelector:(SEL)aSelector 
@@ -341,10 +344,13 @@ void *_pfThreadRun( void *parameter ) { return objc_msgSend((id)parameter, @sele
 			 withObject:(id)arg 
 		  waitUntilDone:(BOOL)wait
 {
+    PF_TODO
 }
 
 // equivalent to the first method with kCFRunLoopCommonModes
-- (void)performSelectorInBackground:(SEL)aSelector withObject:(id)arg { }
+- (void)performSelectorInBackground:(SEL)aSelector withObject:(id)arg {
+    PF_TODO
+}
 
 @end
 

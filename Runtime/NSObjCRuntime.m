@@ -1,5 +1,5 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *	PureFoundation -- http://www.puredarwin.org
  *	NSObjCRuntime.m
  *
  *	Various low-level functions
@@ -9,13 +9,14 @@
  */
 
 #import "NSObjCRuntime.h"
+#import "NSObject.h"
 
 #import <objc/runtime.h>
-//#import "GSNextRuntime.h"
 #import "PFObjCTypeTools.h"
 
 #import <pthread.h>
 #import <xlocale.h>
+
 /*
  *	This is defined in CFLogUtilities.h in CFLite. It is slow and creates far to
  *	many objects as it runs, so one day will be replaced with an entirely internal
@@ -26,7 +27,7 @@ extern void CFLog(int32_t level, CFStringRef format, ...);
 /*
  *	Set this to the version of the proper Foundation we're trying to be
  */
-double NSFoundationVersionNumber = NSFoundationVersionNumber10_4_11;
+double NSFoundationVersionNumber = NSFoundationVersionNumber10_11_Max;
 
 /*
  *	NSString-to/from-obj-C runtime functions
@@ -151,8 +152,7 @@ void NSLog(NSString *format, ...) //__attribute__((format(__NSString__, 1, 2)));
 /*
  *	...which calls this function, which is copied from CFLogv() in CFUtilities.c
  */
-void NSLogv(NSString *format, va_list args)
-{
+void NSLogv(NSString *format, va_list args) {
 	PF_HELLO("")
 
 	CFStringRef s = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, args);
@@ -170,4 +170,39 @@ void NSLogv(NSString *format, va_list args)
 	CFRelease(s);
 }
 
+#pragma mark - Deprecated Functions
 
+// These were previously in NSObject.m and used to implement core tasks which are now handled by code in libobjc
+
+id NSAllocateObject(Class aClass, NSUInteger extraBytes, NSZone *zone) {
+    PF_DEPRECATED
+    return (id _Nonnull)nil;
+}
+
+void NSDeallocateObject(id object) {
+    PF_DEPRECATED
+}
+
+id NSCopyObject(id object, NSUInteger extraBytes, NSZone *zone) {
+    PF_DEPRECATED
+    return (id _Nonnull)nil;
+}
+
+BOOL NSShouldRetainWithZone(id anObject, NSZone *requestedZone) {
+    PF_DEPRECATED
+    return NO;
+}
+
+void NSIncrementExtraRefCount(id object) {
+    PF_DEPRECATED
+}
+
+BOOL NSDecrementExtraRefCountWasZero(id object) {
+    PF_DEPRECATED
+    return NO;
+}
+
+NSUInteger NSExtraRefCount(id object) {
+    PF_DEPRECATED
+    return 0;
+}
