@@ -20,17 +20,11 @@
  *	Another quick skeleton class cluster to increase the exported symbol count
  */
 
-/*
- *	The bridged NSCFArray class
- */
-@interface NSCFArray : NSMutableArray
-@end
+#define ARRAY_CALLBACKS ((CFArrayCallBacks *)&_PFCollectionCallBacks)
 
-/*
- *	The dummy NSCFArray variables
- */
-static Class _PFNSCFArrayClass = nil;
-static Class _PFNSCFMutableArrayClass = nil;
+// The bridged __NSCFArray class
+@interface __NSCFArray : NSMutableArray
+@end
 
 /*
  *	Macro to check for our dummy NSCFData objects, and set isMutable depending on the value
@@ -54,6 +48,7 @@ extern void CFQSortArray(void *list, CFIndex count, CFIndex elementSize, CFCompa
 /*
  *	Array call-back functions
  */
+// TODO: Should be static
 void _PFArrayFindObjectIndeticalTo( const void *value, void *context )
 {
 	// context points to 3 NSUIntegers: result, position, and object
@@ -71,11 +66,13 @@ void _PFArrayFindObjectIndeticalTo( const void *value, void *context )
 /*
  *	The comparison function for sortUsingSelector:
  */
+// TODO: Should be static
 CFComparisonResult _PFArraySortUsingSelector( const void *val1, const void *val2, void *context )
 {
 	return (CFComparisonResult)[(id)val1 performSelector: (SEL)context withObject: (id)val2];
 }
 
+// TODO: Should be static
 CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, void *context )
 {
 	if( *(NSUInteger *)val1 < *(NSUInteger *)val2 )
@@ -86,65 +83,98 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 		return kCFCompareEqualTo;
 }
 
+#pragma mark - utility functions
 
+// Attempts to load an array from a plist
+// TODO: May want to move this out into a utils class so we can use it for dictionaries
+static CFArrayRef PFArrayInitFromURL(CFURLRef url, Boolean mutable) {
+    CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
+    if (!stream) {
+        // TODO: Logging
+        return NULL;
+    }
+    CFErrorRef error = NULL;
+    CFOptionFlags options = mutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable;
+    CFArrayRef array = CFPropertyListCreateWithStream(kCFAllocatorDefault, stream, 0, options, NULL, &error);
+    if (error) {
+        // TODO: Logging
+        CFRelease(error);
+    }
+    CFRelease(stream);
+    return array;
+}
 
-/************
- *	NSArray
- ************/
+static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
+    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, false);
+    CFArrayRef array = PFArrayInitFromURL(url, mutable);
+    CFRelease(url);
+    return array;
+}
+
 @implementation NSArray
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSArray class] )
-		_PFNSCFArrayClass = objc_getClass("NSCFArray");
+#pragma mark - primatives
+
+- (NSUInteger)count {
+    return 0;
 }
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSArray class] )
-		return (id)&_PFNSCFArrayClass;
-	else
-		return [super alloc];
+- (id)objectAtIndex:(NSUInteger)index {
+    return nil;
 }
 
-/*
- *	NSArrayCreation class methods
- */
-+ (id)array
-{
-	PF_HELLO("")
-	//return [[[self alloc] init] autorelease]; // make sure -init exists and works...
-	return [(id)CFArrayCreate( kCFAllocatorDefault, NULL, 0, &_PFCollectionCallBacks ) autorelease];
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone { return nil; }
+
+#pragma mark - NSMutableCopying
+
+- (id)mutableCopyWithZone:(NSZone *)zone { return nil; }
+
+#pragma mark - NSCoding
+
+// TODO: add secure coding
+
+- (void)encodeWithCoder:(NSCoder *)aCoder { }
+- (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
+
+
+#pragma mark - Factory methods
+
+// TODO: copy and redefine array-specific callbacks
+
++ (instancetype)array {
+	return [(id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS) autorelease];
 }
 
-/*
- *	 Since this is meant to be a fast convinience method, we'll call CFArrayCreate() directly
- */
-+ (id)arrayWithObject:(id)anObject
-{
-	PF_HELLO("")
-
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	PF_RETURN_TEMP(new)
++ (instancetype)arrayWithObject:(id)anObject {
+    if (!anObject) {
+        return [self array];
+    }
+	return [(id)CFArrayCreate(kCFAllocatorDefault, (const void **)&anObject, 1, ARRAY_CALLBACKS) autorelease];
 }
 
-+ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)cnt
-{
-	PF_HELLO("")
-	return [[[self alloc] initWithObjects: objects count: cnt] autorelease];
++ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)count {
+    if (!objects || !count) {
+        return [self array];
+    }
+    return [(id)CFArrayCreate(kCFAllocatorDefault, (const void **)objects, count, ARRAY_CALLBACKS) autorelease];
 }
 
 /*
  *	It's a pain that we can't hand off varidic arguments, so we'll have to duplicate initWithObjects: here
  */
+// TODO: Fix this method
 + (id)arrayWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION;
 {
 	PF_HELLO("")
 	//PF_NIL_ARG(firstObj)
 	
-	if( firstObj == nil ) return [self array];
+    if (!firstObj) {
+        return [self array];
+    }
+    
+    // TODO: check this and make it better
 	
 	id *ptr;
 	//void **t_ptr;
@@ -187,209 +217,355 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	return new; // which has already been made collectible and released
 }
 
-+ (id)arrayWithArray:(NSArray *)array
-{
++ (id)arrayWithArray:(NSArray *)array {
 	PF_HELLO("")
-	return [[[self alloc] initWithArray: array] autorelease];
+    return [(id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array) autorelease];
 }
 
-+ (id)arrayWithContentsOfFile:(NSString *)path
++ (id)arrayWithContentsOfFile:(NSString *)path {
+    return [(id)PFArrayInitFromPath((CFStringRef)path, false) autorelease];
+}
+
++ (id)arrayWithContentsOfURL:(NSURL *)url {
+    return [(id)PFArrayInitFromURL((CFURLRef)url, false) autorelease];
+}
+
+#pragma mark - Immutable init methods
+
+- (instancetype)init {
+    free(self);
+    return (id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS);
+}
+
+- (instancetype)initWithObjects:(const id *)objects count:(NSUInteger)count {
+    free(self);
+    if (!objects || !count) {
+        return (id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS);
+    }
+    return (id)CFArrayCreate(kCFAllocatorDefault, (const void **)objects, count, ARRAY_CALLBACKS);
+}
+
+// TODO: need a general one of these which takes var-args and retuns an array
+- (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
 {
-	PF_HELLO("")
-	return [[[self alloc] initWithContentsOfFile: path] autorelease];
+    //printf("array initWithObjects:\n");
+    PF_NIL_ARG(firstObj)
+//    PF_DUMMY_ARR(self)
+    
+    id *ptr;
+    
+    va_list args;
+    va_start( args, firstObj );
+    
+    // count the number of va_args
+    CFIndex count = 1;
+    void *temp;
+    while( (temp = va_arg( args, void* )) != nil )
+        count++;
+    
+    //printf("\tCounted %d object, total\n", count );
+    
+    if( count == 1 )
+        ptr = &firstObj;
+    else
+    {
+        ptr = calloc(count, sizeof(id));
+        id *t_ptr = ptr;
+        
+        va_start( args, firstObj );
+        *t_ptr++ = firstObj;
+        while( (temp = va_arg( args, void* )) != nil)
+            *t_ptr++ = temp;
+    }
+    
+    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
+    
+    if( count != 1 ) free(ptr);
+    va_end( args );
+    
+//    PF_RETURN_ARRAY_INIT
 }
 
-+ (id)arrayWithContentsOfURL:(NSURL *)url
+- (instancetype)initWithArray:(NSArray *)array {
+    free(self);
+    return (id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array);
+}
+
+// TODO: finish this, copying all of the items if needs be
+- (id)initWithArray:(NSArray *)array copyItems:(BOOL)copy //AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER;
 {
-	PF_HELLO("")
-	return [[[self alloc] initWithContentsOfURL: url] autorelease];
+    free (self);
+    if (!copy) {
+        return (id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array);
+    }
+    
+    return NULL; // TODO:
+    
+    /*
+
+    CFIndex count;
+    // check whether there's anything to copy
+    if( (array == nil) || ((count = [array count]) == 0) ) return [self init];
+    
+    // check whether we need to copy what there is
+    if( flag == NO ) return [self initWithArray: array];
+    
+    PF_DUMMY_ARR(self)
+    
+    //if( (flag == NO) || (count == 0) )
+    //    PF_RETURN_NEW([array copyWithZone: nil])
+    
+    // temp scratch space to hold all objects
+    id *ptr = calloc(count, sizeof(id));
+    //const void**ptr2 = (const void**)ptr1;
+    
+    // foreach item in array, -copyWithZone: nil, then put them into a new array and return
+    // could probably use an enumerator about here...
+    //for( int i = 0; i < count; i++ )
+    //    ptr[i] = [[array objectAtIndex: i] copyWithZone: nil];
+    for( id object in array )
+        *ptr++ = [object copyWithZone: nil];
+    ptr -= count;
+    
+    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, count, &_PFCollectionCallBacks );
+    
+    free(ptr);
+    
+    PF_RETURN_ARRAY_INIT
+     */
 }
 
-/*
- *	NSArray instance methods the compiler needs to see
- */
-- (NSUInteger)count
-{
-	return 0;
+- (instancetype)initWithContentsOfFile:(NSString *)path {
+    free(self);
+    return (id)PFArrayInitFromPath((CFStringRef)path, false);
 }
 
-- (id)objectAtIndex:(NSUInteger)index
-{
-	return nil;
+- (instancetype)initWithContentsOfURL:(NSURL *)url {
+    free(self);
+    return (id)PFArrayInitFromURL((CFURLRef)url, true);
 }
 
-/**	NSCopying COMPLIANCE **/
+#pragma mark - NSFastEnumeration
 
-/*
- *	Return nil, because NSString should never be instatitated
- */
-- (id)copyWithZone:(NSZone *)zone
-{
-	return nil;
-}
-
-/** NSMutableCopying COMPLIANCE **/
-
-/*
- *	Create an NSCFMutableString
- */
-- (id)mutableCopyWithZone:(NSZone *)zone
-{
-	return nil;
-}
-
-/**	NSCoding COMPLIANCE **/
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
-
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
-}
-
-/** NSFastEnumeration compliance **/
 - (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state 
 								  objects:(id *)stackbuf 
 									count:(NSUInteger)len
 {
-	return 0;
+	return 0; // TODO
 }
 
+#pragma mark - Implementations using atomic methods
+
+// TODO
 
 @end
 
-
-
-/*
- *	NSMutableArray
- */
 @implementation NSMutableArray
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSMutableArray class] )
-		_PFNSCFMutableArrayClass = objc_getClass("NSCFArray");
-}
+//+(void)initialize
+//{
+//    PF_HELLO("")
+//    if( self == [NSMutableArray class] )
+//        _PFNSCFMutableArrayClass = objc_getClass("NSCFArray");
+//}
+
+#pragma mark - Primatives
+
 
 /*
  *	Mutable version
  */
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSMutableArray class] )
-		return (id)&_PFNSCFMutableArrayClass;
-	else
-		return [super alloc];
+//+(id)alloc
+//{
+//    PF_HELLO("")
+//    if( self == [NSMutableArray class] )
+//        return (id)&_PFNSCFMutableArrayClass;
+//    else
+//        return [super alloc];
+//}
+
+#pragma mark - Factory methods
+
++ (instancetype)arrayWithCapacity:(NSUInteger)capacity {
+    return [(id)CFArrayCreateMutable(kCFAllocatorDefault, capacity, ARRAY_CALLBACKS) autorelease];
 }
 
-/*
- *	NSMutableArray specific class creation method
- */
-+ (id)arrayWithCapacity:(NSUInteger)numItems
-{
-	PF_HELLO("")
-	CFMutableArrayRef array = CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	// CF:ForFoundationOnly.h line #399
-	_CFArraySetCapacity(array, numItems);
-	PF_RETURN_TEMP(array)
++ (instancetype)array {
+	return [(id)CFArrayCreateMutable(kCFAllocatorDefault, 0, ARRAY_CALLBACKS) autorelease];
 }
 
-
-/*
- *	NSArrayCreation class methods, which may need re-implementing to return mutable versions
- */
-+ (id)array
-{
-	PF_HELLO("")
-	CFMutableArrayRef array = CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	PF_RETURN_TEMP(array);
-}
-
-/*
- *	Get a very small speed-increase by calling CF... functions dirrectly here
- */
-+ (id)arrayWithObject:(id)anObject
-{
++ (instancetype)arrayWithObject:(id)anObject {
+    /*
 	PF_HELLO("")
 
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)&anObject, 1, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	CFArrayRef newer = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, new );
-	[(id)new release]; // saves going through CFRelease()
-	PF_RETURN_TEMP(newer)
+    if (!anObject) {
+        return [self array];
+    }
+	CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)&anObject, 1, ARRAY_CALLBACKS);
+	CFArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array);
+//    [(id)new release]; // saves going through CFRelease()
+    CFRelease(array);
+//    PF_RETURN_TEMP(newer)
+    return [(id)mArray autorelease];
+     */
+    return NULL;
 }
 
-// the inherited versions of these, along with our alloc, should work 
-//+ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)cnt
-//{
-//	PF_HELLO("")
-//	return [[[super arrayWithObjects: objects count: cnt] mutableCopyWithZone: nil] autorelease];
-//}
++ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)cnt {
+    /*
+    PF_HELLO("")
+    return [[[super arrayWithObjects: objects count: cnt] mutableCopyWithZone: nil] autorelease];
+     */
+    return NULL;
+}
 
-/*
- *	Because we can't forward varadic wossnames...
- */
-//+ (id)arrayWithObjects:(id)firstObj, ...
-//{
-//	PF_HELLO("")
-//	PF_NIL_ARG(firstObj)
-//	
-//	void **ptr;
-//	void **t_ptr;
-//	void *temp;
-//	
-//	va_list args;
-//	va_start( args, firstObj );
-//	
-	// count the number of va_args
-//	CFIndex count = 1;
-//	while( (temp = va_arg( args, void* )) != nil ) 
-//		count++;
-	
-	//printf("\tCounted %d object, total\n", count );
-	
-//	if( count == 1 )
-//		ptr = (void *)&firstObj;
-//	else
-//	{	
-//		ptr = NSZoneCalloc( nil, count, sizeof(void *) );
-//		t_ptr = ptr;
-		
-//		va_start( args, firstObj );
-//		*t_ptr++ = (void *)firstObj;
-//		while( (temp = va_arg( args, void* )) != nil)
-//			*t_ptr++ = temp;
-//	}
-	
-//	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, &kCFTypeArrayCallBacks );
-	
-//	if( count != 1 ) NSZoneFree( nil, ptr );
-//	va_end( args );
-//	
-//	CFArrayRef newer = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, new );
-//	[(id)new release];
-//	PF_RETURN_TEMP(newer)
-//}
++ (id)arrayWithObjects:(id)firstObj, ...
+{
+    /*
+    PF_HELLO("")
+    PF_NIL_ARG(firstObj)
+    
+    void **ptr;
+    void **t_ptr;
+    void *temp;
+    
+    va_list args;
+    va_start( args, firstObj );
+    
+    count the number of va_args
+    CFIndex count = 1;
+    while( (temp = va_arg( args, void* )) != nil )
+        count++;
+    
+    printf("\tCounted %d object, total\n", count );
+    
+    if( count == 1 )
+        ptr = (void *)&firstObj;
+    else
+    {
+        ptr = NSZoneCalloc( nil, count, sizeof(void *) );
+        t_ptr = ptr;
+        
+        va_start( args, firstObj );
+        *t_ptr++ = (void *)firstObj;
+        while( (temp = va_arg( args, void* )) != nil)
+            *t_ptr++ = temp;
+    }
+    
+    CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, &kCFTypeArrayCallBacks );
+    
+    if( count != 1 ) NSZoneFree( nil, ptr );
+    va_end( args );
+    
+    CFArrayRef newer = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, new );
+    [(id)new release];
+    PF_RETURN_TEMP(newer)
+     */
+    return NULL;
+}
 
-//+ (id)arrayWithArray:(NSArray *)array
-//{
-//	PF_HELLO("")
-//	return [[[super arrayWithArray: array] mutableCopyWithZone: nil] autorelease];
-//}
++ (instancetype)arrayWithArray:(NSArray *)array {
+    free(self);
+    return [(id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array) autorelease];
+}
 
-//+ (id)arrayWithContentsOfFile:(NSString *)path
-//{
-//	PF_HELLO("")
-//	return [[[super arrayWithContentsOfFile: path] mutableCopyWithZone: nil] autorelease];
-//}
++ (instancetype)arrayWithContentsOfFile:(NSString *)path {
+    free(self);
+    return [(id)PFArrayInitFromPath((CFStringRef)path, true) autorelease];
+}
 
-//+ (id)arrayWithContentsOfURL:(NSURL *)url
-//{
-//	PF_HELLO("")
-//	return [[[super arrayWithContentsOfURL: url] mutableCopyWithZone: nil] autorelease];
-//}
++ (instancetype)arrayWithContentsOfURL:(NSURL *)url {
+    free(self);
+    return [(id)PFArrayInitFromURL((CFURLRef)url, true) autorelease];
+}
+
+#pragma mark - Mutable init methods
+
+- (instancetype)init {
+    free(self);
+    return (id)CFArrayCreateMutable(kCFAllocatorDefault, 0, ARRAY_CALLBACKS);
+}
+
+- (instancetype)initWithCapacity:(NSUInteger)capacity {
+    free(self);
+    return (id)CFArrayCreateMutable(kCFAllocatorDefault, capacity, ARRAY_CALLBACKS);
+}
+
+- (instancetype)initWithObjects:(const id *)objects count:(NSUInteger)count {
+    free(self);
+    CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)objects, (CFIndex)count, ARRAY_CALLBACKS);
+    CFArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, count, array);
+    CFRelease(array);
+    return array;
+}
+
+- (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
+{
+    /*
+    //printf("array initWithObjects:\n");
+    PF_NIL_ARG(firstObj)
+    PF_DUMMY_ARR(self)
+    
+    id *ptr;
+    
+    va_list args;
+    va_start( args, firstObj );
+    
+    // count the number of va_args
+    CFIndex count = 1;
+    void *temp;
+    while( (temp = va_arg( args, void* )) != nil )
+        count++;
+    
+    //printf("\tCounted %d object, total\n", count );
+    
+    if( count == 1 )
+        ptr = &firstObj;
+    else
+    {
+        ptr = calloc(count, sizeof(id));
+        id *t_ptr = ptr;
+        
+        va_start( args, firstObj );
+        *t_ptr++ = firstObj;
+        while( (temp = va_arg( args, void* )) != nil)
+            *t_ptr++ = temp;
+    }
+    
+    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
+    
+    if( count != 1 ) free(ptr);
+    va_end( args );
+    
+    PF_RETURN_ARRAY_INIT
+     */
+    return NULL;
+}
+
+- (instancetype)initWithArray:(NSArray *)array {
+    free(self);
+    return (id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)array);
+}
+
+- (instancetype)initWithArray:(NSArray *)array copyItems:(BOOL)copy {
+    free(self);
+    
+    if (!copy) {
+        return (id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)array);
+    }
+    
+    return NULL; // TODO
+}
+
+- (instancetype)initWithContentsOfFile:(NSString *)path {
+    free(self);
+    return (id)PFArrayInitFromPath((CFStringRef)path, true);
+}
+
+- (id)initWithContentsOfURL:(NSURL *)url {
+    free(self);
+    return (id)PFArrayInitFromURL((CFURLRef)url, true);
+}
 
 
 /*
@@ -404,26 +580,11 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 @end
 
 
+@implementation __NSCFArray
 
-/*
- *	NSCFArray
- */
-@implementation NSCFArray
+#pragma mark - CF bridging
 
-/*
- *	Now this class cannot be directly alloc'd
- */
-+(id)alloc
-{
-	PF_HELLO("")
-	return nil;
-}
-
-/*
- *	Undocumented method used by Apple to support bridging
- */
--(CFTypeID)_cfTypeID
-{
+-(CFTypeID)_cfTypeID {
 	PF_HELLO("")
 	return CFArrayGetTypeID();
 }
@@ -431,11 +592,11 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 /*
  *	sjc -- 9/2/09 -- The format now matches Cocoa's. I thought.
@@ -446,20 +607,18 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
  *	At the moment, this won't pass on [descriptionWithLocale:indent:] because I'm not sure
  *	how other objects should react adding the indent...
  */
--(NSString *)description
-{
-	return [self descriptionWithLocale: nil indent: 0];
+- (NSString *)description {
+	return [self descriptionWithLocale:nil indent:0];
 }
 
 
-- (NSString *)descriptionWithLocale:(id)locale
-{
+- (NSString *)descriptionWithLocale:(id)locale {
 	PF_TODO
-	return [self descriptionWithLocale: locale indent: 0];
+	return [self descriptionWithLocale:locale indent:0];
 }
 
-- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
-{
+// TODO: check that this works and looks sane
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
 	NSUInteger count = CFArrayGetCount((CFArrayRef)self);
 	CFStringRef description, template, contents;
 	id object;
@@ -506,24 +665,24 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	PF_RETURN_TEMP(description)
 }
 
+#pragma mark - NSCopying
 
-/**	NSCopying COMPLIANCE **/
-- (id)copyWithZone:(NSZone *)zone
-{
+- (id)copyWithZone:(NSZone *)zone {
 	PF_HELLO("")
 	// at the moment, all allocation goes through the Default CF alloc zone
-	CFArrayRef new = CFArrayCreateCopy( kCFAllocatorDefault, (CFArrayRef)self );
-	PF_RETURN_NEW(new)
+    return [(id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)self) autorelease];
+//    PF_RETURN_NEW(new)
 }
 
-/** NSMutableCopying COMPLIANCE **/
-- (id)mutableCopyWithZone:(NSZone *)zone
-{
+#pragma mark - NSMutableCopying
+
+- (id)mutableCopyWithZone:(NSZone *)zone {
 	PF_HELLO("")
-	CFMutableArrayRef new = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self );
-	PF_RETURN_NEW(new)
+    return [(id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)self) autorelease];
+//    PF_RETURN_NEW(new)
 }
 
+#pragma mark - NSFastEnumeration
 
 /*
  *	This is just evil. Looking at CFArray.h, at the __CFArray structure, there is a _mutations 
@@ -563,228 +722,8 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 	return num;
 }
 
-// creation methods
-- (id)init
-{
-	PF_DUMMY_ARR(self)
-	
-	if( isMutable == NO )
-		self = (id)CFArrayCreate( kCFAllocatorDefault, NULL, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	else
-		self = (id)CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	
-	PF_RETURN_NEW(self)
-}
+#pragma mark - inits
 
-/*
- *	NSMutableArray creation method
- */
-- (id)initWithCapacity:(NSUInteger)numItems
-{
-	PF_HELLO("")
-	//PF_DUMMY_ARR(self) // don't need to set isMutable
-	if( self == (id)&_PFNSCFArrayClass )
-		[NSException raise: NSInternalInconsistencyException format: @"initWithCapacity NSArray"];
-	else if( self != (id)&_PFNSCFMutableArrayClass )
-		[self autorelease];
-	
-	self = (id)CFArrayCreateMutable( kCFAllocatorDefault, 0, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	// from ForFoundationOnly.h line #399
-	_CFArraySetCapacity((CFMutableArrayRef)self, numItems);
-	PF_RETURN_NEW(self)
-}
-
-
-/*
- *	NSArray creation methods
- */
-- (id)initWithObjects:(const id *)objects count:(NSUInteger)cnt
-{
-	PF_HELLO("")
-	PF_DUMMY_ARR(self)
-
-	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)objects, (CFIndex)cnt, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-	PF_RETURN_ARRAY_INIT
-}
-
-- (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
-{
-	//printf("array initWithObjects:\n");
-	PF_NIL_ARG(firstObj)
-	PF_DUMMY_ARR(self)
-
-	id *ptr;
-	
-	va_list args;
-	va_start( args, firstObj );
-	
-	// count the number of va_args
-	CFIndex count = 1;
-	void *temp;
-	while( (temp = va_arg( args, void* )) != nil ) 
-		count++;
-	
-	//printf("\tCounted %d object, total\n", count );
-	
-	if( count == 1 )
-		ptr = &firstObj;
-	else
-	{	
-		ptr = calloc(count, sizeof(id));
-		id *t_ptr = ptr;
-	
-		va_start( args, firstObj );
-		*t_ptr++ = firstObj;
-		while( (temp = va_arg( args, void* )) != nil)
-			*t_ptr++ = temp;
-	}
-	
-	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-
-	if( count != 1 ) free(ptr);
-	va_end( args );
-
-	PF_RETURN_ARRAY_INIT
-}
-
-- (id)initWithArray:(NSArray *)array
-{
-	PF_HELLO("")
-	
-	if( (array == nil) || ([array count] == 0) ) return [self init];
-	
-	PF_DUMMY_ARR(self)
-
-	// use the slower copy methods because array may not be an NSCFArray
-	if( isMutable == NO )
-		self = [array copyWithZone: nil];
-	else
-		self = [array mutableCopyWithZone: nil];
-	
-	PF_RETURN_NEW(self)
-}
-
-- (id)initWithArray:(NSArray *)array copyItems:(BOOL)flag //AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER;
-{
-	PF_HELLO("")
-
-	CFIndex count;
-	// check whether there's anything to copy
-	if( (array == nil) || ((count = [array count]) == 0) ) return [self init];
-	
-	// check whether we need to copy what there is
-	if( flag == NO ) return [self initWithArray: array];
-	
-	PF_DUMMY_ARR(self)
-
-	//if( (flag == NO) || (count == 0) )
-	//	PF_RETURN_NEW([array copyWithZone: nil])
-
-	// temp scratch space to hold all objects
-	id *ptr = calloc(count, sizeof(id));
-	//const void**ptr2 = (const void**)ptr1;
-	
-	// foreach item in array, -copyWithZone: nil, then put them into a new array and return
-	// could probably use an enumerator about here...
-	//for( int i = 0; i < count; i++ )
-	//	ptr[i] = [[array objectAtIndex: i] copyWithZone: nil];
-	for( id object in array )
-		*ptr++ = [object copyWithZone: nil];
-	ptr -= count;
-	
-	self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, count, &_PFCollectionCallBacks );
-
-	free(ptr);
-
-	PF_RETURN_ARRAY_INIT
-}
- 
-
-
-- (id)initWithContentsOfFile:(NSString *)path
-{
-	PF_HELLO("")
-
-	if( path == nil ) return nil;
-	
-	PF_DUMMY_ARR(self)
-	
-	// open a file handle to the path
-	NSFileHandle *fh = [NSFileHandle fileHandleForReadingAtPath: path];
-	if( fh == nil ) return nil;
-	
-	// read the file into an NSData object
-	NSData *data = [fh availableData];
-	if( (data == nil) || ([data length] == 0) ) return nil;
-	
-	// these two steps could be achieved by NSFileManager -contentsOfFileAtPath:, but
-	//	first we need to check whether our version works
-	
-	// parse the data into a property list
-	NSPropertyListMutabilityOptions opt = (isMutable) ? NSPropertyListMutableContainersAndLeaves : NSPropertyListImmutable;
-	NSPropertyListFormat format;
-	NSString *error;
-	self = [NSPropertyListSerialization propertyListFromData: data 
-											  mutabilityOption:(NSPropertyListMutabilityOptions)opt 
-														format: &format 
-											  errorDescription: &error];
-	
-	if( error != nil )
-	{
-		NSLog( error );
-		[error release];
-		return nil;
-	}
-	   
-	if( [self isKindOfClass: [NSArray class]] == NO )
-		return nil; // the new (incorrect) plist has been autoreleased
-	
-	// The NSPropertyListMutableContainersAndLeaves above should have taken care 
-	//	of the mutable/immutable decision for the return, and the plist will have 
-	//	already have been made collectible
-	return [self retain];
-}
-
-- (id)initWithContentsOfURL:(NSURL *)url
-{
-	PF_HELLO("Untested, pending NSData initWithURL")
-	
-	if( url == nil ) return nil;
-	// could loose this once dataWithContentsOfURL: is up and running
-	if( [url isFileURL] ) return [self initWithContentsOfFile: [url path]];
-	
-	PF_DUMMY_ARR(self)
-	
-	// read the URL into an NSData object
-	NSData *data = [NSData dataWithContentsOfURL: url];
-	if( (data == nil) || ([data length] == 0) ) return nil;
-	
-	// REST COPIED FROM initWithContentsOfFile ABOVE
-	// parse the data into a property list
-	NSPropertyListMutabilityOptions opt = (isMutable) ? NSPropertyListMutableContainersAndLeaves : NSPropertyListImmutable;
-	NSPropertyListFormat format;
-	NSString *error;
-	self = [NSPropertyListSerialization propertyListFromData: data 
-											mutabilityOption:(NSPropertyListMutabilityOptions)opt 
-													  format: &format 
-											errorDescription: &error];
-	
-	if( error != nil )
-	{
-		NSLog( error );
-		[error release];
-		return nil;
-	}
-	
-	if( [self isKindOfClass: [NSArray class]] == NO )
-		return nil; // the new (incorrect) plist has been autoreleased
-	
-	// The NSPropertyListMutableContainersAndLeaves above should have taken care 
-	//	of the mutable/immutable decision for the return, and the plist will have 
-	//	already have been made collectible
-	return [self retain];
-	
-}
 
 /*
  *	Complimentary writeTo... methods
@@ -844,20 +783,12 @@ CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, voi
 }
 
 
-
-/*
- *	NSArray instance methods the compiler needs to see
- */
-- (NSUInteger)count
-{
-	PF_HELLO("")
-	return (NSUInteger)CFArrayGetCount( (CFArrayRef)self );
+- (NSUInteger)count {
+	return (NSUInteger)CFArrayGetCount((CFArrayRef)self);
 }
 
-- (id)objectAtIndex:(NSUInteger)index
-{
-	PF_HELLO("")
-	return (id)CFArrayGetValueAtIndex( (CFArrayRef)self, (CFIndex)index );
+- (id)objectAtIndex:(NSUInteger)index {
+	return (id)CFArrayGetValueAtIndex((CFArrayRef)self, (CFIndex)index);
 }
 
 /*

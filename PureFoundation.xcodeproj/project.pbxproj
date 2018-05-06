@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		17A6FAD6207A3D2F0002EEAA /* NSZombie.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD4207A3D2F0002EEAA /* NSZombie.m */; };
 		17A6FADA207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */; };
+		17A6FADC207A7D0A0002EEAA /* SymbolAliases in Resources */ = {isa = PBXBuildFile; fileRef = 17A6FADB207A7D0A0002EEAA /* SymbolAliases */; };
 		17CD9B650F162D1A00A925B3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */; };
 		17F9928B1F93C27100F37DF9 /* CTScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992891F93C27100F37DF9 /* CTScanner.h */; };
 		17F9928C1F93C27100F37DF9 /* CTScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9928A1F93C27100F37DF9 /* CTScanner.m */; };
@@ -83,7 +84,7 @@
 		17F993261F93C93400F37DF9 /* NSString.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F993231F93C93400F37DF9 /* NSString.m */; };
 		17F993291F93C98300F37DF9 /* PureFoundation.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F993271F93C98300F37DF9 /* PureFoundation.h */; };
 		17F9932A1F93C98300F37DF9 /* PureFoundation.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F993281F93C98300F37DF9 /* PureFoundation.m */; };
-		17F9A3210F25E17700471071 /* libobjc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 17F9A3200F25E17700471071 /* libobjc.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
+		17F9A3210F25E17700471071 /* libobjc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 17F9A3200F25E17700471071 /* libobjc.dylib */; };
 		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
@@ -91,6 +92,7 @@
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		17A6FAD4207A3D2F0002EEAA /* NSZombie.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = NSZombie.m; path = Runtime/NSZombie.m; sourceTree = "<group>"; };
 		17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "NSObject+NSDeprecatedMethods.m"; path = "Runtime/NSObject+NSDeprecatedMethods.m"; sourceTree = "<group>"; };
+		17A6FADB207A7D0A0002EEAA /* SymbolAliases */ = {isa = PBXFileReference; lastKnownFileType = text; name = SymbolAliases; path = Runtime/SymbolAliases; sourceTree = "<group>"; };
 		17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		17F992871F93B90C00F37DF9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		17F992891F93C27100F37DF9 /* CTScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CTScanner.h; path = Cocotron/CTScanner.h; sourceTree = "<group>"; };
@@ -178,8 +180,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				17CD9B650F162D1A00A925B3 /* CoreFoundation.framework in Frameworks */,
 				17F9A3210F25E17700471071 /* libobjc.dylib in Frameworks */,
+				17CD9B650F162D1A00A925B3 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -375,6 +377,7 @@
 				17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */,
 				17A6FAD4207A3D2F0002EEAA /* NSZombie.m */,
 				17F992E41F93C4D200F37DF9 /* NSZone.m */,
+				17A6FADB207A7D0A0002EEAA /* SymbolAliases */,
 			);
 			name = Runtime;
 			sourceTree = "<group>";
@@ -544,6 +547,7 @@
 				17F9930B1F93C77F00F37DF9 /* Foundation Headers.txt in Resources */,
 				17F9930A1F93C77F00F37DF9 /* 64-bit.txt in Resources */,
 				8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */,
+				17A6FADC207A7D0A0002EEAA /* SymbolAliases in Resources */,
 				17F9930D1F93C77F00F37DF9 /* Organisation.txt in Resources */,
 				17F9930C1F93C77F00F37DF9 /* GNUStep.txt in Resources */,
 			);

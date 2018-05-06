@@ -20,10 +20,8 @@
  *	bridged classes
  */
 
-/*
- *	Declare the interface to our bridged NSCFSet class
- */
-@interface NSCFSet : NSMutableSet
+// __NSCFSet is basically a CFSetRef
+@interface __NSCFSet : NSMutableSet
 @end
 
 /*
@@ -325,7 +323,7 @@ extern bool _CFSetIsMutable( CFSetRef set );
 /*
  *	NSCFSet implimentation
  */
-@implementation NSCFSet
+@implementation __NSCFSet
 
 /*
  *	Called by NSString and NSMutableString +alloc methods. Returns the _PFNSCFStringClass dummy, so that
@@ -340,24 +338,18 @@ extern bool _CFSetIsMutable( CFSetRef set );
 	return nil;
 }
 
-
-/*
- *	Undocumented method used by Apple to support bridging
- */
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+- (CFTypeID)_cfTypeID {
 	return CFSetGetTypeID();
 }
 
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 /*
  *	See NSArray.h, -[NSCFArray countByEnumeratingWithState:...] for the gory details

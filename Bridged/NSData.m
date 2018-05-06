@@ -50,125 +50,87 @@ extern bool __PFDataIsMutable( CFDataRef data );
 	[NSException raise: NSInternalInconsistencyException format: [NSString stringWithCString: "Attempting mutable data op on a static NSData" encoding: NSUTF8StringEncoding]];
 
 
-/*
- *	Declaration of the actual bridged class
- */
-@interface NSCFData : NSMutableData
+@interface __NSCFData : NSMutableData
 @end
 
 
 /*
  *	A class variable to act as a dummy NSData or NSMutableData
  */
-static Class _PFNSCFDataClass = nil;
-static Class _PFNSCFMutableDataClass = nil;
+//static Class _PFNSCFDataClass = nil;
+//static Class _PFNSCFMutableDataClass = nil;
 
 
-/*
- *	The NSData factory class
- */
 @implementation NSData
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSData class] )
-		_PFNSCFDataClass = objc_getClass("NSCFData");
-}
+//+(void)initialize
+//{
+//    PF_HELLO("")
+//    if( self == [NSData class] )
+//        _PFNSCFDataClass = objc_getClass("NSCFData");
+//}
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSData class] )
-		return (id)&_PFNSCFDataClass;
-	return [super alloc];
-}
+//+(id)alloc
+//{
+//    PF_HELLO("")
+//    if( self == [NSData class] )
+//        return (id)&_PFNSCFDataClass;
+//    return [super alloc];
+//}
 
-/*
- *	Instance methods to keep the compiler happy
- */
-- (NSUInteger)length
-{
+#pragma mark - primatives
+
+- (NSUInteger)length {
 	return 0;
 }
 
-- (const void *)bytes
-{
+- (const void *)bytes {
 	return NULL;
 }
 
-/**	NSCopying COMPLIANCE **/
+#pragma mark - NSCopying
 
-/*
- *	Return nil, because NSString should never be instatitated
- */
-- (id)copyWithZone:(NSZone *)zone
-{
+- (id)copyWithZone:(NSZone *)zone {
 	return nil;
 }
 
-/** NSMutableCopying COMPLIANCE **/
+#pragma mark - NSMutableCopying
 
-/*
- *	Create an NSCFMutableString
- */
-- (id)mutableCopyWithZone:(NSZone *)zone
-{
+- (id)mutableCopyWithZone:(NSZone *)zone {
 	return nil;
 }
 
-/**	NSCoding COMPLIANCE **/
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
+#pragma mark - NSCoding
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    // TODO:
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
 	return nil;
 }
 
 @end
 
-
-
-
-
-/*
- *	The class methods from the NSDataCreation category.
- *
- *	These use the dummy returned by [self alloc] and send it the appropriate -init message. This
- *	method makes the object collectable, etc., so there's no need for this method to do so.
- */
 @implementation NSData (NSDataCreation)
 
-/*
- *	A data containing nothing
- */
-+ (id)data 
-{
-	PF_HELLO("")
-	//return [[[self alloc] init] autorelease];
-	CFDataRef data = CFDataCreate( kCFAllocatorDefault, NULL, 0 );
-	PF_RETURN_TEMP(data)
++ (instancetype)data {
+    return [(id)CFDataCreate(kCFAllocatorDefault, NULL, 0) autorelease];
 }
 
-+ (id)dataWithBytes:(const void *)bytes length:(NSUInteger)length 
-{
-	PF_HELLO("")
-	return [[[self alloc] initWithBytes: bytes length: length] autorelease];
++ (instancetype)dataWithBytes:(const void *)bytes length:(NSUInteger)length {
+    return [(id)CFDataCreate(kCFAllocatorDefault, bytes, length) autorelease];
 }
 
-+ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length 
-{
-	PF_HELLO("")
-		// calling the ...freeWhenDone: version cuts one hop off of the call
-	return [[[self alloc] initWithBytesNoCopy: bytes length: length freeWhenDone: YES] autorelease];
++ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length {
+    return [(id)CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, bytes, length, kCFAllocatorDefault) autorelease];
 }
 
-+ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)b 
-{
+// TODO: got this far before going back to the original yak i was shaving
+
++ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)free {
 	PF_HELLO("")
-	return [[[self alloc] initWithBytesNoCopy: bytes length: length freeWhenDone: b] autorelease];
+	return [[[self alloc] initWithBytesNoCopy: bytes length: length freeWhenDone:free] autorelease];
 }
 
 + (id)dataWithContentsOfURL:(NSURL *)url 
@@ -227,34 +189,32 @@ static Class _PFNSCFMutableDataClass = nil;
  */
 @implementation NSMutableData
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSMutableData class] )
-		_PFNSCFMutableDataClass = objc_getClass("NSCFData");
-}
+//+(void)initialize
+//{
+//    PF_HELLO("")
+//    if( self == [NSMutableData class] )
+//        _PFNSCFMutableDataClass = objc_getClass("NSCFData");
+//}
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSMutableData class] )
-		return (id)&_PFNSCFMutableDataClass;
-	return [super alloc];
-}
+//+(id)alloc
+//{
+//    PF_HELLO("")
+//    if( self == [NSMutableData class] )
+//        return (id)&_PFNSCFMutableDataClass;
+//    return [super alloc];
+//}
 
 /*
  *	NSData (NSDataCreation) class methods to replace
  */
-+ (id)data 
-{
-	PF_HELLO("")
++ (id)data {
+//    PF_HELLO("")
 	//return [[[self alloc] init] autorelease];
-	CFDataRef data = CFDataCreateMutable( kCFAllocatorDefault, 0 );
-	PF_RETURN_TEMP(data)
+    return [(id)CFDataCreateMutable(kCFAllocatorDefault, 0) autorelease];
+//    PF_RETURN_TEMP(data)
 }
 
-// the rest of these should be fine inheriting from NSData
-//+ (id)dataWithBytes:(const void *)bytes length:(NSUInteger)length 
+//+ (id)dataWithBytes:(const void *)bytes length:(NSUInteger)length
 //{
 //	PF_HELLO("")
 //	return [[[self alloc] initWithBytes: bytes length: length] autorelease];
@@ -356,45 +316,22 @@ static Class _PFNSCFMutableDataClass = nil;
 /*
  *	The NSCFData bridged class
  */
-@implementation NSCFData
+@implementation __NSCFData
 
-/*
- *	Object maintenance
- */
-
-/*
- *	Called by NSString and NSMutableString +alloc methods. Returns the _PFNSCFStringClass dummy, so that
- *	the impending -init... methods can be correctly delivered. These then replace it with newly-allocated
- *	CFString objects
- */
-+(id)alloc
-{
-	PF_HELLO("")
-	return nil; // can't ever instantiate
-}
-
-
-
-/*
- *	Undocumented method used by CFLite to support bridging
- */
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+- (CFTypeID)_cfTypeID {
 	return CFDataGetTypeID();
 }
 
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
--(NSString *)description
-{
+- (NSString *)description {
 	PF_HELLO("")
 	return [NSString stringWithFormat: @"It's a data! (length = %u)", [self length]]; // to test
 	//PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
@@ -430,212 +367,203 @@ static Class _PFNSCFMutableDataClass = nil;
 	return nil;
 }
 
-/*
- *	NSData (NSDataCreation) methods
- */
-- (id)init
-{
-	PF_HELLO("")
-	PF_DUMMY_DATA(self)
-	
-	if( isMutable == NO )
-		self = (id)CFDataCreate( kCFAllocatorDefault, NULL, 0 );
-	else
-		self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
-	
-	PF_RETURN_NEW(self)
-}
+// init methods are now in NSData and NSMutableData
+// TODO: Check that all of these have been moved
 
-- (id)initWithBytes:(const void *)bytes length:(NSUInteger)length 
-{
-	PF_HELLO("")
-	PF_DUMMY_DATA(self)
+//- (id)init
+//{
+//    PF_HELLO("")
+//    PF_DUMMY_DATA(self)
+//
+//    if( isMutable == NO )
+//        self = (id)CFDataCreate( kCFAllocatorDefault, NULL, 0 );
+//    else
+//        self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
+//
+//    PF_RETURN_NEW(self)
+//}
 
-	self = (id)CFDataCreate( kCFAllocatorDefault, (const UInt8 *)bytes, (CFIndex)length );
-	PF_RETURN_DATA_INIT
-}
+//- (id)initWithBytes:(const void *)bytes length:(NSUInteger)length
+//{
+//    PF_HELLO("")
+//    PF_DUMMY_DATA(self)
+//
+//    self = (id)CFDataCreate( kCFAllocatorDefault, (const UInt8 *)bytes, (CFIndex)length );
+//    PF_RETURN_DATA_INIT
+//}
 
-- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length 
-{
-	PF_HELLO("")
-	
-	return [self initWithBytesNoCopy: bytes length: length freeWhenDone: YES];
-}
+//- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length
+//{
+//    PF_HELLO("")
+//
+//    return [self initWithBytesNoCopy: bytes length: length freeWhenDone: YES];
+//}
 
-- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)b 
-{
-	PF_HELLO("")
-	PF_DUMMY_DATA(self)
-	
-	// set up the deallocator based on the value of the freeWhenDone BOOL
-	CFAllocatorRef d = b ? kCFAllocatorDefault : kCFAllocatorNull;
-	
-	self = (id)CFDataCreateWithBytesNoCopy( kCFAllocatorDefault, (const UInt8 *)bytes, (CFIndex)length, d );
-	PF_RETURN_DATA_INIT
-}
+//- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)b
+//{
+//    PF_HELLO("")
+//    PF_DUMMY_DATA(self)
+//
+//    // set up the deallocator based on the value of the freeWhenDone BOOL
+//    CFAllocatorRef d = b ? kCFAllocatorDefault : kCFAllocatorNull;
+//
+//    self = (id)CFDataCreateWithBytesNoCopy( kCFAllocatorDefault, (const UInt8 *)bytes, (CFIndex)length, d );
+//    PF_RETURN_DATA_INIT
+//}
 
 /*
  *	Reading from a file or URL
  */
-- (id)initWithContentsOfFile:(NSString *)path 
-{
-	PF_HELLO("")
-	NSError *error;
-	return [self initWithContentsOfFile: path options: 0 error: &error];
-}
+//- (id)initWithContentsOfFile:(NSString *)path
+//{
+//    PF_HELLO("")
+//    NSError *error;
+//    return [self initWithContentsOfFile: path options: 0 error: &error];
+//}
 
-
-- (id)initWithContentsOfMappedFile:(NSString *)path 
-{
-	PF_HELLO("")
-	NSError *error;
-	return [self initWithContentsOfFile: path options: NSMappedRead error: &error];
-}
-
-
+//- (id)initWithContentsOfMappedFile:(NSString *)path
+//{
+//    PF_HELLO("")
+//    NSError *error;
+//    return [self initWithContentsOfFile: path options: NSMappedRead error: &error];
+//}
 
 /*
  *	Not entirely sure whether readOptionsMask should be actually treated as a mask or
  *	whether it's two options (uncached and mapped) are mutually eclusive
  */
-- (id)initWithContentsOfFile:(NSString *)path options:(NSUInteger)readOptionsMask error:(NSError **)errorPtr 
-{
-	PF_HELLO("")
-	if( path == nil ) { /* set *error */ return nil; }
-	const char *filename = [path fileSystemRepresentation];
+//- (id)initWithContentsOfFile:(NSString *)path options:(NSUInteger)readOptionsMask error:(NSError **)errorPtr
+//{
+//    PF_HELLO("")
+//    if( path == nil ) { /* set *error */ return nil; }
+//    const char *filename = [path fileSystemRepresentation];
+//
+//    //NSLog(@"filename = %s", filename);
+//
+//    if( filename == NULL ) { /* set error */ return nil; }
+//
+//    // open the file and get a file descriptor for it
+//    int fd = open(filename, O_RDONLY);
+//    if( fd == -1 )
+//        { *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
+//
+//    //NSLog(@"got fd %u", fd);
+//
+//    // get the size of the file
+//    struct stat statbuf;
+//    if (fstat(fd, &statbuf) == -1)
+//        { *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
+//
+//    NSUInteger length = statbuf.st_size;
+//
+//    //NSLog(@"got length %u", length);
+//
+//    // if uncached was specified, turn caching off
+//    if( readOptionsMask & NSUncachedRead )
+//    {
+//        //NSLog(@"going to set read to uncahced");
+//        if(fcntl(fd, F_NOCACHE, 1) == -1)
+//            { *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
+//    }
+//
+//    //NSLog(@"past fnctl, fd = %u", fd);
+//
+//    void *bytes;
+//
+//    // if we're mapping, map...
+//    if( readOptionsMask & NSMappedRead )
+//    {
+//        //NSLog(@"Going to mmap");
+//        if( (int)(bytes = mmap(0, length, PROT_READ, (MAP_FILE | MAP_PRIVATE | MAP_NOCACHE), fd, 0)) == -1 )
+//            { *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
+//    }
+//    else // ...otherwise, simply read in the data
+//    {
+//        //NSLog(@"going to malloc and read");
+//        bytes = malloc(length);
+//        //NSLog(@"allocated memory at 0x%X", bytes);
+//        if( (length = read(fd, bytes, length)) == -1 )
+//            { *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
+//    }
+//
+//    //NSLog(@"bytes is 0x%X", bytes);
+//
+//    PF_DUMMY_DATA(self)
+//
+//    // create the data object (by copying bytes into it)
+//    self = (id)CFDataCreate( kCFAllocatorDefault, (const UInt8 *)bytes, length );
+//
+//    //NSLog(@"self = 0x%X", self);
+//
+//    // clear up
+//    if( readOptionsMask & NSMappedRead )
+//        munmap(bytes, length);
+//    else
+//        free(bytes);
+//
+//    close(fd);
+//
+//    PF_RETURN_DATA_INIT
+//}
 
-	//NSLog(@"filename = %s", filename);
-	
-	if( filename == NULL ) { /* set error */ return nil; }
-	
-	// open the file and get a file descriptor for it
-	int fd = open(filename, O_RDONLY);
-	if( fd == -1 ) 
-		{ *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
-	
-	//NSLog(@"got fd %u", fd);
-	
-	// get the size of the file
-	struct stat statbuf;
-	if (fstat(fd, &statbuf) == -1) 
-		{ *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
-	
-	NSUInteger length = statbuf.st_size;
-	
-	//NSLog(@"got length %u", length);
-	
-	// if uncached was specified, turn caching off
-	if( readOptionsMask & NSUncachedRead )
-	{
-		//NSLog(@"going to set read to uncahced");
-		if(fcntl(fd, F_NOCACHE, 1) == -1)
-			{ *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
-	}
+//- (id)initWithContentsOfURL:(NSURL *)url
+//{
+//    PF_TODO
+//    NSError *error;
+//    if( url == nil ) return nil;
+//    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] options: 0 error: &error];
+//    return [self initWithContentsOfURL: url options: 0 error: &error];
+//}
 
-	//NSLog(@"past fnctl, fd = %u", fd);
-	
-	void *bytes;
-	
-	// if we're mapping, map...
-	if( readOptionsMask & NSMappedRead )
-	{
-		//NSLog(@"Going to mmap");
-		if( (int)(bytes = mmap(0, length, PROT_READ, (MAP_FILE | MAP_PRIVATE | MAP_NOCACHE), fd, 0)) == -1 )
-			{ *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
-	}
-	else // ...otherwise, simply read in the data
-	{
-		//NSLog(@"going to malloc and read");
-		bytes = malloc(length);
-		//NSLog(@"allocated memory at 0x%X", bytes);
-		if( (length = read(fd, bytes, length)) == -1 )
-			{ *errorPtr = [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]; return nil; }
-	}
-
-	//NSLog(@"bytes is 0x%X", bytes);
-	
-	PF_DUMMY_DATA(self)
-
-	// create the data object (by copying bytes into it) 
-	self = (id)CFDataCreate( kCFAllocatorDefault, (const UInt8 *)bytes, length );
-	
-	//NSLog(@"self = 0x%X", self);
-	
-	// clear up
-	if( readOptionsMask & NSMappedRead )
-		munmap(bytes, length);
-	else
-		free(bytes);
-
-	close(fd);
-
-	PF_RETURN_DATA_INIT
-}
+//- (id)initWithContentsOfURL:(NSURL *)url options:(NSUInteger)readOptionsMask error:(NSError **)errorPtr
+//{
+//    PF_TODO
+//    if( url == nil ) return nil;
+//    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] options: readOptionsMask error: errorPtr];
+//
+//    return nil;
+//}
 
 
-- (id)initWithContentsOfURL:(NSURL *)url 
-{
-	PF_TODO
-	NSError *error;
-	if( url == nil ) return nil;
-	if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] options: 0 error: &error];
-	return [self initWithContentsOfURL: url options: 0 error: &error];
-}
-
-- (id)initWithContentsOfURL:(NSURL *)url options:(NSUInteger)readOptionsMask error:(NSError **)errorPtr 
-{
-	PF_TODO
-	if( url == nil ) return nil;
-	if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] options: readOptionsMask error: errorPtr];
-	
-	return nil;
-}
-
-
-- (id)initWithData:(NSData *)data 
-{
-	PF_HELLO("")
-	PF_NIL_ARG(data)
-	PF_DUMMY_DATA(self)
-
-	self = (id)CFDataCreateCopy( kCFAllocatorDefault, (CFDataRef)data );
-	PF_RETURN_DATA_INIT
-}
+//- (id)initWithData:(NSData *)data
+//{
+//    PF_HELLO("")
+//    PF_NIL_ARG(data)
+//    PF_DUMMY_DATA(self)
+//
+//    self = (id)CFDataCreateCopy( kCFAllocatorDefault, (CFDataRef)data );
+//    PF_RETURN_DATA_INIT
+//}
 
 /*
  *	NSMutableData creation methods
  */
-- (id)initWithCapacity:(NSUInteger)capacity 
-{
-	PF_HELLO("")
-	PF_DUMMY_DATA(self)
-	if( isMutable == NO ) return nil; // throw exception?
-	self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
-	// apply capacity hint?
-	PF_RETURN_NEW(self)
-}
+//- (id)initWithCapacity:(NSUInteger)capacity
+//{
+//    PF_HELLO("")
+//    PF_DUMMY_DATA(self)
+//    if( isMutable == NO ) return nil; // throw exception?
+//    self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
+//    // apply capacity hint?
+//    PF_RETURN_NEW(self)
+//}
 
-- (id)initWithLength:(NSUInteger)length 
-{
-	PF_HELLO("")
-	PF_DUMMY_DATA(self)
-	if( isMutable == NO ) return nil; // throw exception?
-	self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
-	CFDataIncreaseLength( (CFMutableDataRef)self, (CFIndex)length );
-	PF_RETURN_NEW(self)
-}
+//- (id)initWithLength:(NSUInteger)length
+//{
+//    PF_HELLO("")
+//    PF_DUMMY_DATA(self)
+//    if( isMutable == NO ) return nil; // throw exception?
+//    self = (id)CFDataCreateMutable( kCFAllocatorDefault, 0 );
+//    CFDataIncreaseLength( (CFMutableDataRef)self, (CFIndex)length );
+//    PF_RETURN_NEW(self)
+//}
 
 
-/*
- *	NSData instance methods
- */
-- (NSUInteger)length
-{
+- (NSUInteger)length {
 	return (NSUInteger)CFDataGetLength((CFDataRef)self);
 }
 
-- (const void *)bytes
-{
+- (const void *)bytes {
 	return (const void *)CFDataGetBytePtr((CFDataRef)self);
 }
 

@@ -10,10 +10,7 @@
 
 #import "NSDate.h"
 
-/*
- *	Declare the bridged class
- */
-@interface NSCFDate : NSDate
+@interface __NSDate : NSDate
 @end
 
 /*
@@ -173,28 +170,26 @@ static CFDateRef _PFReferenceDate = nil;
 /*
  *	NSCFDate, the bridged class
  */
-@implementation NSCFDate
+@implementation __NSDate
 
-+(id)alloc
-{
-	PF_HELLO("")
-	return nil;
-}
+//+(id)alloc
+//{
+//    PF_HELLO("")
+//    return nil;
+//}
 
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+- (CFTypeID)_cfTypeID {
 	return CFDateGetTypeID();
 }
 
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 /*
  *	"A string representation of the receiver in the international format 

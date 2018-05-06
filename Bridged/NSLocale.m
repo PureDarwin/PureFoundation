@@ -10,42 +10,7 @@
 
 #import "NSLocale.h"
 
-/*
- *	Constants
- */
-NSString * const NSCurrentLocaleDidChangeNotification = @"kCFLocaleCurrentLocaleDidChangeNotification";
-
-// these have now been moved into CF
-//NSString * const NSLocaleIdentifier = @"locale:id";
-//NSString * const NSLocaleLanguageCode = @"locale:language code";
-//NSString * const NSLocaleCountryCode = @"locale:country code";
-//NSString * const NSLocaleScriptCode = @"locale:script code";
-//NSString * const NSLocaleVariantCode = @"locale:variant code";
-//NSString * const NSLocaleExemplarCharacterSet = @"locale:exemplar characters";
-//NSString * const NSLocaleCalendar = @"locale:calendarref";
-//NSString * const NSLocaleCollationIdentifier = @"collation";
-//NSString * const NSLocaleUsesMetricSystem = @"locale:uses metric";
-//NSString * const NSLocaleMeasurementSystem = @"locale:measurement system";
-//NSString * const NSLocaleDecimalSeparator = @"locale:decimal separator";
-//NSString * const NSLocaleGroupingSeparator = @"locale:grouping separator";
-//NSString * const NSLocaleCurrencySymbol = @"locale:currency symbol";
-//NSString * const NSLocaleCurrencyCode = @"currency";
-
-// Values for NSCalendar identifiers (not the NSLocaleCalendar property key)
-// these are now exported by CF
-//NSString * const NSGregorianCalendar = @"gregorian";
-//NSString * const NSBuddhistCalendar = @"buddhist";
-//NSString * const NSChineseCalendar = @"chinese";
-//NSString * const NSHebrewCalendar = @"hebrew";
-//NSString * const NSIslamicCalendar = @"islamic";
-//NSString * const NSIslamicCivilCalendar = @"islamic-civil";
-//NSString * const NSJapaneseCalendar = @"japanese";
-
-
-/*
- *	Declaration for our bridged class
- */
-@interface NSCFLocale : NSLocale
+@interface __NSCFLocale : NSLocale
 @end
 
 
@@ -188,7 +153,7 @@ static Class _PFNSCFLocaleClass = nil;
 /*
  *	NSCFLocale, the bridged class
  */
-@implementation NSCFLocale
+@implementation __NSCFLocale
 
 +(id)alloc
 {
@@ -210,11 +175,11 @@ static Class _PFNSCFLocaleClass = nil;
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // appears to return NSObjects <class address> description
 //-(NSString *)description

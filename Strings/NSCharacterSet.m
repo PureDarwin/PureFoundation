@@ -14,7 +14,7 @@
 /*
  *	The bridged class
  */
-@interface NSCFCharacterSet : NSMutableCharacterSet
+@interface __NSCFCharacterSet : NSMutableCharacterSet
 @end
 
 /*
@@ -490,7 +490,7 @@ extern bool _CFCharacterSetIsMutable( CFCharacterSetRef cset );
 /*
  *	NSCFCharacterSet, the bridged class
  */
-@implementation NSCFCharacterSet
+@implementation __NSCFCharacterSet
 
 +(id)alloc
 {
@@ -504,14 +504,12 @@ extern bool _CFCharacterSetIsMutable( CFCharacterSetRef cset );
 	return CFCharacterSetGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+// Standard bridged-class over-rides
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // NSCharacterSet returns the standard NSObject description of itself
 //-(NSString *)description
@@ -520,28 +518,25 @@ extern bool _CFCharacterSetIsMutable( CFCharacterSetRef cset );
 //	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
 //}
 
-// NSCopying
+#pragma mark - NSCopying
 
-- (id)copyWithZone:(NSZone *)zone
-{
+- (id)copyWithZone:(NSZone *)zone {
 	PF_HELLO("")
 	PF_RETURN_NEW( CFCharacterSetCreateCopy( kCFAllocatorDefault, (CFCharacterSetRef)self ) )
 }
 
-// NSMutableCopying
-- (id)mutableCopyWithZone:(NSZone *)zone
-{
+#pragma mark - NSMutableCopying
+
+- (id)mutableCopyWithZone:(NSZone *)zone {
 	PF_HELLO("")
 	PF_RETURN_NEW( CFCharacterSetCreateMutableCopy( kCFAllocatorDefault, (CFCharacterSetRef)self ) )
 }
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
+#pragma mark - NSCoding
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
 	return nil;
 }
 
@@ -700,6 +695,4 @@ extern bool _CFCharacterSetIsMutable( CFCharacterSetRef cset );
 	CFCharacterSetInvert( (CFMutableCharacterSetRef)self );
 }
 
-
 @end
-

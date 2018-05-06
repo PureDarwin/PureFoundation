@@ -9,7 +9,7 @@
  */
 
 /*
- *	Inheritance runs: NSObject -> NSString -> NSMutableString -> NSCFString. A single NSCFString
+ *	Inheritance runs: NSObject -> NSString -> NSMutableString -> __NSCFString. A single __NSCFString
  *	instance (which is the only string instance Foundation seems to create) can therefore do double-duty
  *	as both static and mutable strings.
  *
@@ -25,32 +25,30 @@
 
 #import <objc/runtime.h>
 
-//#include "../CF-476.15.patched/CFString.h" // PF_PATH_TO_CF
+// CoreFoundation needs to be patched to expose this function
+extern Boolean _CFStringIsMutable(CFStringRef string);
 
 /*
  *	This macro will check whether an NSCFString is mutable and raise an exception if it isn't. This
- *	will require patching CFLite to have it export __CFStringIsMutable
+ *	will require patching CFLite to have it export _CFStringIsMutable
  *
  *	Alter to display _cmd as part of output?
  */
-#define PF_CHECK_STRING(str) BOOL isMutable; \
-	if( str == (id)&_PFNSCFStringClass ) isMutable = NO; \
-	else if( str == (id)&_PFNSCFMutableStringClass ) isMutable = YES; \
-	else { isMutable = __CFStringIsMutable((CFStringRef)str); [str autorelease]; }
+//#define PF_CHECK_STRING(str) BOOL isMutable; \
+//    if( str == (id)&_PFNSCFStringClass ) isMutable = NO; \
+//    else if( str == (id)&_PFNSCFMutableStringClass ) isMutable = YES; \
+//    else { isMutable = _CFStringIsMutable((CFStringRef)str); [str autorelease]; }
 
 // we're okay straight releasing this object because we only just created it
-#define PF_RETURN_STRING_INIT if( isMutable == YES ) { id old = self; self = (id)CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)old ); [old release]; } \
-	PF_RETURN_NEW(self)
+//#define PF_RETURN_STRING_INIT if( isMutable == YES ) { id old = self; self = (id)CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)old ); [old release]; } \
+//    PF_RETURN_NEW(self)
 
-#define PF_CHECK_STR_MUTABLE(str) if( !__CFStringIsMutable((CFStringRef)str) ) \
-	[NSException raise: NSInvalidArgumentException format: [NSString stringWithCString: "Attempting mutable string op on a static NSString" encoding: NSUTF8StringEncoding]];
+//#define PF_CHECK_STR_MUTABLE(str) if( !_CFStringIsMutable((CFStringRef)str) ) \
+//    [NSException raise: NSInvalidArgumentException format: [NSString stringWithCString: "Attempting mutable string op on a static NSString" encoding: NSUTF8StringEncoding]];
 
 
-/*
- *	The NSCFString class. Has no instance variables, because it's never actually created as an
- *	objective-C object -- instead, a CFString object is created and used it its place.
- */
-@interface NSCFString : NSMutableString
+// __NSCFString is a CFStringRef
+@interface __NSCFString : NSMutableString
 @end
 
 
@@ -69,154 +67,98 @@
  *	the runtime can direct -init... calls to the correct object methods, because a pointer to a single
  *	Class var is basically all most objects are.
  */
-static Class _PFNSCFStringClass = nil;
-static Class _PFNSCFMutableStringClass = nil;
+//static Class _PFNSCFStringClass = nil;
+//static Class _PFNSCFMutableStringClass = nil;
 
 
 /*
  *	exception raised by -propertyList
  */
+// TODO: Check where these are meant to be defined
 NSString * const NSParseErrorException = @"NSParseErrorException";
 NSString * const NSCharacterConversionException = @"NSCharacterConversionException";
 
+// TOOD: Implement all NSString instance methods in terms of the primative methods (length, character at index)
 
-/*
- *	NSString is an abstract class cluster factory wossname. Its sole purpose in life is to crank out
- *	private subclasses.
- */
+// The NSString and NSMutableString interfaces to the class cluster return CFStringRef instances
+
 @implementation NSString
 
-/*
- *	Set up the _PFNSStringClass dummy object
- */
-+ (void)initialize {
-	PF_HELLO("")
-    if (self == [NSString class]) {
-		_PFNSCFStringClass = objc_getClass("NSCFString");
-    }
-}
+#pragma mark - primatives
 
-/*
- *	Return a pointer to _PFNSStringClass, which will act exactly like a newly-allocated NSString
- *	object, with out us going to the trouble of allocating one.
- */
-+ (id)alloc {
-	PF_HELLO("")
-    if (self == [NSString class]) {
-		return (id)&_PFNSCFStringClass;
-    }
-	return [super alloc];
-}
-
-
-/** 
- *	THE PRIMATIVE FUNCTION -- These are basically no-ops to satisfy the compiler, and so anyone else's
- *	NSString subclass doesn't inherit our screwy CFString-based version.
- **/
 - (NSUInteger)length { return 0; }
 - (unichar)characterAtIndex:(NSUInteger)index { return (unichar)NULL; }
 
-/**	NSCopying COMPLIANCE **/
+#pragma mark - NSCopying
+
 - (id)copyWithZone:(NSZone *)zone { return nil; }
 
-/** NSMutableCopying COMPLIANCE **/
+#pragma mark - NSMutableCopying
+
 - (id)mutableCopyWithZone:(NSZone *)zone { return nil; }
 
-/**	NSCoding COMPLIANCE **/
+#pragma mark - NSCoding
+
 - (void)encodeWithCoder:(NSCoder *)aCoder { }
 - (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
 
+#pragma mark - Factory methods
 
-/*
- *	CLASS METHODS
- *
- *	These methods call the relevant CF function, bless the returned CFString (to turn it into an
- *	NSCFString) and then return it.
- */
+// These all return imutable CFStringRefs
 
-
-/*
- *	Similar to -init... compiler optimisations should mean it returns the exact same object.
- */
-+ (id)string
-{
-	PF_HELLO("")
++ (instancetype)string {
+//    PF_HELLO("")
 	return @"";
 }
 
-
-/*
- *	Create a new NSCFString with the contents of string, using the CF function. Also invoked by
- *	NSCFString -initWithString:.
- */
-+ (id)stringWithString:(NSString *)string
-{
-	PF_HELLO("")
-	CFStringRef str = CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)string );
-	PF_RETURN_TEMP(str)
++ (instancetype)stringWithString:(NSString *)string {
+//    PF_HELLO("")
+	return [(id)CFStringCreateCopy(kCFAllocatorDefault, (CFStringRef)string) autorelease];
 }
 
-
-/*
- *	Create a new NSCFString from an array of unicode characters
- */
-+ (id)stringWithCharacters:(const unichar *)characters length:(NSUInteger)length
-{
-	PF_HELLO("")
-	PF_NIL_ARG(characters)
-	
-	return [[[self alloc] initWithCharacters: characters length: length] autorelease];
++ (instancetype)stringWithCharacters:(const unichar *)characters length:(NSUInteger)length {
+//    PF_HELLO("")
+    return [(id)CFStringCreateWithCharacters(kCFAllocatorDefault, characters, length) autorelease];
 }
 
-
-/*
- *	Create a new string from a NULL-terminated C string of UTF8 characters
- *
- *	Calls [NSString +stringWithCString: ~ encoding: NSUTF8...] ????
- */
-+ (id)stringWithUTF8String:(const char *)nullTerminatedCString
-{
-	PF_HELLO("")
-	return [[[self alloc] initWithUTF8String: nullTerminatedCString] autorelease];
++ (id)stringWithUTF8String:(const char *)nullTerminatedCString {
+//    PF_HELLO("")
+    return [(id)CFStringCreateWithCString(kCFAllocatorDefault, nullTerminatedCString, kCFStringEncodingUTF8) autorelease];
 }
 
-
-/*
- *	"Returns a string created by using a given format string as a template into which the remaining 
- *	argument values are substituted."
- */
-+ (id)stringWithFormat:(NSString *)format, ...
-{
-	PF_HELLO("")
++ (id)stringWithFormat:(NSString *)format, ... {
+//    PF_HELLO("")
 	
 	va_list argList;
 	va_start( argList, format );
+    
+    CFStringRef string = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, argList);
 
-	id string = [[[self alloc] initWithFormat: format arguments: argList] autorelease];
+//    id string = [[[self alloc] initWithFormat: format arguments: argList] autorelease];
 	
 	va_end( argList );
-	return string;
+	
+    return [(id)string autorelease];
 }
 
-
-/*
- *	"Returns a string created by using a given format string as a template into which the remaining
- *	argument values are substituted according to the user's default locale."
- */
-+ (id)localizedStringWithFormat:(NSString *)format, ...
-{
-	PF_HELLO("")
-	
++ (instancetype)localizedStringWithFormat:(NSString *)format, ... {
+//    PF_HELLO("")
+	PF_TODO // Because I don't think that this i
+    
 	va_list argList;
 	va_start( argList, format );
 	
 	// retrieve the user's default locale
-	id locale = nil; // [[NSUserDefaults standardUserDefaults] dictionaryRepresentation]
-	
-	id string = [[[self alloc] initWithFormat: format locale: locale arguments: argList] autorelease];
+//    id locale = nil; // [[NSUserDefaults standardUserDefaults] dictionaryRepresentation]
+//    id string = [[[self alloc] initWithFormat: format locale: locale arguments: argList] autorelease];
 
+    CFLocaleRef locale = CFLocaleCopyCurrent();
+    CFStringRef string = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList);
+    CFRelease(locale);
+    
 	va_end( argList );
-	return string;
+    
+	return [(id)string autorelease];
 }
 
 
@@ -229,28 +171,32 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  *	As well as doing all the work for NSCFString -initWithCString:encoding:, this is also call from
  *	NSCFString -initWithUTF8String: and NSString +stringWithUTF8String:
  */
-+ (id)stringWithCString:(const char *)cString encoding:(NSStringEncoding)enc
-{
-	PF_HELLO("")
-	return [[[self alloc] initWithCString: cString encoding: enc] autorelease];
++ (id)stringWithCString:(const char *)cString encoding:(NSStringEncoding)encoding {
+//    PF_HELLO("")
+//    return [[[self alloc] initWithCString: cString encoding: enc] autorelease];
+    return [(id)CFStringCreateWithCString(kCFAllocatorDefault, cString, CFStringConvertNSStringEncodingToEncoding(encoding)) autorelease];
 }
 
 /* These use the specified encoding.  If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
  */
 + (id)stringWithContentsOfFile:(NSString *)path encoding:(NSStringEncoding)enc error:(NSError **)error
 {
-	PF_HELLO("")
-	return [[[self alloc] initWithContentsOfFile: path encoding: enc error: error] autorelease];
+    PF_TODO
+//    PF_HELLO("")
+//    return [[[self alloc] initWithContentsOfFile: path encoding: enc error: error] autorelease];
+    return NULL;
 }
 
 + (id)stringWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
 {
-	PF_HELLO("")
-	
-	if( [url isFileURL] ) 
-		return [[[self alloc] initWithContentsOfFile: [url path] encoding: enc error: error] autorelease];
-	
-	return [[[self alloc] initWithContentsOfURL: url encoding: enc error: error] autorelease];
+    PF_TODO
+//    PF_HELLO("")
+//
+//    if( [url isFileURL] )
+//        return [[[self alloc] initWithContentsOfFile: [url path] encoding: enc error: error] autorelease];
+//
+//    return [[[self alloc] initWithContentsOfURL: url encoding: enc error: error] autorelease];
+    return NULL;
 }
 
 
@@ -258,21 +204,377 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  */
 + (id)stringWithContentsOfFile:(NSString *)path usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
 {
-	PF_HELLO("")
-	return [[[self alloc] initWithContentsOfFile: path usedEncoding: enc error: error] autorelease];
+    PF_TODO
+//    PF_HELLO("")
+//    return [[[self alloc] initWithContentsOfFile: path usedEncoding: enc error: error] autorelease];
+    return NULL;
 }
 
 + (id)stringWithContentsOfURL:(NSURL *)url usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
 {
-	PF_HELLO("")
+    PF_TODO
+//    PF_HELLO("")
+//
+//    if( [url isFileURL] )
+//        return [[[self alloc] initWithContentsOfFile: [url path] usedEncoding: enc error: error] autorelease];
+//
+//    return [[[self alloc] initWithContentsOfURL: url usedEncoding: enc error: error] autorelease];
+    return NULL;
+}
 
-	if( [url isFileURL] ) 
-		return [[[self alloc] initWithContentsOfFile: [url path] usedEncoding: enc error: error] autorelease];
-	
-	return [[[self alloc] initWithContentsOfURL: url usedEncoding: enc error: error] autorelease];
+#pragma mark - init
+
+- (instancetype)init {
+    free(self);
+    return @"";
+}
+
+/*
+ *    "Returns an initialized NSString object that contains a given number of bytes from a given C array
+ *    of bytes in a given encoding, and optionally frees the array on deallocation."
+ */
+- (instancetype)initWithCharactersNoCopy:(unichar *)characters length:(NSUInteger)length freeWhenDone:(BOOL)freeBuffer {
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // Passing kCFAllocatorDefault will free it, while kCFAllocatorNull won't
+    CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
+    
+    return (id)CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, characters, length, allocator);
 }
 
 
+/*
+ *    "Returns an initialized NSString object that contains a given number of characters from a given
+ *    C array of Unicode characters." "Raises an exception [NSInvalidArgumentException?] if characters
+ *    is NULL, even if length is 0."
+ */
+- (id)initWithCharacters:(const unichar *)characters length:(NSUInteger)length {
+//    PF_HELLO("")
+//    PF_NIL_ARG(characters)
+//    PF_CHECK_STRING(self)
+    free(self);
+    return (id)CFStringCreateWithCharacters(kCFAllocatorDefault, characters, length);
+}
+
+// "Returns an NSString object initialized by copying the characters a given C array of UTF8-encoded bytes."
+- (id)initWithUTF8String:(const char *)nullTerminatedCString {
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    free(self);
+    return (id)CFStringCreateWithCString(kCFAllocatorDefault, nullTerminatedCString, kCFStringEncodingUTF8);
+}
+
+
+// "Returns an NSString object initialized by copying the characters from another given string."
+- (id)initWithString:(NSString *)aString {
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    free(self);
+    return (id)CFStringCreateCopy(kCFAllocatorDefault, (CFStringRef)aString);
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted." "Raises an NSInvalidArgumentException if format
+ *    is nil."
+ */
+- (id)initWithFormat:(NSString *)format, ...
+{
+    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    va_list argList;
+    va_start( argList, format );
+    
+    CFStringRef string = CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
+    
+    va_end( argList );
+//    PF_RETURN_STRING_INIT
+    return (id)string;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to the user’s default locale."
+ */
+- (id)initWithFormat:(NSString *)format arguments:(va_list)argList
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    return CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
+    
+//    PF_RETURN_STRING_INIT
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to given locale information."
+ */
+- (id)initWithFormat:(NSString *)format locale:(id)locale, ...
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    va_list argList;
+    va_start( argList, locale );
+    
+    // trawling through the CF code, it seems that it can take a locale object here, so...
+    CFStringRef string = CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
+    
+    va_end( argList );
+//    PF_RETURN_STRING_INIT
+    return string;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to given locale information."
+ *
+ *    This method actually does all of the work for the other ...Format... NSString and NSCFString
+ *    methods.
+ */
+- (id)initWithFormat:(NSString *)format locale:(id)locale arguments:(va_list)argList {
+//    PF_HELLO("Ignores locale")
+//    PF_CHECK_STRING(self)
+
+    free(self);
+    
+    // set up the locale
+    BOOL freeLocale = NO;
+    if (!locale) {
+        locale = (id)CFLocaleCopyCurrent();
+        freeLocale = YES;
+    }
+    
+    CFStringRef string = CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
+    
+    if (freeLocale) {
+        CFRelease(locale);
+    }
+    
+//    PF_RETURN_STRING_INIT
+    return (id)string;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by converting given data into Unicode characters using
+ *    a given encoding."
+ */
+- (id)initWithData:(NSData *)data encoding:(NSStringEncoding)encoding {
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // fix the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    return (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, (CFDataRef)data, enc );
+    
+//    PF_RETURN_STRING_INIT
+}
+
+
+/*
+ *    "Returns an initialized NSString object containing a given number of bytes from a given C array
+ *    of bytes in a given encoding."
+ */
+- (id)initWithBytes:(const void *)bytes
+             length:(NSUInteger)len
+           encoding:(NSStringEncoding)encoding
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // convert the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    // yes, we're just assuming that this isn't an external representation
+    return (id)CFStringCreateWithBytes( kCFAllocatorDefault, bytes, len, enc, FALSE );
+//    PF_RETURN_STRING_INIT
+}
+
+
+/*
+ *    "Returns an initialized NSString object that contains a given number of bytes from a given C array
+ *    of bytes in a given encoding, and optionally frees the array on deallocation."
+ *
+ *    //#if MAC_OS_X_VERSION_10_3 <= MAC_OS_X_VERSION_MAX_ALLOWED
+ */
+- (id)initWithBytesNoCopy:(void *)bytes
+                   length:(NSUInteger)len
+                 encoding:(NSStringEncoding)encoding
+             freeWhenDone:(BOOL)freeBuffer
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // convert the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    // should the string be freed once we're finished?
+    CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
+    
+    // again, we're just assuming that this isn't an external representation
+    return (id)CFStringCreateWithBytesNoCopy( kCFAllocatorDefault, bytes, len, enc, FALSE, allocator );
+//    PF_RETURN_STRING_INIT
+}
+
+/*
+ *    "Returns an NSString object initialized using the characters in a given C array, interpreted
+ *    according to a given encoding."
+ *
+ *    Like -initWithUTF8String: this invokes NSString +stringWithCString:encoding:
+ */
+- (id)initWithCString:(const char *)nullTerminatedCString encoding:(NSStringEncoding)encoding
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    return (id)CFStringCreateWithCString( kCFAllocatorDefault, nullTerminatedCString, enc );
+    
+    //NSLog(@"0x%X", self);
+    
+//    PF_RETURN_STRING_INIT
+}
+
+
+- (id)initWithCapacity:(NSUInteger)capacity
+{
+//    PF_HELLO("")
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+//    if( isMutable == NO )
+//        [NSException raise: NSInternalInconsistencyException format: @""];
+    
+    return (id)CFStringCreateMutable( kCFAllocatorDefault, 0 );
+    // apply capacity hint...
+//    PF_RETURN_NEW(self)
+}
+
+
+/* These use the specified encoding.  If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
+- (id)initWithContentsOfFile:(NSString *)path encoding:(NSStringEncoding)enc error:(NSError **)error
+{
+//    PF_HELLO("")
+    free(self);
+    if (!path) return nil;
+//    PF_CHECK_STRING(self)
+    
+    
+    
+    CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // create the data object via NSData. Could use eg. a mapped file one day
+    CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
+    if( data == nil ) return nil;
+    
+    CFStringRef string = CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    [(id)data release];
+    
+//    PF_RETURN_STRING_INIT
+    return string;
+}
+
+- (id)initWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
+{
+    PF_TODO
+    /*
+    
+    
+//    free(self); <-- when we do
+    
+    if( url == nil ) return nil;
+    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
+    
+    PF_CHECK_STRING(self)
+    
+    CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // CFDataRef data = // load data via the URL. use streams?
+    
+    //self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    // [(id)data release];
+    
+    PF_RETURN_STRING_INIT
+     */
+    return nil;
+}
+
+
+/* These try to determine the encoding, and return the encoding which was used.  Note that these methods might get "smarter" in subsequent releases of the system, and use additional techniques for recognizing encodings. If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
+- (id)initWithContentsOfFile:(NSString *)path usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
+{
+    PF_TODO
+    if( path == nil ) return nil;
+//    PF_CHECK_STRING(self)
+    
+    //CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // create the data object via NSData. Could use eg. a mapped file one day
+    CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
+    if( data == nil ) return nil;
+    
+    //self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    [(id)data release];
+    
+//    PF_RETURN_STRING_INIT
+    
+    return nil;
+}
+
+- (id)initWithContentsOfURL:(NSURL *)url usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
+{
+    PF_TODO
+    
+    if( url == nil ) return nil;
+    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
+    
+//    PF_CHECK_STRING(self)
+    
+    
+    //CFStringCreateFromExternalRepresentation (
+    //                                          CFAllocatorRef alloc,
+    //                                          CFDataRef data,
+    //                                          CFStringEncoding encoding
+    //);
+    
+//    PF_RETURN_STRING_INIT
+    
+    return nil;
+}
+
+#pragma mark - utility
 
 /* User-dependent encoding who value is derived from user's default language and potentially other factors. The use of this encoding might sometimes be needed when interpreting user documents with unknown encodings, in the absence of other hints.  This encoding should be used rarely, if at all. Note that some potential values here might result in unexpected encoding conversions of even fairly straightforward NSString content --- for instance, punctuation characters with a bidirectional encoding.
  */
@@ -368,52 +670,504 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  */
 @implementation NSMutableString
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSMutableString class] )
-		_PFNSCFMutableStringClass = objc_getClass("NSCFString");
+#pragma mark - Factory methods
+
+// Mutable version of the NSString class methods
+
++ (id)string {
+//    PF_HELLO("")
+    return [(id)CFStringCreateMutable(kCFAllocatorDefault, 0) autorelease];
 }
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSMutableString class] )
-		return (id)&_PFNSCFMutableStringClass;
-	return [super alloc];
++ (id)stringWithCapacity:(NSUInteger)capacity {
+//    PF_HELLO("")
+	return [(id)CFStringCreateMutable(kCFAllocatorDefault, capacity) autorelease];
 }
 
-// NSMutableString specific
-+ (id)stringWithCapacity:(NSUInteger)capacity
-{
-	PF_HELLO("")
-	CFMutableStringRef str = CFStringCreateMutable( kCFAllocatorDefault, 0 );
-	// apply capacity hint here...
-	PF_RETURN_TEMP(str)
++ (id)stringWithString:(NSString *)string {
+//    PF_HELLO("")
+	return [(id)CFStringCreateMutableCopy(kCFAllocatorDefault, 0, (CFStringRef)string) autorelease];
+}
+
++ (id)stringWithCharacters:(const unichar *)characters length:(NSUInteger)length {
+//    PF_HELLO("")
+//    return [[super stringWithCharacters:characters length:length] mutableCopy];
+    PF_TODO
+    return nil;
+}
+
++ (id)stringWithUTF8String:(const char *)nullTerminatedCString {
+//    PF_HELLO("")
+//    return (id)CFStringCreateWithCString(kCFAllocatorDefault, nullTerminatedCString, kCFStringEncodingUTF8);
+//    return [[super stringWithUTF8String:nullTerminatedCString] mutableCopy];
+    PF_TODO
+    return nil;
+}
+
+// Below here were copied and not updated yet
+
++ (id)stringWithFormat:(NSString *)format, ... {
+    PF_HELLO("")
+    PF_TODO
+    
+    va_list argList;
+    va_start( argList, format );
+    
+    CFStringRef string = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, argList);
+    CFStringRef mString = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, string);
+    
+    //    id string = [[[self alloc] initWithFormat: format arguments: argList] autorelease];
+    
+    va_end( argList );
+    CFRelease(string);
+    
+    return [(id)mString autorelease];
+}
+
+// TODO: Haven't checked return from any of these below here
+
++ (instancetype)localizedStringWithFormat:(NSString *)format, ... {
+    PF_HELLO("")
+    PF_TODO // Need to check that this works
+    
+    va_list argList;
+    va_start( argList, format );
+    
+    // retrieve the user's default locale
+    //    id locale = nil; // [[NSUserDefaults standardUserDefaults] dictionaryRepresentation]
+    //    id string = [[[self alloc] initWithFormat: format locale: locale arguments: argList] autorelease];
+    
+    CFLocaleRef locale = CFLocaleCopyCurrent();
+    CFStringRef string = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList);
+    CFRelease(locale);
+    
+    va_end( argList );
+    
+    return (id)string;
 }
 
 
 /*
- *	NSString factory creation methods, re-implemented to return mutable copies
+ *    "Returns a string containing the bytes in a given C array, interpreted according to a given encoding."
+ *
+ *    This method was introduced in 10.4. Since we're targeting compatibility with 10.5, we can include it
+ *    without making any checks.
+ *
+ *    As well as doing all the work for NSCFString -initWithCString:encoding:, this is also call from
+ *    NSCFString -initWithUTF8String: and NSString +stringWithUTF8String:
  */
-+ (id)string
-{
-	PF_HELLO("")
-	CFMutableStringRef str = CFStringCreateMutable( kCFAllocatorDefault, 0 );
-	PF_RETURN_TEMP(str)
++ (id)stringWithCString:(const char *)cString encoding:(NSStringEncoding)encoding {
+    PF_HELLO("")
+    //    return [[[self alloc] initWithCString: cString encoding: enc] autorelease];
+//    return (id)CFStringCreateWithCString(kCFAllocatorDefault, cString, CFStringConvertNSStringEncodingToEncoding(encoding));
+    return [[super stringWithCString:cString encoding:encoding] mutableCopy];
 }
- 
-+ (id)stringWithString:(NSString *)string
+
+/* These use the specified encoding.  If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
++ (id)stringWithContentsOfFile:(NSString *)path encoding:(NSStringEncoding)enc error:(NSError **)error {
+    PF_TODO
+    //    PF_HELLO("")
+    //    return [[[self alloc] initWithContentsOfFile: path encoding: enc error: error] autorelease];
+    return [[super stringWithContentsOfFile:path encoding:enc error:error] mutableCopy];
+}
+
++ (id)stringWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
 {
-	PF_HELLO("")
-	CFMutableStringRef str = CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)string );
-	PF_RETURN_TEMP(str)
+    PF_TODO
+    //    PF_HELLO("")
+    //
+    //    if( [url isFileURL] )
+    //        return [[[self alloc] initWithContentsOfFile: [url path] encoding: enc error: error] autorelease];
+    //
+    //    return [[[self alloc] initWithContentsOfURL: url encoding: enc error: error] autorelease];
+    return [[super stringWithContentsOfURL:url encoding:enc error:error] mutableCopy];
+}
+
+
+/* These try to determine the encoding, and return the encoding which was used.  Note that these methods might get "smarter" in subsequent releases of the system, and use additional techniques for recognizing encodings. If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
++ (id)stringWithContentsOfFile:(NSString *)path usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
+{
+    PF_TODO
+    //    PF_HELLO("")
+    //    return [[[self alloc] initWithContentsOfFile: path usedEncoding: enc error: error] autorelease];
+    return [[super stringWithContentsOfFile:path usedEncoding:enc error:error] mutableCopy];
+}
+
++ (id)stringWithContentsOfURL:(NSURL *)url usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
+{
+    PF_TODO
+    //    PF_HELLO("")
+    //
+    //    if( [url isFileURL] )
+    //        return [[[self alloc] initWithContentsOfFile: [url path] usedEncoding: enc error: error] autorelease];
+    //
+    //    return [[[self alloc] initWithContentsOfURL: url usedEncoding: enc error: error] autorelease];
+    return [[super stringWithContentsOfURL:url usedEncoding:enc error:error] mutableCopy];
+}
+
+
+#pragma mark - init
+
+- (instancetype)init {
+    return (id)CFStringCreateMutable(kCFAllocatorDefault, 0);
+}
+
+/*
+ *    "Returns an initialized NSString object that contains a given number of bytes from a given C array
+ *    of bytes in a given encoding, and optionally frees the array on deallocation."
+ */
+- (id)initWithCharactersNoCopy:(unichar *)characters length:(NSUInteger)length freeWhenDone:(BOOL)freeBuffer {
+    PF_HELLO("")
+    //    PF_CHECK_STRING(self)
+
+    free(self);
+
+    // Passing kCFAllocatorDefault will free it, while kCFAllocatorNull won't
+    CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
+
+    return (id)CFStringCreateMutableWithExternalCharactersNoCopy(kCFAllocatorDefault, characters, length, 0, allocator);
 }
 
 
 /*
- *	NSMutableString's sole defining feature. (Dummy method to please the compiler.)
+ *    "Returns an initialized NSString object that contains a given number of characters from a given
+ *    C array of Unicode characters." "Raises an exception [NSInvalidArgumentException?] if characters
+ *    is NULL, even if length is 0."
  */
+- (id)initWithCharacters:(const unichar *)characters length:(NSUInteger)length {
+    PF_HELLO("")
+    //    PF_NIL_ARG(characters)
+    //    PF_CHECK_STRING(self)
+//    free(self);
+//    return (id)CFStringCreateWithCharacters(kCFAllocatorDefault, characters, length);
+    return [[super initWithCharacters:characters length:length] mutableCopy];
+}
+
+// "Returns an NSString object initialized by copying the characters a given C array of UTF8-encoded bytes."
+- (id)initWithUTF8String:(const char *)nullTerminatedCString {
+    PF_HELLO("")
+    //    PF_CHECK_STRING(self)
+//    free(self);
+//    return (id)CFStringCreateWithCString(kCFAllocatorDefault, nullTerminatedCString, kCFStringEncodingUTF8);
+    return [[super initWithUTF8String:nullTerminatedCString] mutableCopy];
+}
+
+
+// "Returns an NSString object initialized by copying the characters from another given string."
+- (id)initWithString:(NSString *)aString {
+    PF_HELLO("")
+    //    PF_CHECK_STRING(self)
+    free(self);
+//    return (id)CFStringCreateCopy(kCFAllocatorDefault, (CFStringRef)aString);
+    return (id)CFStringCreateMutableCopy(kCFAllocatorDefault, 0, (CFStringRef)aString);
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted." "Raises an NSInvalidArgumentException if format
+ *    is nil."
+ */
+- (id)initWithFormat:(NSString *)format, ...
+{
+    PF_HELLO("")
+    PF_TODO // Because we need to pass the va_list into something which produces a mutable string
+    
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    va_list argList;
+    va_start( argList, format );
+    
+    self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
+    
+    va_end( argList );
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to the user’s default locale."
+ */
+- (id)initWithFormat:(NSString *)format arguments:(va_list)argList
+{
+    PF_HELLO("")
+    PF_TODO // Because this needs to return a mutable string
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
+    
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to given locale information."
+ */
+- (id)initWithFormat:(NSString *)format locale:(id)locale, ...
+{
+    PF_HELLO("")
+    PF_TODO // Because this needs to return a mutable string
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    va_list argList;
+    va_start( argList, locale );
+    
+    // trawling through the CF code, it seems that it can take a locale object here, so...
+    self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
+    
+    va_end( argList );
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by using a given format string as a template into which
+ *    the remaining argument values are substituted according to given locale information."
+ *
+ *    This method actually does all of the work for the other ...Format... NSString and NSCFString
+ *    methods.
+ */
+- (id)initWithFormat:(NSString *)format locale:(id)locale arguments:(va_list)argList {
+    PF_HELLO("Ignores locale")
+    PF_TODO // Needs to return a mutable version
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // set up the locale
+    BOOL freeLocale = NO;
+    if (!locale) {
+        locale = (id)CFLocaleCopyCurrent();
+        freeLocale = YES;
+    }
+    
+    self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
+    
+    if (freeLocale) {
+        CFRelease(locale);
+    }
+    
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an NSString object initialized by converting given data into Unicode characters using
+ *    a given encoding."
+ */
+- (id)initWithData:(NSData *)data encoding:(NSStringEncoding)encoding
+{
+    PF_HELLO("")
+    PF_TODO // Return a mutable version
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // fix the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, (CFDataRef)data, enc );
+    
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an initialized NSString object containing a given number of bytes from a given C array
+ *    of bytes in a given encoding."
+ */
+- (id)initWithBytes:(const void *)bytes
+             length:(NSUInteger)len
+           encoding:(NSStringEncoding)encoding
+{
+    PF_HELLO("")
+    PF_TODO // return a mutable version
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // convert the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    // yes, we're just assuming that this isn't an external representation
+    self = (id)CFStringCreateWithBytes( kCFAllocatorDefault, bytes, len, enc, FALSE );
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+/*
+ *    "Returns an initialized NSString object that contains a given number of bytes from a given C array
+ *    of bytes in a given encoding, and optionally frees the array on deallocation."
+ *
+ *    //#if MAC_OS_X_VERSION_10_3 <= MAC_OS_X_VERSION_MAX_ALLOWED
+ */
+- (id)initWithBytesNoCopy:(void *)bytes
+                   length:(NSUInteger)len
+                 encoding:(NSStringEncoding)encoding
+             freeWhenDone:(BOOL)freeBuffer
+{
+    PF_HELLO("")
+    PF_TODO // return a mutable version
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    // convert the string encoding
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    // should the string be freed once we're finished?
+    CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
+    
+    // again, we're just assuming that this isn't an external representation
+    self = (id)CFStringCreateWithBytesNoCopy( kCFAllocatorDefault, bytes, len, enc, FALSE, allocator );
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+/*
+ *    "Returns an NSString object initialized using the characters in a given C array, interpreted
+ *    according to a given encoding."
+ *
+ *    Like -initWithUTF8String: this invokes NSString +stringWithCString:encoding:
+ */
+- (id)initWithCString:(const char *)nullTerminatedCString encoding:(NSStringEncoding)encoding
+{
+    PF_HELLO("")
+    PF_TODO // Return a mutable version
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
+    
+    self = (id)CFStringCreateWithCString( kCFAllocatorDefault, nullTerminatedCString, enc );
+    
+    //NSLog(@"0x%X", self);
+    
+//    PF_RETURN_STRING_INIT
+    return self;
+}
+
+
+- (id)initWithCapacity:(NSUInteger)capacity {
+    PF_HELLO("")
+    free(self);
+    return (id)CFStringCreateMutable( kCFAllocatorDefault, 0 );
+}
+
+
+/* These use the specified encoding.  If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
+- (id)initWithContentsOfFile:(NSString *)path encoding:(NSStringEncoding)enc error:(NSError **)error
+{
+    PF_HELLO("")
+    PF_TODO // return a mutable version
+    if( path == nil ) return nil;
+//    PF_CHECK_STRING(self)
+    
+    free(self);
+    
+    CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // create the data object via NSData. Could use eg. a mapped file one day
+    CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
+    if( data == nil ) return nil;
+    
+    self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    [(id)data release];
+    
+//    PF_RETURN_STRING_INIT
+    return nil;
+}
+
+
+- (id)initWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
+{
+    PF_TODO // return a mutable version
+    
+    //    free(self); <-- when we do
+    
+    if( url == nil ) return nil;
+    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
+    
+//    PF_CHECK_STRING(self)
+    
+    CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // CFDataRef data = // load data via the URL. use streams?
+    
+    //self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    // [(id)data release];
+    
+//    PF_RETURN_STRING_INIT
+    return nil;
+}
+
+
+/* These try to determine the encoding, and return the encoding which was used.  Note that these methods might get "smarter" in subsequent releases of the system, and use additional techniques for recognizing encodings. If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
+ */
+- (id)initWithContentsOfFile:(NSString *)path usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
+{
+    PF_TODO // return mutable version
+    if( path == nil ) return nil;
+//    PF_CHECK_STRING(self)
+    
+    //CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
+    
+    // create the data object via NSData. Could use eg. a mapped file one day
+    CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
+    if( data == nil ) return nil;
+    
+    //self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
+    
+    [(id)data release];
+    
+//    PF_RETURN_STRING_INIT
+    return nil;
+}
+
+- (id)initWithContentsOfURL:(NSURL *)url usedEncoding:(NSStringEncoding *)enc error:(NSError **)error {
+    PF_TODO // return a mutable version
+    
+    if( url == nil ) return nil;
+    if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
+    
+//    PF_CHECK_STRING(self)
+    
+    
+    //CFStringCreateFromExternalRepresentation (
+    //                                          CFAllocatorRef alloc,
+    //                                          CFDataRef data,
+    //                                          CFStringEncoding encoding
+    //);
+    
+//    PF_RETURN_STRING_INIT
+    return nil;
+}
+
+
+#pragma mark - primative
+
+// NSMutableString's sole defining feature. (Dummy method to please the compiler.)
+// TODO: Do we want to implement this with CFString's version? If we implement all NSString and NSMutableString methods in terms of their atomic methods (the ones described in the notes on subclassing NSString) then we'll need these to test that they work
 - (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)aString { }
 
 @end
@@ -423,432 +1177,62 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 
 
 /*
- *	NSCFString is basically a CFString with its _cfisa set to NSCFString. When you talk about toll-free
+ *	__NSCFString is basically a CFStringRef with its _cfisa set to __NSCFString. When you talk about toll-free
  *	bridging it is actually this class (and not NSString, which can never be created) which can be used
  *	between CF and Foundation.
- *
- *	Defined here -- before NSString -- to please the compiler, because NSString calls it.
  *
  *	Because we never create an NSCFString as an objective-C object, we don't need to allocate it any
  *	storage.
  */
 
-@implementation NSCFString
+@implementation __NSCFString
 
-+(id)alloc
-{
-	PF_HELLO("")
-	return nil;
-}
+// Should we implement a +alloc which throws an exception?
 
-/*
- *	Undocumented method used by Apple to support bridging
- */
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+- (CFTypeID)_cfTypeID {
 	return CFStringGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+// TODO: implement -classForCoder
+
+// Standard bridged-class over-rides
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // "Returns the receiver." We give it an extra retain because CF functions will expect
 //	a copy
--(NSString *)description
-{
+- (NSString *)description {
 	PF_HELLO("")
 	return (NSString *)CFRetain((CFTypeRef)self);
 	//(NSString *)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ); //CFCopyDescription((CFTypeRef)self);
 }
 
-/**	NSCopying COMPLIANCE **/
+#pragma mark - NSCopying
 
-/*
- *	Return a copy of self, via the CF function. Zone is ignored and the string is allocated from the
- *	default zone.
- */
-- (id)copyWithZone:(NSZone *)zone
-{
-	PF_HELLO("")
-	PF_RETURN_NEW(CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)self ))
+- (id)copyWithZone:(NSZone *)zone {
+    return (id)CFStringCreateCopy(kCFAllocatorDefault, (CFStringRef)self);
 }
 
-/** NSMutableCopying COMPLIANCE **/
+#pragma mark - NSMutableCopying
 
-/*
- *	Return an NSCFMutableString via the CF function
- */
-- (id)mutableCopyWithZone:(NSZone *)zone
-{
-	//PF_HELLO("")
-	//NSLog( @"Copying '%@'", self );
-	PF_RETURN_NEW(CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)self ))
+- (id)mutableCopyWithZone:(NSZone *)zone {
+    return (id)CFStringCreateMutableCopy(kCFAllocatorDefault, 0, (CFStringRef)self);
 }
 
-/**	NSCoding COMPLIANCE **/
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
+#pragma mark - NSCoding
 
-}
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    // TODO: Implement this
 	return nil;
 }
 
 
-/*
- *	Returns an empty NSString. To be exact, it returns a reference to this common empty NSString.
- *
- *	Which currently makes no checks to see if this chould be mutable or not... two _PFNSCFStringClass vars,
- *	one for mutable, the other for immutable ???
- */
--(id)init
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	if( isMutable == NO )
-		self = (id)CFStringCreateCopy( kCFAllocatorDefault, CFSTR("") );
-	else
-		self = (id)CFStringCreateMutable( kCFAllocatorDefault, 0 );
-	
-	PF_RETURN_NEW(self)
-}
-
-
-/*
- *	"Returns an initialized NSString object that contains a given number of bytes from a given C array 
- *	of bytes in a given encoding, and optionally frees the array on deallocation."
- */
-- (id)initWithCharactersNoCopy:(unichar *)characters length:(NSUInteger)length freeWhenDone:(BOOL)freeBuffer
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	/*	Should the string be freed upon deallocation? Passing kCFAllocatorDefault will free it, while
-	 kCFAllocatorNull won't */
-	CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
-	
-	self = (id)CFStringCreateWithCharactersNoCopy( kCFAllocatorDefault, characters, length, allocator );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an initialized NSString object that contains a given number of characters from a given 
- *	C array of Unicode characters." "Raises an exception [NSInvalidArgumentException?] if characters 
- *	is NULL, even if length is 0."
- */
-- (id)initWithCharacters:(const unichar *)characters length:(NSUInteger)length
-{
-	PF_HELLO("")
-	PF_NIL_ARG(characters)
-	PF_CHECK_STRING(self)
-	
-	self = (id)CFStringCreateWithCharacters( kCFAllocatorDefault, characters, length );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by copying the characters a given C array of UTF8-encoded 
- *	bytes."
- */
-- (id)initWithUTF8String:(const char *)nullTerminatedCString
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	self = (id)CFStringCreateWithCString( kCFAllocatorDefault, nullTerminatedCString, kCFStringEncodingUTF8 );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by copying the characters from another given string."
- */
-- (id)initWithString:(NSString *)aString
-{
-	PF_HELLO("")	
-	PF_CHECK_STRING(self)
-	
-	if( isMutable == NO )
-		self = (id)CFStringCreateCopy( kCFAllocatorDefault, (CFStringRef)aString );
-	else
-		self = (id)CFStringCreateMutableCopy( kCFAllocatorDefault, 0, (CFStringRef)aString );
-	
-	PF_RETURN_NEW(self)
-}
-
-
-/*
- *	"Returns an NSString object initialized by using a given format string as a template into which 
- *	the remaining argument values are substituted." "Raises an NSInvalidArgumentException if format 
- *	is nil."
- */
-- (id)initWithFormat:(NSString *)format, ...
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	va_list argList;
-	va_start( argList, format );
-	
-	self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
-
-	va_end( argList );
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by using a given format string as a template into which 
- *	the remaining argument values are substituted according to the user’s default locale."
- */
-- (id)initWithFormat:(NSString *)format arguments:(va_list)argList
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, NULL, (CFStringRef)format, argList );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by using a given format string as a template into which 
- *	the remaining argument values are substituted according to given locale information."
- */
-- (id)initWithFormat:(NSString *)format locale:(id)locale, ...
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	va_list argList;
-	va_start( argList, locale );
-	
-	// trawling through the CF code, it seems that it can take a locale object here, so...
-	self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
-
-	va_end( argList );
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by using a given format string as a template into which
- *	the remaining argument values are substituted according to given locale information."
- *
- *	This method actually does all of the work for the other ...Format... NSString and NSCFString
- *	methods.
- */
-- (id)initWithFormat:(NSString *)format locale:(id)locale arguments:(va_list)argList
-{
-	PF_HELLO("Ignores locale")
-	PF_CHECK_STRING(self)
-	
-	// set up the locale
-	if( locale == nil ) locale = CFLocaleCopyCurrent();
-
-	self = (id)CFStringCreateWithFormatAndArguments( kCFAllocatorDefault, (CFDictionaryRef)locale, (CFStringRef)format, argList );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an NSString object initialized by converting given data into Unicode characters using 
- *	a given encoding."
- */
-- (id)initWithData:(NSData *)data encoding:(NSStringEncoding)encoding
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	// fix the string encoding
-	CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
-	
-	self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, (CFDataRef)data, enc );
-
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an initialized NSString object containing a given number of bytes from a given C array 
- *	of bytes in a given encoding."
- */
-- (id)initWithBytes:(const void *)bytes 
-			 length:(NSUInteger)len 
-		   encoding:(NSStringEncoding)encoding
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	// convert the string encoding
-	CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
-	
-	// yes, we're just assuming that this isn't an external representation
-	self = (id)CFStringCreateWithBytes( kCFAllocatorDefault, bytes, len, enc, FALSE );
-	PF_RETURN_STRING_INIT
-}
-
-
-/*
- *	"Returns an initialized NSString object that contains a given number of bytes from a given C array 
- *	of bytes in a given encoding, and optionally frees the array on deallocation."
- *
- *	//#if MAC_OS_X_VERSION_10_3 <= MAC_OS_X_VERSION_MAX_ALLOWED
- */
-- (id)initWithBytesNoCopy:(void *)bytes 
-				   length:(NSUInteger)len 
-				 encoding:(NSStringEncoding)encoding 
-			 freeWhenDone:(BOOL)freeBuffer
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	// convert the string encoding
-	CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
-	
-	// should the string be freed once we're finished?
-	CFAllocatorRef allocator = freeBuffer ? kCFAllocatorDefault : kCFAllocatorNull;
-	
-	// again, we're just assuming that this isn't an external representation
-	self = (id)CFStringCreateWithBytesNoCopy( kCFAllocatorDefault, bytes, len, enc, FALSE, allocator );
-	PF_RETURN_STRING_INIT
-}
-
-/*
- *	"Returns an NSString object initialized using the characters in a given C array, interpreted 
- *	according to a given encoding."
- *
- *	Like -initWithUTF8String: this invokes NSString +stringWithCString:encoding:
- */
-- (id)initWithCString:(const char *)nullTerminatedCString encoding:(NSStringEncoding)encoding
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	CFStringEncoding enc = CFStringConvertNSStringEncodingToEncoding(encoding);
-	
-	self = (id)CFStringCreateWithCString( kCFAllocatorDefault, nullTerminatedCString, enc );
-	
-	//NSLog(@"0x%X", self);
-	
-	PF_RETURN_STRING_INIT
-}
-
-
-- (id)initWithCapacity:(NSUInteger)capacity
-{
-	PF_HELLO("")
-	PF_CHECK_STRING(self)
-	
-	if( isMutable == NO )
-		[NSException raise: NSInternalInconsistencyException format: @""];
-	
-	self = (id)CFStringCreateMutable( kCFAllocatorDefault, 0 );
-	// apply capacity hint...
-	PF_RETURN_NEW(self)
-}
-
-
-/* These use the specified encoding.  If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
- */
-- (id)initWithContentsOfFile:(NSString *)path encoding:(NSStringEncoding)enc error:(NSError **)error
-{
-	PF_HELLO("")
-	if( path == nil ) return nil;
-	PF_CHECK_STRING(self)
-	
-	CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
-	
-	// create the data object via NSData. Could use eg. a mapped file one day
-	CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
-	if( data == nil ) return nil;
-	
-	self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
-	
-	[(id)data release];
-	
-	PF_RETURN_STRING_INIT
-}
-
-
-- (id)initWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
-{
-	PF_TODO
-	
-	if( url == nil ) return nil;
-	if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
-	
-	PF_CHECK_STRING(self)
-	
-	CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
-
-	// CFDataRef data = // load data via the URL. use streams?
-
-	//self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
-	
-	// [(id)data release];
-	
-	PF_RETURN_STRING_INIT
-}
-
-
-/* These try to determine the encoding, and return the encoding which was used.  Note that these methods might get "smarter" in subsequent releases of the system, and use additional techniques for recognizing encodings. If nil is returned, the optional error return indicates problem that was encountered (for instance, file system or encoding errors).
- */
-- (id)initWithContentsOfFile:(NSString *)path usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
-{
-	PF_TODO
-	if( path == nil ) return nil;
-	PF_CHECK_STRING(self)
-	
-	//CFStringEncoding cf_enc = CFStringConvertNSStringEncodingToEncoding(enc);
-	
-	// create the data object via NSData. Could use eg. a mapped file one day
-	CFDataRef data = (CFDataRef)[NSData dataWithContentsOfFile: path];
-	if( data == nil ) return nil;
-	
-	//self = (id)CFStringCreateFromExternalRepresentation( kCFAllocatorDefault, data, cf_enc );
-	
-	[(id)data release];
-	
-	PF_RETURN_STRING_INIT
-}
-
-- (id)initWithContentsOfURL:(NSURL *)url usedEncoding:(NSStringEncoding *)enc error:(NSError **)error
-{
-	PF_TODO
-
-	if( url == nil ) return nil;
-	if( [url isFileURL] ) return [self initWithContentsOfFile: [url path] encoding: enc error: error];
-
-	PF_CHECK_STRING(self)
-	
-	
-	//CFStringCreateFromExternalRepresentation (
-	//										  CFAllocatorRef alloc,
-	//										  CFDataRef data,
-	//										  CFStringEncoding encoding
-	//);
-
-	PF_RETURN_STRING_INIT
-}
-
+#pragma mark - File operations
 
 - (BOOL)writeToURL:(NSURL *)url 
 		atomically:(BOOL)useAuxiliaryFile 
@@ -861,7 +1245,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 	if( [url isFileURL] ) return [self writeToFile: [url path] atomically: useAuxiliaryFile encoding: enc error: error];
 	
 	
-	
+    return false;
 }
 
 - (BOOL)writeToFile:(NSString *)path 
@@ -903,31 +1287,33 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 
 - (NSDictionary *)propertyListFromStringsFileFormat { }
 
+#pragma mark - primatives
 
+// TODO: We could comment out all the other methods and if we've implemented NSString and NSMutableString right they should work the same
 
-/*	PRIMATIVES -- NSString proper */
-/*
- *	Return the length of the managed string, using the CFString primative
- */
-- (NSUInteger)length
-{
+- (NSUInteger)length {
 	return (NSUInteger)(CFStringGetLength((CFStringRef)self));
 }
 
-/*
- *	Return the unicode character at index, using the CFString primative
- */
-- (unichar)characterAtIndex:(NSUInteger)index
-{
+- (unichar)characterAtIndex:(NSUInteger)index {
 	return CFStringGetCharacterAtIndex((CFStringRef)self, (CFIndex)index);
 }
 
-/*
- *	STRING MANIPULATION METHODS
- */
+- (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)aString {
+    PF_HELLO("")
+//    PF_CHECK_STR_MUTABLE(self)
+    
+    NSUInteger length = CFStringGetLength((CFStringRef)self);
+    if( (range.location >= length) || ((range.location+range.length) > length) )
+        [NSException raise: NSRangeException format: nil];
+    CFRange r = CFRangeMake( range.location, range.length );
+    
+    CFStringReplace( (CFMutableStringRef)self, r, (CFStringRef)aString);
+}
 
-- (void)getCharacters:(unichar *)buffer
-{
+#pragma mark - string manipulation
+
+- (void)getCharacters:(unichar *)buffer {
 	PF_HELLO("")
 	
 	NSRange aRange = NSMakeRange( 0, [self length] );
@@ -1977,22 +2363,6 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  *	Instance methods added by NSMutableString.
  */
 
-/*
- *	NSMutableString's sole defining feature. This is a no-op in NSMutableString, but is defined here to
- *	use the coresponding CFStringReplace function
- */
-- (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)aString
-{
-	PF_HELLO("")
-	PF_CHECK_STR_MUTABLE(self)
-	
-	NSUInteger length = CFStringGetLength((CFStringRef)self);
-	if( (range.location >= length) || ((range.location+range.length) > length) )
-		[NSException raise: NSRangeException format: nil];
-	CFRange r = CFRangeMake( range.location, range.length );
-
-	CFStringReplace( (CFMutableStringRef)self, r, (CFStringRef)aString);
-}
 
 
 /*
@@ -2002,7 +2372,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 {
 	PF_HELLO("")
 	PF_NIL_ARG(aString)
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	if( loc >= CFStringGetLength((CFStringRef)self) ) //raise NSRangeException
 		[NSException raise: NSRangeException format: nil];
@@ -2017,7 +2387,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 - (void)deleteCharactersInRange:(NSRange)range
 {
 	PF_HELLO("")
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	NSUInteger length = CFStringGetLength((CFStringRef)self);
 	if( (range.location >= length) || ((range.location+range.length) > length) )
@@ -2035,7 +2405,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 {
 	PF_HELLO("")
 	PF_NIL_ARG(aString)
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	CFStringAppend( (CFMutableStringRef)self, (CFStringRef)aString );
 }
@@ -2048,7 +2418,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 {
 	PF_HELLO("")
 	PF_NIL_ARG(format)
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	va_list arguments;
 	va_start( arguments, format );
@@ -2066,7 +2436,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 {
 	PF_HELLO("")
 	PF_NIL_ARG(aString)
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	CFStringReplaceAll( (CFMutableStringRef)self, (CFStringRef)aString );
 }
@@ -2088,7 +2458,7 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
 								   range:(NSRange)searchRange
 {
 	//printf("replaceOccurencesOfString...\n");
-	PF_CHECK_STR_MUTABLE(self)
+//    PF_CHECK_STR_MUTABLE(self)
 	
 	if( (target == nil) || (replacement == nil) ) 
 		[NSException raise: NSInvalidArgumentException format: nil];
@@ -2503,13 +2873,13 @@ NSString * const NSCharacterConversionException = @"NSCharacterConversionExcepti
  *
  *	TODO: Fix NSDeallocateObject() to prevent manual deallocation of strings.
  */
-@interface NSCFConstantString : NSCFString
+@interface __NSCFConstantString : __NSCFString
 @end
 
-@implementation NSCFConstantString
+@implementation __NSCFConstantString
 - (id)retain { return self; }
-- (void)release { }
+- (oneway void)release { }
 - (id)autorelease { return self; }
-- (NSUInteger)retainCount { return 2147483647; }
+- (NSUInteger)retainCount { return NSIntegerMax; }
 @end
 

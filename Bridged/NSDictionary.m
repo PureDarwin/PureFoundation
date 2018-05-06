@@ -17,7 +17,7 @@
 /*
  *	Declare the interface for the bridged NSCFDisctionary class
  */
-@interface NSCFDictionary : NSMutableDictionary
+@interface __NSCFDictionary : NSMutableDictionary
 @end
 
 /*
@@ -397,7 +397,7 @@ void _PFKeysForObject( const void *key, const void *value, void *context )
 /*
  *	NSCFDictionary bridged class implementation
  */
-@implementation NSCFDictionary
+@implementation __NSCFDictionary
 
 /*
  *	Object maintenance
@@ -420,13 +420,13 @@ void _PFKeysForObject( const void *key, const void *value, void *context )
  *	the impending -init... methods can be correctly delivered. These then replace it with newly-allocated
  *	CFString objects
  */
-+(id)alloc
-{
-	PF_HELLO("")
-	//printf("_PFNSCFDictionaryClass = %d\n", _PFNSCFDictionaryClass);
-	//return (id)(&_PFNSCFDictionaryClass);
-	return nil;
-}
+//+(id)alloc
+//{
+//    PF_HELLO("")
+//    //printf("_PFNSCFDictionaryClass = %d\n", _PFNSCFDictionaryClass);
+//    //return (id)(&_PFNSCFDictionaryClass);
+//    return nil;
+//}
 
 /*
  *	Undocumented method used by Apple to support bridging

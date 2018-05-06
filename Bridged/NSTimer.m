@@ -13,7 +13,7 @@
 /*
  *	Declare the bridged class
  */
-@interface NSCFTimer : NSTimer
+@interface __NSCFTimer : NSTimer
 @end
 
 /*
@@ -95,7 +95,7 @@ static Class _PFNSCFTimerClass = nil;
 /*
  *	NSCFTimer bridged class
  */
-@implementation NSCFTimer
+@implementation __NSCFTimer
 
 +(id)alloc
 {
@@ -112,14 +112,13 @@ static Class _PFNSCFTimerClass = nil;
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
--(NSString *)description
-{
+- (NSString *)description {
 	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
 }
 

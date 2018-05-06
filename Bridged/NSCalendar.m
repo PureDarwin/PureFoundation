@@ -14,7 +14,7 @@
 /*
  *	Declare the bridged class
  */
-@interface NSCFCalendar : NSCalendar
+@interface __NSCFCalendar : NSCalendar
 @end
 
 
@@ -143,7 +143,7 @@ NSUInteger _PFGetDateComponents( char *comps, NSUInteger flags )
 /*
  *	The NSCFCalendar bridged class
  */
-@implementation NSCFCalendar
+@implementation __NSCFCalendar
 
 +(id)alloc
 {
@@ -157,14 +157,12 @@ NSUInteger _PFGetDateComponents( char *comps, NSUInteger flags )
 	return CFCalendarGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+// Standard bridged-class over-rides
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // do we override isEqual: ???
 
@@ -174,28 +172,27 @@ NSUInteger _PFGetDateComponents( char *comps, NSUInteger flags )
 //	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
 //}
 
-// NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone {
 	PF_HELLO("")
 	CFStringRef identifier = CFCalendarGetIdentifier((CFCalendarRef)self);
 	CFCalendarRef new = CFCalendarCreateWithIdentifier( kCFAllocatorDefault, identifier );
 	PF_RETURN_NEW(new)
 }
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
+#pragma mark - NSCoding
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
 	return nil;
 }
 
 /*
  *	creation method
  */
+// TODO: move this into NSCalendar
 - (id)initWithCalendarIdentifier:(NSString *)ident 
 {
 	PF_HELLO("")

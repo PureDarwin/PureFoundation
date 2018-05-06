@@ -14,10 +14,10 @@
 /*
  *	Classes bridged to CFNumber and CFBoolean
  */
-@interface NSCFNumber : NSNumber
+@interface __NSCFNumber : NSNumber
 @end
 
-@interface NSCFBoolean : NSNumber
+@interface __NSCFBoolean : NSNumber
 @end
 
 /*
@@ -182,7 +182,7 @@ Class _PFNSCFNumberClass = nil;
 /*
  *	NSCFNumber, the bridged number class
  */
-@implementation NSCFNumber
+@implementation __NSCFNumber
 
 +(id)alloc
 {
@@ -199,11 +199,11 @@ Class _PFNSCFNumberClass = nil;
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 // because numbers are kept unique by CF
 - (id)copyWithZone: (NSZone *)zone
@@ -563,16 +563,14 @@ Class _PFNSCFNumberClass = nil;
  *	This cannot be alloced and never recieves init methods. It is a wrapper for one
  *	of the two kCFBoolean constants.
  */
-@implementation NSCFBoolean
+@implementation __NSCFBoolean
 
-+(id)alloc
-{
++ (id)alloc {
 	PF_HELLO("")
 	return nil;
 }
 
--(CFTypeID)_cfTypeID
-{
+- (CFTypeID)_cfTypeID {
 	PF_HELLO("")
 	return CFBooleanGetTypeID();
 }
@@ -580,14 +578,13 @@ Class _PFNSCFNumberClass = nil;
 /*
  *	Standard bridged-class over-rides
  */
--(id)retain { return (id)CFRetain((CFTypeRef)self); }
--(NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
--(void)release { CFRelease((CFTypeRef)self); }
+- (id)retain { return (id)CFRetain((CFTypeRef)self); }
+- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
+- (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
--(NSUInteger)hash { return CFHash((CFTypeRef)self); }
+- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
--(id)copyWithZone:(NSZone *)zone
-{
+- (id)copyWithZone:(NSZone *)zone {
 	return self; // because these are constants
 }
 
