@@ -31,6 +31,14 @@ NSString *const NSHelpAnchorErrorKey = @"NSHelpAnchor";
 
 #define SELF ((CFErrorRef)self)
 
+static id PFErrorUserInfoValue(CFErrorRef error, NSString *key) {
+    CFDictionaryRef userInfo = CFErrorCopyUserInfo(error);
+    if (!userInfo) return nil;
+    const void *value = CFDictionaryGetValue(userInfo, key);
+    CFRelease(userInfo);
+    return [(id)value autorelease];
+}
+
 @interface __NSCFError : NSError
 @end
 
@@ -43,7 +51,7 @@ NSString *const NSHelpAnchorErrorKey = @"NSHelpAnchor";
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code userInfo:(NSDictionary *)dict {
     free(self);
     if (!domain) return nil;
-    return [(id)CFErrorCreate(kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict) autorelease];
+    return (id)CFErrorCreate(kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict);
 }
 
 // Placeholder implementations of NSError methods
@@ -104,14 +112,6 @@ NSString *const NSHelpAnchorErrorKey = @"NSHelpAnchor";
 
 - (NSString *)localizedFailureReason {
     return [(id)CFErrorCopyFailureReason(SELF) autorelease];
-}
-
-id PFErrorUserInfoValue(CFErrorRef error, NSString *key) {
-    CFDictionaryRef userInfo = CFErrorCopyUserInfo(error);
-    if (!userInfo) return nil;
-    const void *value = CFDictionaryGetValue(userInfo, key);
-    CFRelease(userInfo);
-    return [(id)value autorelease];
 }
 
 - (NSString *)localizedRecoverySuggestion {

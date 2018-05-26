@@ -10,80 +10,86 @@
 
 #import "Foundation/NSArray.h"
 #import "PFEnumerator.h"
-#import "NSPropertyList.h"
 #import "PureFoundation.h"
 
-//#import "../CF-476.15.patched/CFArray.h"
-//#import "../CF-476.15.patched/ForFoundationOnly.h"
-
-/*
- *	Another quick skeleton class cluster to increase the exported symbol count
- */
-
 #define ARRAY_CALLBACKS ((CFArrayCallBacks *)&_PFCollectionCallBacks)
+#define SELF ((CFArrayRef)self)
+#define MSELF ((CFMutableArrayRef)self)
 
-// The bridged __NSCFArray class
 @interface __NSCFArray : NSMutableArray
 @end
 
-/*
- *	Macro to check for our dummy NSCFData objects, and set isMutable depending on the value
- */
+// These are exposed by CoreFoundation
 extern bool _CFArrayIsMutable(CFArrayRef array);
 extern void _CFArraySetCapacity(CFMutableArrayRef array, CFIndex cap);
-
-#define PF_DUMMY_ARR(array) BOOL isMutable; \
-	if( array == (id)&_PFNSCFArrayClass ) isMutable = NO; \
-	else if( array == (id)&_PFNSCFMutableArrayClass ) isMutable = YES; \
-	else { isMutable = _CFArrayIsMutable((CFArrayRef)array); [array autorelease]; }
-
-#define PF_RETURN_ARRAY_INIT if( isMutable == YES ) { [self autorelease]; self = (id)CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self ); } \
-	PF_RETURN_NEW(self)
-
-#define PF_CHECK_ARR_MUTABLE(array) if( !_CFArrayIsMutable((CFArrayRef)array) ) \
-	[NSException raise: NSInternalInconsistencyException format: [NSString stringWithCString: "Attempting mutable array op on a static NSArray" encoding: NSUTF8StringEncoding]];
-
 extern void CFQSortArray(void *list, CFIndex count, CFIndex elementSize, CFComparatorFunction comparator, void *context);
+// state is defined as "struct __objcFastEnumerationStateEquivalent" in CFArray.c
+extern unsigned long _CFArrayFastEnumeration(CFArrayRef array, NSFastEnumerationState *state, void *stackbuffer, unsigned long count);
 
-/*
- *	Array call-back functions
- */
-// TODO: Should be static
-void _PFArrayFindObjectIndeticalTo( const void *value, void *context )
-{
-	// context points to 3 NSUIntegers: result, position, and object
-	//NSLog( @"find indentical: %u, %u, 0x%X", ((NSUInteger *)context)[0], ((NSUInteger *)context)[1], ((NSUInteger *)context)[2] );
-	
-	if( ((NSUInteger *)context)[0] == NSNotFound )
-	{
-		if( (NSUInteger)value == ((NSUInteger *)context)[2] )
-			((NSUInteger *)context)[0] = ((NSUInteger *)context)[1];
-		else
-			((NSUInteger *)context)[1]++;
+#pragma mark - callbacks
+
+static void PFArrayFindObjectIndeticalTo(const void *value, void *context) {
+	// context points to 3 NSUIntegers: result, position, and object address
+    NSUInteger *ctx = (NSUInteger *)context;
+	if (ctx[0] == NSNotFound) {
+        if (ctx[2] == (NSUInteger)value) {
+			ctx[0] = ctx[1];
+        } else {
+			ctx[1]++;
+        }
 	}
 }
 
-/*
- *	The comparison function for sortUsingSelector:
- */
-// TODO: Should be static
-CFComparisonResult _PFArraySortUsingSelector( const void *val1, const void *val2, void *context )
-{
-	return (CFComparisonResult)[(id)val1 performSelector: (SEL)context withObject: (id)val2];
+// The comparison function for sortUsingSelector:
+static CFComparisonResult PFArraySortUsingSelector(const void *val1, const void *val2, void *context) {
+	return (CFComparisonResult)[(id)val1 performSelector:(SEL)context withObject:(id)val2];
 }
 
-// TODO: Should be static
-CFComparisonResult _PFNSUIntegerCompare( const void *val1, const void *val2, void *context )
-{
-	if( *(NSUInteger *)val1 < *(NSUInteger *)val2 )
-		return kCFCompareLessThan;
-	else if( *(NSUInteger *)val1 > *(NSUInteger *)val2 )
-		return kCFCompareGreaterThan;
-	else
-		return kCFCompareEqualTo;
+typedef struct _PerformSelectorContext {
+    SEL selector;
+    id object;
+} _PerformSelectorContext;
+
+static void PFArrayMakePerformSelector(const void *value, void *context) {
+    [(id)value performSelector:((_PerformSelectorContext *)context)->selector withObject:((_PerformSelectorContext *)context)->object];
 }
 
 #pragma mark - utility functions
+
+static CFArrayRef PFArrayInitFromVAList(void *first, va_list args) {
+    va_list dargs;
+    va_copy(dargs, args);
+
+    CFIndex count = 1;
+    while (va_arg(dargs, void *)) count++;
+    va_end(dargs);
+    
+    void **values;
+    if (count == 1) {
+        values = &first;
+    } else {
+        void **ptr = values = malloc(count * sizeof(void *));
+        *ptr++ = first;
+        while ((*ptr++ = va_arg(args, void *))) {}
+    }
+    
+    CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)values, count, ARRAY_CALLBACKS);
+    free(values);
+    return array;
+}
+
+// Returns a pointer to an array of copied objects which the caller must free
+static void ** PFArrayShallowCopy(CFArrayRef array, CFIndex count) {
+    if (!count) count = CFArrayGetCount(array);
+    void **values = calloc(count, sizeof(void *));
+    CFArrayGetValues((CFArrayRef)array, CFRangeMake(0, count), (const void **)values);
+    void **ptr = values;
+    while (count--) {
+        *ptr = [(id)*ptr copy];
+        ptr++;
+    }
+    return values;
+}
 
 // Attempts to load an array from a plist
 // TODO: May want to move this out into a utils class so we can use it for dictionaries
@@ -111,17 +117,35 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return array;
 }
 
+// Attempts to save an array to a plist
+// TODO: May want to generalise this and move this out into a utility class
+static BOOL PFArraySaveToURL(CFArrayRef array, CFURLRef url, BOOL atomically, CFErrorRef *error) {
+    CFWriteStreamRef stream = CFWriteStreamCreateWithFile(kCFAllocatorDefault, url);
+    if (!stream) {
+        // TODO: Logging
+        // TODO: Create and return an error
+        return NO;
+    }
+    CFPropertyListFormat format = kCFPropertyListXMLFormat_v1_0;
+    CFIndex length = CFPropertyListWrite(array, stream, format, 0, error);
+    CFRelease(stream);
+    return length ? YES : NO;
+}
+
+static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomically, CFErrorRef *error) {
+    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, false);
+    BOOL result = PFArraySaveToURL(array, url, atomically, error);
+    CFRelease(url);
+    return result;
+}
+
 @implementation NSArray
 
 #pragma mark - primatives
 
-- (NSUInteger)count {
-    return 0;
-}
-
-- (id)objectAtIndex:(NSUInteger)index {
-    return nil;
-}
+- (NSUInteger)count { return 0; }
+- (id)objectAtIndex:(NSUInteger)index { return nil; }
+- (id)firstObject { return nil; }
 
 #pragma mark - NSCopying
 
@@ -141,8 +165,6 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 
 #pragma mark - Factory methods
 
-// TODO: copy and redefine array-specific callbacks
-
 + (instancetype)array {
 	return [(id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS) autorelease];
 }
@@ -161,64 +183,18 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return [(id)CFArrayCreate(kCFAllocatorDefault, (const void **)objects, count, ARRAY_CALLBACKS) autorelease];
 }
 
-/*
- *	It's a pain that we can't hand off varidic arguments, so we'll have to duplicate initWithObjects: here
- */
-// TODO: Fix this method
-+ (id)arrayWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION;
-{
-	PF_HELLO("")
-	//PF_NIL_ARG(firstObj)
-	
++ (id)arrayWithObjects:(id)firstObj, ... {
     if (!firstObj) {
         return [self array];
     }
-    
-    // TODO: check this and make it better
-	
-	id *ptr;
-	//void **t_ptr;
-	void *temp;
-	
 	va_list args;
-	va_start( args, firstObj );
-	
-	// count the number of va_args
-	CFIndex count = 1;
-	while( (temp = va_arg( args, void* )) != nil ) 
-		count++;
-	
-	//printf("\tCounted %d object, total\n", count );
-	
-	if( count == 1 )
-		ptr = &firstObj;
-	else
-	{	
-		ptr = calloc(count, sizeof(void *));
-		//t_ptr = ptr;
-		
-		va_start( args, firstObj );
-		*ptr++ = firstObj;
-		while( (temp = va_arg( args, void* )) != nil)
-			*ptr++ = temp;
-		
-		ptr -= count;
-	}
-	
-	//CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, &kCFTypeArrayCallBacks );
-	
-	// problem was that this was only returning an immutable array, so pass collected args
-	// off to initWithObjects:count: to interpret [self alloc]
-	NSArray *new = [[[self alloc] initWithObjects: ptr count: count] autorelease];
-
-	if( count != 1 ) free( ptr );
-	va_end( args );
-	//PF_RETURN_TEMP(new)
-	return new; // which has already been made collectible and released
+	va_start(args, firstObj);
+    CFArrayRef array = PFArrayInitFromVAList(firstObj, args);
+    va_end(args);
+    return [(id)array autorelease];
 }
 
 + (id)arrayWithArray:(NSArray *)array {
-	PF_HELLO("")
     return [(id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array) autorelease];
 }
 
@@ -245,45 +221,16 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return (id)CFArrayCreate(kCFAllocatorDefault, (const void **)objects, count, ARRAY_CALLBACKS);
 }
 
-// TODO: need a general one of these which takes var-args and retuns an array
-- (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
-{
-    //printf("array initWithObjects:\n");
-    PF_NIL_ARG(firstObj)
-//    PF_DUMMY_ARR(self)
-    
-    id *ptr;
-    
-    va_list args;
-    va_start( args, firstObj );
-    
-    // count the number of va_args
-    CFIndex count = 1;
-    void *temp;
-    while( (temp = va_arg( args, void* )) != nil )
-        count++;
-    
-    //printf("\tCounted %d object, total\n", count );
-    
-    if( count == 1 )
-        ptr = &firstObj;
-    else
-    {
-        ptr = calloc(count, sizeof(id));
-        id *t_ptr = ptr;
-        
-        va_start( args, firstObj );
-        *t_ptr++ = firstObj;
-        while( (temp = va_arg( args, void* )) != nil)
-            *t_ptr++ = temp;
+- (id)initWithObjects:(id)firstObj, ... {
+    if (!firstObj) {
+        return [self init];
     }
-    
-    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-    
-    if( count != 1 ) free(ptr);
-    va_end( args );
-    
-//    PF_RETURN_ARRAY_INIT
+    free(self);
+    va_list args;
+    va_start(args, firstObj);
+    CFArrayRef array = PFArrayInitFromVAList(firstObj, args);
+    va_end(args);
+    return (id)array;
 }
 
 - (instancetype)initWithArray:(NSArray *)array {
@@ -291,48 +238,21 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return (id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array);
 }
 
-// TODO: finish this, copying all of the items if needs be
-- (id)initWithArray:(NSArray *)array copyItems:(BOOL)copy //AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER;
-{
+// TODO: Check what macOS Foundation returns when pass a nil array
+- (id)initWithArray:(NSArray *)array copyItems:(BOOL)copy {
+    if (!array) {
+        return [self init];
+    }
     free (self);
-    if (!copy) {
+    CFIndex count = CFArrayGetCount((CFArrayRef)array);
+    if (!copy || !count) {
         return (id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)array);
     }
     
-    return NULL; // TODO:
-    
-    /*
-
-    CFIndex count;
-    // check whether there's anything to copy
-    if( (array == nil) || ((count = [array count]) == 0) ) return [self init];
-    
-    // check whether we need to copy what there is
-    if( flag == NO ) return [self initWithArray: array];
-    
-    PF_DUMMY_ARR(self)
-    
-    //if( (flag == NO) || (count == 0) )
-    //    PF_RETURN_NEW([array copyWithZone: nil])
-    
-    // temp scratch space to hold all objects
-    id *ptr = calloc(count, sizeof(id));
-    //const void**ptr2 = (const void**)ptr1;
-    
-    // foreach item in array, -copyWithZone: nil, then put them into a new array and return
-    // could probably use an enumerator about here...
-    //for( int i = 0; i < count; i++ )
-    //    ptr[i] = [[array objectAtIndex: i] copyWithZone: nil];
-    for( id object in array )
-        *ptr++ = [object copyWithZone: nil];
-    ptr -= count;
-    
-    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, count, &_PFCollectionCallBacks );
-    
-    free(ptr);
-    
-    PF_RETURN_ARRAY_INIT
-     */
+    void **values = PFArrayShallowCopy((CFArrayRef)array, count);
+    CFArrayRef newArray = CFArrayCreate(kCFAllocatorDefault, (const void **)values, count, ARRAY_CALLBACKS);
+    free(values);
+    return (id)newArray;
 }
 
 - (instancetype)initWithContentsOfFile:(NSString *)path {
@@ -362,28 +282,6 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 
 @implementation NSMutableArray
 
-//+(void)initialize
-//{
-//    PF_HELLO("")
-//    if( self == [NSMutableArray class] )
-//        _PFNSCFMutableArrayClass = objc_getClass("NSCFArray");
-//}
-
-#pragma mark - Primatives
-
-
-/*
- *	Mutable version
- */
-//+(id)alloc
-//{
-//    PF_HELLO("")
-//    if( self == [NSMutableArray class] )
-//        return (id)&_PFNSCFMutableArrayClass;
-//    else
-//        return [super alloc];
-//}
-
 #pragma mark - Factory methods
 
 + (instancetype)arrayWithCapacity:(NSUInteger)capacity {
@@ -395,87 +293,42 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 }
 
 + (instancetype)arrayWithObject:(id)anObject {
-    /*
-	PF_HELLO("")
+    CFMutableArrayRef array = CFArrayCreateMutable(kCFAllocatorDefault, 0, ARRAY_CALLBACKS);
+    if (anObject) {
+        CFArrayAppendValue(array, anObject);
+    }
+    return [(id)array autorelease];
+}
 
-    if (!anObject) {
++ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)count {
+    CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)objects, count, ARRAY_CALLBACKS);
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array);
+    CFRelease(array);
+    return [(id)mArray autorelease];
+}
+
++ (id)arrayWithObjects:(id)firstObj, ... {
+    if (!firstObj) {
         return [self array];
     }
-	CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)&anObject, 1, ARRAY_CALLBACKS);
-	CFArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array);
-//    [(id)new release]; // saves going through CFRelease()
-    CFRelease(array);
-//    PF_RETURN_TEMP(newer)
-    return [(id)mArray autorelease];
-     */
-    return NULL;
-}
-
-+ (id)arrayWithObjects:(const id *)objects count:(NSUInteger)cnt {
-    /*
-    PF_HELLO("")
-    return [[[super arrayWithObjects: objects count: cnt] mutableCopyWithZone: nil] autorelease];
-     */
-    return NULL;
-}
-
-+ (id)arrayWithObjects:(id)firstObj, ...
-{
-    /*
-    PF_HELLO("")
-    PF_NIL_ARG(firstObj)
-    
-    void **ptr;
-    void **t_ptr;
-    void *temp;
-    
     va_list args;
-    va_start( args, firstObj );
-    
-    count the number of va_args
-    CFIndex count = 1;
-    while( (temp = va_arg( args, void* )) != nil )
-        count++;
-    
-    printf("\tCounted %d object, total\n", count );
-    
-    if( count == 1 )
-        ptr = (void *)&firstObj;
-    else
-    {
-        ptr = NSZoneCalloc( nil, count, sizeof(void *) );
-        t_ptr = ptr;
-        
-        va_start( args, firstObj );
-        *t_ptr++ = (void *)firstObj;
-        while( (temp = va_arg( args, void* )) != nil)
-            *t_ptr++ = temp;
-    }
-    
-    CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, &kCFTypeArrayCallBacks );
-    
-    if( count != 1 ) NSZoneFree( nil, ptr );
-    va_end( args );
-    
-    CFArrayRef newer = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, new );
-    [(id)new release];
-    PF_RETURN_TEMP(newer)
-     */
-    return NULL;
+    va_start(args, firstObj);
+    CFArrayRef array = PFArrayInitFromVAList(firstObj, args);
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array);
+    CFRelease(array);
+    va_end(args);
+    return [(id)mArray autorelease];
 }
 
 + (instancetype)arrayWithArray:(NSArray *)array {
-    free(self);
-    return [(id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array) autorelease];
+    return [(id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)array) autorelease];
 }
 
 + (instancetype)arrayWithContentsOfFile:(NSString *)path {
-    free(self);
     return [(id)PFArrayInitFromPath((CFStringRef)path, true) autorelease];
 }
 
 + (instancetype)arrayWithContentsOfURL:(NSURL *)url {
-    free(self);
     return [(id)PFArrayInitFromURL((CFURLRef)url, true) autorelease];
 }
 
@@ -496,50 +349,21 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)objects, (CFIndex)count, ARRAY_CALLBACKS);
     CFArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, count, array);
     CFRelease(array);
-    return array;
+    return (id)array;
 }
 
-- (id)initWithObjects:(id)firstObj, ... //NS_REQUIRES_NIL_TERMINATION
-{
-    /*
-    //printf("array initWithObjects:\n");
-    PF_NIL_ARG(firstObj)
-    PF_DUMMY_ARR(self)
-    
-    id *ptr;
-    
-    va_list args;
-    va_start( args, firstObj );
-    
-    // count the number of va_args
-    CFIndex count = 1;
-    void *temp;
-    while( (temp = va_arg( args, void* )) != nil )
-        count++;
-    
-    //printf("\tCounted %d object, total\n", count );
-    
-    if( count == 1 )
-        ptr = &firstObj;
-    else
-    {
-        ptr = calloc(count, sizeof(id));
-        id *t_ptr = ptr;
-        
-        va_start( args, firstObj );
-        *t_ptr++ = firstObj;
-        while( (temp = va_arg( args, void* )) != nil)
-            *t_ptr++ = temp;
+- (id)initWithObjects:(id)firstObj, ... {
+    if (!firstObj) {
+        return [self init];
     }
-    
-    self = (id)CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (CFIndex)count, (CFArrayCallBacks *)&_PFCollectionCallBacks );
-    
-    if( count != 1 ) free(ptr);
-    va_end( args );
-    
-    PF_RETURN_ARRAY_INIT
-     */
-    return NULL;
+    free(self);
+    va_list args;
+    va_start(args, firstObj);
+    CFArrayRef array = PFArrayInitFromVAList(firstObj, args);
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, array);
+    CFRelease(array);
+    va_end(args);
+    return (id)mArray;
 }
 
 - (instancetype)initWithArray:(NSArray *)array {
@@ -547,14 +371,22 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return (id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)array);
 }
 
+// TODO: Write some benchmarks to test whether it is quicker to create a mutable array and copy+append each item in turn
 - (instancetype)initWithArray:(NSArray *)array copyItems:(BOOL)copy {
-    free(self);
-    
-    if (!copy) {
+    if (!array) {
+        return [self init]; // TODO: Check whether this is the correct behaviour
+    }
+    free (self);
+    CFIndex count = CFArrayGetCount((CFArrayRef)array);
+    if (!copy || !count) {
         return (id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)array);
     }
-    
-    return NULL; // TODO
+    void **values = PFArrayShallowCopy((CFArrayRef)array, count);
+    CFArrayRef newArray = CFArrayCreate(kCFAllocatorDefault, (const void **)values, count, ARRAY_CALLBACKS);
+    free(values);
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, newArray);
+    CFRelease(newArray);
+    return (id)mArray;
 }
 
 - (instancetype)initWithContentsOfFile:(NSString *)path {
@@ -567,10 +399,7 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
     return (id)PFArrayInitFromURL((CFURLRef)url, true);
 }
 
-
-/*
- *	NSMutableArray specific instance methods, for the compiler
- */
+// Instance method prototypes
 - (void)addObject:(id)anObject {}
 - (void)insertObject:(id)anObject atIndex:(NSUInteger)index {}
 - (void)removeLastObject {}
@@ -585,13 +414,10 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 #pragma mark - CF bridging
 
 -(CFTypeID)_cfTypeID {
-	PF_HELLO("")
 	return CFArrayGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
+// Standard bridged-class over-rides
 - (id)retain { return (id)CFRetain((CFTypeRef)self); }
 - (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
 - (oneway void)release { CFRelease((CFTypeRef)self); }
@@ -613,7 +439,6 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 
 
 - (NSString *)descriptionWithLocale:(id)locale {
-	PF_TODO
 	return [self descriptionWithLocale:locale indent:0];
 }
 
@@ -668,808 +493,435 @@ static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
 #pragma mark - NSCopying
 
 - (id)copyWithZone:(NSZone *)zone {
-	PF_HELLO("")
-	// at the moment, all allocation goes through the Default CF alloc zone
-    return [(id)CFArrayCreateCopy(kCFAllocatorDefault, (CFArrayRef)self) autorelease];
-//    PF_RETURN_NEW(new)
+    return (id)CFArrayCreateCopy(kCFAllocatorDefault, SELF);
 }
 
 #pragma mark - NSMutableCopying
 
 - (id)mutableCopyWithZone:(NSZone *)zone {
-	PF_HELLO("")
-    return [(id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, (CFArrayRef)self) autorelease];
-//    PF_RETURN_NEW(new)
+    return (id)CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, SELF);
 }
 
 #pragma mark - NSFastEnumeration
 
-/*
- *	This is just evil. Looking at CFArray.h, at the __CFArray structure, there is a _mutations 
- *	count stored 12 bytes in. We point the fast enumerations mutationsPtr at it, and it seems to
- *	catch any attempt at altering a mutable array. Of course, this will break under 64-bit, so needs 
- *	to be conditionally defined to take into account the extra 4 bytes.
- */
-#define PF_ARRAY_MO 12
- 
-/*
- *	NSFastEnumeration support. Based on example code from
- *		http://cocoawithlove.com/2008/05/implementing-countbyenumeratingwithstat.html
- */
-- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state 
-								  objects:(id *)stackbuf 
-									count:(NSUInteger)len
-{
-	PF_HELLO("")
-	
-	CFIndex count = CFArrayGetCount( (CFArrayRef)self );
-	NSUInteger num = count - state->state; // 0 if 1st time through an empty array, or at end
-										  // of a full one
-	if( num != 0 )
-	{
-		num = (len < num) ? len : num; // number of items to copy
-
-		CFRange range = CFRangeMake( state->state, num ); // range to copy across
-
-		CFArrayGetValues( (CFArrayRef)self, range, (const void**)stackbuf ); // do the copy
-
-		// set the return values
-		state->state += num;
-		state->itemsPtr = stackbuf;
-		state->mutationsPtr = (unsigned long *)((NSUInteger)self + PF_ARRAY_MO); // see above
-		//printf("Is %u %u + %u?\n", state->mutationsPtr, self, PF_ARRAY_MO);
-	}
-	return num;
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id *)stackbuf count:(NSUInteger)len {
+    return _CFArrayFastEnumeration(SELF, state, stackbuf, len);
 }
 
-#pragma mark - inits
+#pragma mark - saving arrays
 
-
-/*
- *	Complimentary writeTo... methods
- */
-- (BOOL)writeToFile:(NSString *)path atomically:(BOOL)useAuxiliaryFile
-{
-	PF_HELLO("")
-	
-	if( path == nil ) return NO;
-	
-	// check that self can be written out as a property list
-	//	don't bother -- it's done again by dataFromPropertyList:
-	//if( [NSPropertyListSerialization propertyList: self isValidForFormat: NSPropertyListXMLFormat_v1_0] == NO )
-	//	return NO;
-	
-	// convert it into an NSData item
-	NSString *error;
-	NSData *data = [NSPropertyListSerialization dataFromPropertyList: self format: NSPropertyListXMLFormat_v1_0 errorDescription: &error];
-	if( error != nil )
-	{
-		NSLog( error );
-		[error release];
-		return NO;
-	}
-	
-	// if we're writing directly to the file location...
-	if( useAuxiliaryFile == NO )
-		return [[NSFileManager defaultManager] createFileAtPath: path contents: data attributes: nil];
-	
-	// ...otherwise
-		// the temp name won't be unique if we try lots of these in quick sucession
-	NSString *tempPath = [NSTemporaryDirectory() stringByAppendingFormat: @"PFTempArray-%u", [[NSDate date] timeIntervalSinceReferenceDate]]; 
-	
-	//NSLog(@"Trying temp path %@", tempPath);
-	
-	// could maybe check to see if path exists before doing this
-	
-	if( YES == [[NSFileManager defaultManager] createFileAtPath: tempPath contents: data attributes: nil] )
-	{
-		//return [[NSFileManager defaultManager] moveItemAtPath: tempPath toPath: path error: NULL];
-#warning Replace this with the version above, once NSFileManager supports it
-		return [[NSFileManager defaultManager] movePath: tempPath toPath: path handler: nil];
-	}
-	return NO;
+- (BOOL)writeToFile:(NSString *)path atomically:(BOOL)atomically {
+	if (!path.length) return NO;
+    return PFArraySaveToPath(SELF, (CFStringRef)path, atomically, NULL);
 }
 
-
-- (BOOL)writeToURL:(NSURL *)url atomically:(BOOL)atomically
-{
-	PF_TODO
-
-	if( url == nil ) return NO;
-	if( [url isFileURL] ) return [self writeToFile: [url path] atomically: atomically];
-	
-	
-	return NO;
+- (BOOL)writeToURL:(NSURL *)url atomically:(BOOL)atomically {
+	if (!url) return NO;
+    return PFArraySaveToURL(SELF, (CFURLRef)url, atomically, NULL);
 }
 
+#pragma mark - primatives
 
 - (NSUInteger)count {
-	return (NSUInteger)CFArrayGetCount((CFArrayRef)self);
+	return (NSUInteger)CFArrayGetCount(SELF);
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
-	return (id)CFArrayGetValueAtIndex((CFArrayRef)self, (CFIndex)index);
+	return (id)CFArrayGetValueAtIndex(SELF, (CFIndex)index);
 }
 
-/*
- *	@interface NSArray (NSExtendedArray) instance methods
- */
-- (NSArray *)arrayByAddingObject:(id)anObject
-{
-	PF_HELLO("Test this")
-	PF_NIL_ARG(anObject)
-	
-	CFIndex count = CFArrayGetCount((CFArrayRef)self); //(CFIndex)[self count];
-	if( count == 0 ) return [NSArray arrayWithObject: anObject]; // leaks?
-	
-	/*
-	 *	??? allocate this on the stack ???
-	 */
-	id *ptr = calloc((count + 1), sizeof(id));
-	CFRange range = CFRangeMake( 0, count );
-	CFArrayGetValues( (CFArrayRef)self, range, (const void **)ptr );
+#pragma mark - NSArray (NSExtendedArray)
 
-	// insert the extra object at the end
-	ptr[count] = anObject;
-	
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, (count + 1), &kCFTypeArrayCallBacks );
-	free(ptr);
-	PF_RETURN_TEMP(new)
+- (NSArray *)arrayByAddingObject:(id)anObject {
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, SELF);
+    if (anObject) {
+        CFArrayAppendValue(mArray, &anObject);
+    }
+    return [(id)mArray autorelease];
 }
 
-- (NSArray *)arrayByAddingObjectsFromArray:(NSArray *)otherArray
-{
-	PF_HELLO("test this")
-	PF_NIL_ARG(otherArray)
-	
-	CFIndex count1 = CFArrayGetCount((CFArrayRef)self); //[self count];
-	CFIndex count2 = [otherArray count];
-	
-	if( count1 == 0 )
-	{
-		if( count2 == 0 ) { return [NSArray array]; }
-		else { return [otherArray copyWithZone: nil]; }
-	}
-	else if( count2 == 0 ) return [self copyWithZone: nil];
-	
-	id *ptr = calloc((count1 + count2), sizeof(id));
-	
-	// get first set of objects
-	CFRange range = CFRangeMake( 0, count1);
-	CFArrayGetValues( (CFArrayRef)self, range, (const void **)ptr );
-	
-	range.length = count2;
-	CFArrayGetValues( (CFArrayRef)otherArray, range, (const void**)(ptr+count1) ); //*sizeof(void *))) );
-	
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void**)ptr, (count1 + count2), &kCFTypeArrayCallBacks );
-	free(ptr);
-	PF_RETURN_TEMP(new)
+- (NSArray *)arrayByAddingObjectsFromArray:(NSArray *)otherArray {
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, SELF);
+    CFIndex count = 0;
+    if (otherArray && (count = CFArrayGetCount((CFArrayRef)otherArray))) {
+        CFArrayAppendArray(mArray, (CFArrayRef)otherArray, CFRangeMake(0, count));
+    }
+    return [(id)mArray autorelease];
 }
 
-- (NSString *)componentsJoinedByString:(NSString *)separator
-{
-	PF_HELLO("")
-	PF_NIL_ARG(separator)
-	
-	NSUInteger count = [self count];
-	if( count == 0 )
-		return [NSString string];
-	else if( count == 1 )
-		return [self description]; // I think this works...
-	
-	CFStringRef new = CFStringCreateByCombiningStrings( kCFAllocatorDefault, (CFArrayRef)self, (CFStringRef)separator );
-
-	PF_RETURN_TEMP(new)
+- (NSString *)componentsJoinedByString:(NSString *)separator {
+	return [(id)CFStringCreateByCombiningStrings(kCFAllocatorDefault, SELF, (CFStringRef)separator) autorelease];
 }
 
-- (BOOL)containsObject:(id)anObject
-{
-	PF_HELLO("")
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( count == 0 ) return NO;
-
-	CFRange range = CFRangeMake( 0, count );
-	
-	return CFArrayContainsValue( (CFArrayRef)self, range, (const void *)anObject );
+- (BOOL)containsObject:(id)anObject {
+	CFIndex count = CFArrayGetCount(SELF);
+	if (!anObject || !count) return NO;
+	return CFArrayContainsValue(SELF, CFRangeMake(0, count), (const void *)anObject);
 }
 
-
-- (id)firstObjectCommonWithArray:(NSArray *)otherArray
-{
-	PF_HELLO("")
-	
-	// this is a little expensive, but we can't guarentee that otherArray is a NSCFArray
-	for( id object in self )
-		if( [otherArray containsObject: object] )
-			return object;
+- (id)firstObjectCommonWithArray:(NSArray *)otherArray {
+    if (otherArray && CFArrayGetCount(SELF) && [otherArray count]) {
+        for (id object in self) {
+            if ([otherArray containsObject:object]) return object;
+        }
+    }
 	return nil;
 }
 
-
-- (void)getObjects:(id *)objects
-{
-	PF_HELLO("")
-	
-	NSRange range = NSMakeRange( 0, [self count] );
-	[self getObjects: objects range: range];
+- (void)getObjects:(id *)objects {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!objects || !count) return;
+    CFArrayGetValues(SELF, CFRangeMake(0, count), (const void **)objects);
 }
 
-- (void)getObjects:(id *)objects range:(NSRange)range
-{
-	PF_HELLO("")
+- (void)getObjects:(id *)objects range:(NSRange)range {
+    NSUInteger count = CFArrayGetCount(SELF);
+	if (!objects || !count) return;
 
-	if( objects == NULL ) return;
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
 	
-	NSUInteger count = [self count];
-	if( count == 0 ) return;
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFRange r = CFRangeMake( range.location, range.length );
-	
-	CFArrayGetValues( (CFArrayRef)self, r, (const void **)objects );
+	CFArrayGetValues(SELF, CFRangeMake(range.location, range.length), (const void **)objects);
 }
 
-
-- (NSUInteger)indexOfObject:(id)anObject
-{
-	PF_HELLO("")
-	
-	NSRange range = NSMakeRange( 0, [self count] );
-	return [self indexOfObject: anObject inRange: range];
+- (NSUInteger)indexOfObject:(id)anObject {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!anObject || !count) return NSNotFound;
+    CFIndex index = CFArrayGetFirstIndexOfValue(SELF, CFRangeMake(0, count), (const void *)anObject);
+    return index == -1 ? NSNotFound : index;
 }
 
-
-- (NSUInteger)indexOfObject:(id)anObject inRange:(NSRange)range
-{
-	PF_HELLO("")
+- (NSUInteger)indexOfObject:(id)anObject inRange:(NSRange)range {
+	NSUInteger count = CFArrayGetCount(SELF);
+	if (!anObject || !count) return NSNotFound;
+    
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise: NSRangeException format: @"TODO"];
+    }
 	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (anObject == nil) || (count == 0) ) return NSNotFound;
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFRange r = CFRangeMake( range.location, range.length );
-	
-	CFIndex result = CFArrayGetFirstIndexOfValue( (CFArrayRef)self, r, (const void *)anObject );
-	return (result == -1) ? NSNotFound : (NSUInteger)result;
+	CFIndex result = CFArrayGetFirstIndexOfValue(SELF, CFRangeMake(range.location, range.length), (const void *)anObject);
+	return result == -1 ? NSNotFound : result;
 }
 
-// addresses must be identical
-- (NSUInteger)indexOfObjectIdenticalTo:(id)anObject
-{
-	PF_HELLO("")
-							// was [self count] -- marginally faster
-	NSRange range = NSMakeRange( 0, CFArrayGetCount((CFArrayRef)self) );
-	return [self indexOfObjectIdenticalTo: anObject inRange: range];
+- (NSUInteger)indexOfObjectIdenticalTo:(id)anObject {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!anObject || !count) return NSNotFound;
+    NSUInteger context[3] = { NSNotFound, 0, (NSUInteger)anObject };
+    CFArrayApplyFunction(SELF, CFRangeMake(0, count), PFArrayFindObjectIndeticalTo, context);
+    return context[0];
 }
 
-- (NSUInteger)indexOfObjectIdenticalTo:(id)anObject inRange:(NSRange)range
-{
-	PF_TODO
-
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (anObject == nil) || (count == 0) ) return NSNotFound;
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
+- (NSUInteger)indexOfObjectIdenticalTo:(id)anObject inRange:(NSRange)range {
+	NSUInteger count = CFArrayGetCount(SELF);
+	if (!anObject || !count) return NSNotFound;
 	
-	CFRange r = CFRangeMake( range.location, range.length );
-
-	/*
-	 *	This probably takes longer than it needs to over large arrays, but it
-	 *	dispatches far fewer (eg. no) messages than any alternative I can think
-	 *	of right now
-	 */
-	NSUInteger context[3] = { NSNotFound, r.location, (NSUInteger)anObject };
-	CFArrayApplyFunction( (CFArrayRef)self, r, _PFArrayFindObjectIndeticalTo, context );
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise: NSRangeException format: @"TODO"];
+    }
+	
+	NSUInteger context[3] = { NSNotFound, range.location, (NSUInteger)anObject };
+	CFArrayApplyFunction(SELF, CFRangeMake(range.location, range.length), PFArrayFindObjectIndeticalTo, context);
 	return context[0];
 }
 
-- (BOOL)isEqualToArray:(NSArray *)otherArray
-{
-	PF_TODO
-	PF_NIL_ARG(otherArray) // ???
-	
-	if( self == otherArray ) return YES;
-	return CFEqual( (CFTypeRef)self, (CFTypeRef)otherArray );
+- (BOOL)isEqualToArray:(NSArray *)otherArray {
+    if (!otherArray) return NO;
+	return (self == otherArray) || CFEqual((CFTypeRef)self, (CFTypeRef)otherArray);
 }
 
-- (id)lastObject
-{
-	PF_HELLO("")
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( count == 0 ) return nil;
-	return (id)CFArrayGetValueAtIndex( (CFArrayRef)self, --count );
+- (id)firstObject {
+    CFIndex count = CFArrayGetCount(SELF);
+    return count ? (id)CFArrayGetValueAtIndex(SELF, 0) : nil;
 }
 
-/*
- *	These skip NSEnumerator and instantiate our own enumerator subclass
- */
-- (NSEnumerator *)objectEnumerator
-{
-	PF_HELLO("")
-	return [[[PFEnumerator alloc] initWithCFArray: self] autorelease];
+- (id)lastObject {
+	CFIndex count = CFArrayGetCount(SELF);
+    return count ? (id)CFArrayGetValueAtIndex(SELF, --count) : nil;
 }
 
-- (NSEnumerator *)reverseObjectEnumerator
-{
-	PF_HELLO("")
-	return [[[PFReverseEnumerator alloc] initWithCFArray: self] autorelease];
+// These skip NSEnumerator and instantiate our own enumerator subclass
+- (NSEnumerator *)objectEnumerator {
+	return [[[PFEnumerator alloc] initWithCFArray:self] autorelease];
 }
 
-/*
- *	"Analyzes the receiver and returns a “hint” that speeds the sorting of the array when the 
+- (NSEnumerator *)reverseObjectEnumerator {
+	return [[[PFReverseEnumerator alloc] initWithCFArray:self] autorelease];
+}
+
+- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator context:(void *)context {
+    NSUInteger count = CFArrayGetCount(SELF);
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, SELF);
+    if (comparator && count > 0) {
+        CFArraySortValues(mArray, CFRangeMake(0, count), (CFComparatorFunction)comparator, context);
+    }
+    return [(id)mArray autorelease];
+}
+
+/*	"Analyzes the receiver and returns a “hint” that speeds the sorting of the array when the
  *	hint is supplied to sortedArrayUsingFunction:context:hint:."
- *
- *	The "hint" 
  */
-- (NSData *)sortedArrayHint
-{
-	PF_HELLO("")
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self);
-	if( count == 0 ) return [[NSData alloc] init];
-	
-	NSUInteger *buffer = calloc(count, sizeof(id));
-	for( id object in self )
-		*buffer++ = [object hash];
-	buffer -= count;
-	
-	return (NSData *)CFDataCreateWithBytesNoCopy( kCFAllocatorDefault, (const UInt8 *)buffer, (count * sizeof(id)), kCFAllocatorMalloc );
+- (NSData *)sortedArrayHint {
+    PF_TODO
+    return nil;
 }
 
-- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator context:(void *)context
-{
-	PF_HELLO("")
-
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self);
-	if( count == 0 ) return [[NSArray alloc] init];
-	if( count == 1 ) return [self copyWithZone: nil];
-	
-	CFMutableArrayRef array = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self );
-	CFRange range = CFRangeMake( 0, count );
-	CFArraySortValues( array, range, (CFComparatorFunction)comparator, context );
-	PF_RETURN_NEW(array)
-}
-
-- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator context:(void *)context hint:(NSData *)hint
-{
+- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator context:(void *)context hint:(NSData *)hint {
 	PF_TODO
-
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self);
-	// get the easy cases out of the way
-	if( count == 0 ) return [[NSArray alloc] init];
-	if( count == 1 ) return [self copyWithZone: nil];
-	
-	// create a mutable copy to work on
-	CFMutableArrayRef array = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self );
-	
-	// maybe do something with CFMergeSortArray
-	// use hint to determine how many entries have changed
-	//CFIndex start = 0;
-	//CFIndex dataLength = [hint length] / sizeof(NSUInteger);
-	//
-	//NSLog( @"dataLength = %u", dataLength );
-	//
-	//if( dataLength != 0 )
-	//{
-	//	NSUInteger *data = (NSUInteger *)[hint bytes];
-	//	for( id object in self )
-	//	{
-	//		if( *data++ != [object hash] ) break; // found first difference
-	//		if( ++start == dataLength ) break; // reached end of data
-	//	}
-	//}
-	//
-	//if( start != count )
-	//{
-	//	CFRange range = CFRangeMake( start, (count - start) );
-	//
-	//	NSLog(@"only need to search from %u for %u", range.location, range.length);
-	//
-	//	CFArraySortValues( (CFMutableArrayRef)array, range, (CFComparatorFunction)comparator, context );
-	//}
-	//PF_RETURN_NEW(array)
+    return [self sortedArrayUsingFunction:comparator context:context];
 }
 
-- (NSArray *)sortedArrayUsingSelector:(SEL)comparator
-{
-	PF_HELLO("")
-	
-	// what do we do if comparator is nil ???
-	
-	// get some quick cases out of the way
-	CFIndex count = CFArrayGetCount((CFArrayRef)self);
-	if( count == 0 ) return [NSArray array]; // autoreleased
-	if( count == 1 ) PF_RETURN_TEMP([self copyWithZone: nil]) // just one way of doing it...
-	
-	// create a mutable copy to work on
-	CFMutableArrayRef array = CFArrayCreateMutableCopy( kCFAllocatorDefault, 0, (CFArrayRef)self ); //[self mutableCopyWithZone: nil];
-	CFRange range = CFRangeMake( 0, count);
-	CFArraySortValues( array, range, _PFArraySortUsingSelector, (void *)comparator );
-	PF_RETURN_TEMP(array)
+- (NSArray *)sortedArrayUsingSelector:(SEL)comparator {
+    CFMutableArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, SELF);
+    CFIndex count = CFArrayGetCount(SELF);
+    if (comparator && count > 1) {
+        CFArraySortValues(mArray, CFRangeMake(0, count), PFArraySortUsingSelector, (void *)comparator);
+    }
+    return [(id)mArray autorelease];
 }
 
-/*
- *	This is added by NSSortDescript.h, and will be implemented after they are
- */
+// TODO: This is added in NSSortDescriptor.h, and will be implemented once sort decriptors are
 - (NSArray *)sortedArrayUsingDescriptors:(NSArray *)sortDescriptors { return nil; }
 
-
-- (NSArray *)subarrayWithRange:(NSRange)range
-{
-	PF_HELLO("")
+- (NSArray *)subarrayWithRange:(NSRange)range {
+    NSUInteger count = CFArrayGetCount(SELF);
+    if (!count || !range.length) {
+        return [(id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS) autorelease];
+    }
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise: NSRangeException format:@"TODO"];
+    }
 	
-	NSUInteger count = [self count];
-	if( (count == 0) || (range.length == 0) || (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFRange r = CFRangeMake( range.location, range.length );
-	void **ptr = calloc( range.length, sizeof(id) );
-	
-	CFArrayGetValues( (CFArrayRef)self, r, (const void **)ptr );
-	
-	CFArrayRef new = CFArrayCreate( kCFAllocatorDefault, (const void **)ptr, range.length, &kCFTypeArrayCallBacks );
-	free( ptr );
-	PF_RETURN_TEMP(new)
+	void **values = calloc(range.length, sizeof(void *));
+    CFArrayGetValues(SELF, CFRangeMake(range.location, range.length), (const void **)values);
+	CFArrayRef newArray = CFArrayCreate(kCFAllocatorDefault, (const void **)values, range.length, ARRAY_CALLBACKS);
+	free(values);
+    return [(id)newArray autorelease];
 }
 
-
-- (void)makeObjectsPerformSelector:(SEL)aSelector
-{
-	PF_HELLO("Test this")
-	PF_NIL_ARG(aSelector)
-	
-	//CFRange range = CFRangeMake( 0, [self count] );
-	//CFArrayApplyFunction( (CFArrayRef)self, range, _PFArrayPerformSelector, (void *)aSelector );
-	
-	// okay, enough pretending to be clever by using ApplyFunction
-	for( id object in self )
-		[object performSelector: aSelector];
+- (void)makeObjectsPerformSelector:(SEL)aSelector {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!aSelector || !count) return;
+    _PerformSelectorContext context = { aSelector, nil };
+    CFArrayApplyFunction(SELF, CFRangeMake(0, count), PFArrayMakePerformSelector, &context);
 }
 
-- (void)makeObjectsPerformSelector:(SEL)aSelector withObject:(id)argument
-{
-	PF_HELLO("test this")
-	PF_NIL_ARG(aSelector)
-	//PF_NIL_ARG(argument)
-	
-	//NSUInteger context[2] = { (NSUInteger)aSelector, (NSUInteger)argument }; 
-	//CFRange range = CFRangeMake( 0, [self count] );
-	//CFArrayApplyFunction( (CFArrayRef)self, range, _PFArrayPerformSelectorWithObject, (void *)context );
-	
-	for( id object in self )
-		[object performSelector: aSelector withObject: argument];
+- (void)makeObjectsPerformSelector:(SEL)aSelector withObject:(id)argument {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!aSelector || !count) return;
+    _PerformSelectorContext context = { aSelector, argument };
+    CFArrayApplyFunction(SELF, CFRangeMake(0, count), PFArrayMakePerformSelector, &context);
 }
 
-//#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-- (NSArray *)objectsAtIndexes:(NSIndexSet *)indexes
-{
+// TODO: Requires NSIndexSet
+- (NSArray *)objectsAtIndexes:(NSIndexSet *)indexes {
 	PF_TODO
-	
-	// if [set count] == 0 return an empty set
-	// get arrayCount. ret empty array if it's 0
-	// alloc enough space for all ids
-	// for setCount.
-	//		if index > arrayCount NSRangeException
-	//		write into memory space
-	// done: create a new array
-
+    return nil;
 }
 
+// NSMutableArray specific instance methods
 
-/*
- *	NSMutableArray specific instance methods
- */
-- (void)addObject:(id)anObject
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	PF_NIL_ARG(anObject)
-	
-	CFArrayAppendValue( (CFMutableArrayRef)self, (const void *)anObject );
+- (void)addObject:(id)anObject {
+    if (!anObject) return;
+	CFArrayAppendValue(MSELF, (const void *)anObject);
 }
 
-- (void)insertObject:(id)anObject atIndex:(NSUInteger)index
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	PF_NIL_ARG(anObject)
-	
-	if( index > [self count] )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFArrayInsertValueAtIndex( (CFMutableArrayRef)self, (CFIndex)index, (const void *)anObject );
+- (void)insertObject:(id)anObject atIndex:(NSUInteger)index {
+    if (!anObject) {
+        [NSException raise:NSInvalidArgumentException format:@"TODO"];
+    }
+    if (index > CFArrayGetCount(SELF)) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	CFArrayInsertValueAtIndex(MSELF, index, (const void *)anObject);
 }
 
-- (void)removeLastObject
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger count = [self count];
-	if( count == 0 )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFArrayRemoveValueAtIndex( (CFMutableArrayRef)self, (CFIndex)--count );
+- (void)removeLastObject {
+	CFIndex count = CFArrayGetCount(SELF);
+    if (!count) return;
+	CFArrayRemoveValueAtIndex(MSELF, --count);
 }
 
-- (void)removeObjectAtIndex:(NSUInteger)index
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	if( index >= [self count] )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFArrayRemoveValueAtIndex( (CFMutableArrayRef)self, (CFIndex)index );
+- (void)removeObjectAtIndex:(NSUInteger)index {
+    if (index >= CFArrayGetCount(SELF)) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	CFArrayRemoveValueAtIndex(MSELF, index);
 }
 
-- (void)replaceObjectAtIndex:(NSUInteger)index withObject:(id)anObject
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	PF_NIL_ARG(anObject)
-	
-	if( index >= [self count] )
-		[NSException raise: NSRangeException format: nil];
-	
-	// I presume that the replaced object is correctly released
-	CFArraySetValueAtIndex( (CFMutableArrayRef)self, (CFIndex)index, (const void *)anObject );
+- (void)replaceObjectAtIndex:(NSUInteger)index withObject:(id)anObject {
+    if (!anObject) {
+        [NSException raise:NSInvalidArgumentException format:@"TODO"];
+    }
+    if (index >= CFArrayGetCount(SELF)) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	CFArraySetValueAtIndex(MSELF, index, (const void *)anObject);
 }
 
-/*
- *	NSMutableArray (NSExtendedMutableArray) instance methods
- */
-- (void)addObjectsFromArray:(NSArray *)otherArray
-{
+// NSMutableArray (NSExtendedMutableArray)
+
+- (void)addObjectsFromArray:(NSArray *)otherArray {
+    CFIndex count = 0;
+    if (otherArray && (count = CFArrayGetCount((CFArrayRef)otherArray))) {
+        CFArrayAppendArray(MSELF, (CFArrayRef)otherArray, CFRangeMake(0, count));
+    }
+}
+
+- (void)exchangeObjectAtIndex:(NSUInteger)idx1 withObjectAtIndex:(NSUInteger)idx2 {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (idx1 >= count || idx2 >= count) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	CFArrayExchangeValuesAtIndices(MSELF, idx1, idx2);
+}
+
+- (void)removeAllObjects {
+	CFArrayRemoveAllValues(MSELF);
+}
+
+- (void)removeObject:(id)anObject inRange:(NSRange)range {
+	CFIndex count = CFArrayGetCount(SELF);
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+    CFIndex index = CFArrayGetFirstIndexOfValue(SELF, CFRangeMake(range.location, range.length), (const void *)anObject);
+    if (index != -1) {
+        CFArrayRemoveValueAtIndex(MSELF, index);
+    }
+}
+
+- (void)removeObject:(id)anObject {
+    CFIndex count = CFArrayGetCount(SELF);
+    if (!count) return;
+    CFRange range = CFRangeMake(0, count);
+    CFIndex index;
+    do {
+        index = CFArrayGetFirstIndexOfValue(SELF, range, (const void *)anObject);
+        if (index != -1) {
+            CFArrayRemoveValueAtIndex(MSELF, index);
+            range.location = index;
+            range.length = count - index;
+        }
+    } while (index != -1 && range.length);
+}
+
+- (void)removeObjectIdenticalTo:(id)anObject inRange:(NSRange)range {
+    NSUInteger index = NSNotFound;
+    NSUInteger end = range.location + range.length;
+    do {
+        index = [self indexOfObjectIdenticalTo:anObject inRange:range];
+        if (index != NSNotFound) {
+            CFArrayRemoveValueAtIndex(MSELF, index);
+            range.location = index;
+            range.length = end - index;
+        }
+    } while (index != NSNotFound && range.length);
+}
+
+- (void)removeObjectIdenticalTo:(id)anObject {
+    NSUInteger index = NSNotFound;
+    NSUInteger count = CFArrayGetCount(SELF);
+    NSRange range = NSMakeRange(0, count);
+    do {
+        index = [self indexOfObjectIdenticalTo: anObject];
+        if (index != NSNotFound) {
+            CFArrayRemoveValueAtIndex(MSELF, index);
+            range.location = index;
+            range.length = count - index;
+        }
+    } while (index != NSNotFound && range.length);
+}
+
+- (void)removeObjectsFromIndices:(NSUInteger *)indices numIndices:(NSUInteger)indexCount {
+    CFIndex count = CFArrayGetCount(SELF);
+	if (!count || !indices || !indexCount) return;
+    while (indexCount--) {
+        NSUInteger index = *indices++;
+        if (index >= count) {
+            [NSException raise:NSRangeException format:@"TODO"];
+        }
+        CFArrayRemoveValueAtIndex(MSELF, index);
+        count--;
+    }
+}
+
+- (void)removeObjectsInArray:(NSArray *)otherArray {
+    if (!CFArrayGetCount(SELF) || ![otherArray count]) return;
+    for (id object in otherArray) {
+		[self removeObject:object];
+    }
+}
+
+// Unlike the implementation described in Apple's documentation, this version does not use -removeObjectAtIndex:
+- (void)removeObjectsInRange:(NSRange)range {
+	CFIndex count = CFArrayGetCount(SELF);
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	CFArrayReplaceValues(MSELF, CFRangeMake(range.location, range.length), NULL, 0);
+}
+
+- (void)replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray range:(NSRange)otherRange {
+	CFIndex count = CFArrayGetCount(SELF);
+    if (range.location >= count || range.location + range.length > count) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	
+	NSUInteger otherCount = [otherArray count];
+    if (otherRange.location > otherCount || otherRange.location + otherRange.length > otherCount) {
+		[NSException raise:NSRangeException format:@"TODO"];
+    }
+	
+	void **values = calloc(otherRange.length, sizeof(void *));
+    [otherArray getObjects:(id *)values range:otherRange];
+	CFArrayReplaceValues(MSELF, CFRangeMake(range.location, range.length), (const void **)values, otherRange.length);
+	free(values);
+}
+
+- (void)replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray {
+	[self replaceObjectsInRange:range withObjectsFromArray:otherArray range:NSMakeRange(0, [otherArray count])];
+}
+
+- (void)setArray:(NSArray *)otherArray {
+    CFArrayRemoveAllValues(MSELF);
+	NSUInteger otherCount = [otherArray count];
+    if (otherCount) {
+        void **values = calloc(otherCount, sizeof(void *));
+        [otherArray getObjects:(id *)values];
+        CFArrayReplaceValues(MSELF, CFRangeMake(0, 0), (const void **)values, otherCount);
+        free(values);
+    }
+}
+
+- (void)sortUsingFunction:(NSInteger (*)(id, id, void *))compare context:(void *)context {
+	CFIndex count = CFArrayGetCount(SELF);
+	if (!compare || count < 2) return;
+	CFArraySortValues(MSELF, CFRangeMake(0, count), (CFComparatorFunction)compare, context);
+}
+
+- (void)sortUsingSelector:(SEL)comparator {
+	CFIndex count = CFArrayGetCount(SELF);
+	if (!comparator || count < 2) return;
+	CFArraySortValues(MSELF, CFRangeMake(0, count), PFArraySortUsingSelector, (void *)comparator);
+}
+
+// TODO: These methods require NSIndexSet
+
+- (void)insertObjects:(NSArray *)objects atIndexes:(NSIndexSet *)indexes {
 	PF_TODO
-	PF_CHECK_ARR_MUTABLE(self)
-	PF_NIL_ARG(otherArray) // not mentioned in docs
-	
-	NSUInteger count = [otherArray count];
-	if( count == 0 ) return; // nothing to do
-	CFRange range = CFRangeMake( 0, count );
-	
-	CFArrayAppendArray( (CFMutableArrayRef)self, (CFArrayRef)otherArray, range );
 }
 
-- (void)exchangeObjectAtIndex:(NSUInteger)idx1 withObjectAtIndex:(NSUInteger)idx2
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	// not mentioned in docs but we'll do this anyway
-	if( (idx1 >= [self count]) || (idx2 >= [self count]) )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFArrayExchangeValuesAtIndices( (CFMutableArrayRef)self, (CFIndex)idx1, (CFIndex)idx2 );
-}
-
-- (void)removeAllObjects
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	CFArrayRemoveAllValues( (CFMutableArrayRef)self );
-}
-
-- (void)removeObject:(id)anObject inRange:(NSRange)range
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-		
-	NSUInteger index = [self indexOfObject: anObject inRange: range];
-	if( index != NSNotFound )
-		[self removeObjectAtIndex: index];
-}
-
-- (void)removeObject:(id)anObject
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSRange range = NSMakeRange( 0, CFArrayGetCount((CFArrayRef)self) ); //[self count] );
-	[self removeObject: anObject inRange: range];
-}
-
-- (void)removeObjectIdenticalTo:(id)anObject inRange:(NSRange)range
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-	
-	NSUInteger index = [self indexOfObjectIdenticalTo: anObject inRange: range];
-	if( index != NSNotFound )
-		[self removeObjectAtIndex: index];
-}
-
-- (void)removeObjectIdenticalTo:(id)anObject
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger index = [self indexOfObjectIdenticalTo: anObject];
-	if( index != NSNotFound )
-		[self removeObjectAtIndex: index];
-	
-}
-
-- (void)removeObjectsFromIndices:(NSUInteger *)indices numIndices:(NSUInteger)cnt
-{
-	PF_HELLO("This does not currently work...")
-	PF_CHECK_ARR_MUTABLE(self)
-
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (count == 0) || (cnt == 0) ) return;
-	
-	// start by sorting the indiced
-	NSUInteger *buffer;
-	
-	if( cnt == 1 )
-		buffer = indices;
-	else
-	{	// we copy and then sort the indicies
-		buffer = (NSUInteger *)calloc(cnt, sizeof(NSUInteger));
-		for( int i = 0; i < cnt; i++)
-			buffer[i] = indices[i];
-		CFQSortArray(buffer, cnt, sizeof(NSUInteger), _PFNSUIntegerCompare, NULL);
-	}
-	
-	buffer += cnt; // move to the end of the sorted indicies
-	for( int i = 0; i < cnt; i++ )
-	{
-		if( *--buffer >= (count - i) ) // the current length of the array
-			[NSException raise: NSRangeException format: nil];
-		
-		CFArrayRemoveValueAtIndex( (CFMutableArrayRef)self, (CFIndex)*buffer );
-	}
-	
-	if( cnt != 1 ) free(buffer);
-}
-
-- (void)removeObjectsInArray:(NSArray *)otherArray
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-
-	for( id object in otherArray )
-		[self removeObject: object];
-}
-
-// unlike what the Apple docs say, this version does not use removeObjectAtIndex:
-- (void)removeObjectsInRange:(NSRange)range
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( count == 0 ) return;
-	if( (range.location >= count) || ((range.location+range.length) > count) )
-		[NSException raise: NSRangeException format: nil];
-	
-	CFRange r = CFRangeMake( range.location, range.length );
-	CFArrayReplaceValues( (CFMutableArrayRef)self, r, NULL, 0 );
-}
-
-- (void)replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray range:(NSRange)otherRange
-{
-	PF_HELLO("test this")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	// check that range is valid for self
-	NSUInteger count1 = CFArrayGetCount((CFArrayRef)self); //[self count];
-	if( (count1 == 0) || (range.location >= count1) || ((range.location+range.length) > count1) )
-		[NSException raise: NSRangeException format: nil];
-	
-	// check that range is valid for otherArray
-	NSUInteger count2 = [otherArray count];
-	if( (count2 == 0) || (otherRange.location > count2) || ((otherRange.location+otherRange.length) > count2) )
-		[NSException raise: NSRangeException format: nil];
-	
-	// get a CFRange of values to copy from otherArray
-	CFRange r = CFRangeMake( otherRange.location, otherRange.length );
-	
-	// get the values from otherArray...
-	void **ptr = calloc( otherRange.length, sizeof(id) );
-	CFArrayGetValues( (CFArrayRef)otherArray, r, (const void **)ptr );
-
-	// ...and insert them into self
-	r = CFRangeMake( range.location, range.length );
-	CFArrayReplaceValues( (CFMutableArrayRef)self, r, (const void **)ptr, (CFIndex)otherRange.length );
-
-	free( ptr );
-}
-
-- (void)replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray
-{
-	PF_HELLO("test this")
-	PF_CHECK_ARR_MUTABLE(self)
-
-	NSRange otherRange = NSMakeRange( 0, [otherArray count] );
-	[self replaceObjectsInRange: range withObjectsFromArray: otherArray range: otherRange];
-}
-
-- (void)setArray:(NSArray *)otherArray
-{
-	PF_HELLO("test this")
-	PF_CHECK_ARR_MUTABLE(self)
-	PF_NIL_ARG(otherArray)
-	
-	CFIndex count = (CFIndex)[otherArray count];
-	//if( count == 0 ) ???
-	CFRange range = CFRangeMake( 0, count );
-	
-	// get values from otherArray...
-	void **ptr = calloc( count, sizeof(void *) );
-	CFArrayGetValues( (CFArrayRef)otherArray, range, (const void **)ptr );
-	
-	range = CFRangeMake( 0, [self count] );
-	CFArrayReplaceValues( (CFMutableArrayRef)self, range, (const void **)ptr, count );
-	
-	free( ptr );
-}
-
-- (void)sortUsingFunction:(NSInteger (*)(id, id, void *))compare context:(void *)context
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	NSUInteger count = CFArrayGetCount((CFArrayRef)self);
-	if( count < 1 ) return;
-	
-	CFRange range = CFRangeMake( 0, count );
-	CFArraySortValues( (CFMutableArrayRef)self, range, (CFComparatorFunction)compare, context );
-}
-
-- (void)sortUsingSelector:(SEL)comparator
-{
-	PF_HELLO("")
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	CFIndex count = CFArrayGetCount((CFArrayRef)self);
-	if( count < 1 ) return;
-	
-	CFRange range = CFRangeMake( 0, count);
-	CFArraySortValues( (CFMutableArrayRef)self, range, _PFArraySortUsingSelector, (void *)comparator );
-}
-
-/*
- *	Leave these for now because they need NSIndexSets
- */
-//#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-- (void)insertObjects:(NSArray *)objects atIndexes:(NSIndexSet *)indexes
-{
+- (void)removeObjectsAtIndexes:(NSIndexSet *)indexes {
 	PF_TODO
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	// iteration
 }
 
-- (void)removeObjectsAtIndexes:(NSIndexSet *)indexes
-{
+- (void)replaceObjectsAtIndexes:(NSIndexSet *)indexes withObjects:(NSArray *)objects {
 	PF_TODO
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	// iteration
-}
-
-- (void)replaceObjectsAtIndexes:(NSIndexSet *)indexes withObjects:(NSArray *)objects
-{
-	PF_TODO
-	PF_CHECK_ARR_MUTABLE(self)
-	
-	// iteration
 }
 
 @end
 
+#undef ARRAY_CALLBACKS
+#undef SELF
+#undef MSELF
