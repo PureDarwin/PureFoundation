@@ -10,19 +10,13 @@
 
 #import <Foundation/NSError.h>
 
-/*
- *	NSError domain constants, found by printing them out on OS X (10.5.6)
- */
-NSString *const NSCocoaErrorDomain		= @"NSCocoaErrorDomain";
-NSString *const NSPOSIXErrorDomain		= @"NSPOSIXErrorDomain";
-NSString *const NSOSStatusErrorDomain	= @"NSOSStatusErrorDomain";
-NSString *const NSMachErrorDomain		= @"NSMachErrorDomain";
+// These constants have the same values as those defined in CoreFoundation but are distinct symbols
+NSString *const NSCocoaErrorDomain      = @"NSCocoaErrorDomain";    // kCFErrorDomainCocoa
+NSString *const NSPOSIXErrorDomain		= @"NSPOSIXErrorDomain";    // kCFErrorDomainPOSIX
+NSString *const NSOSStatusErrorDomain	= @"NSOSStatusErrorDomain"; // kCFErrorDomainOSStatus
+NSString *const NSMachErrorDomain		= @"NSMachErrorDomain";     // kCFErrorDomainMach
 
-// ??? CONST_STRING_DECL(kCFErrorDebugDescriptionKey,              "NSDebugDescription");
-
-/*
- *	Keys for NSError userInfo dictionary
- */
+// NSError userInfo dictionary keys
 NSString *const NSUnderlyingErrorKey					= @"NSUnderlyingError";
 NSString *const NSLocalizedDescriptionKey				= @"NSLocalizedDescription";
 NSString *const NSLocalizedFailureReasonErrorKey		= @"NSLocalizedFailureReason";
@@ -33,55 +27,27 @@ NSString *const NSStringEncodingErrorKey				= @"NSStringEncoding";
 NSString *const NSURLErrorKey							= @"NSURL";
 NSString *const NSFilePathErrorKey						= @"NSFilePath";
 
+NSString *const NSHelpAnchorErrorKey = @"NSHelpAnchor";
+
+#define SELF ((CFErrorRef)self)
+
 @interface __NSCFError : NSError
 @end
 
-/*
- *	Dummy error object, but slightly different because NSError is the bridged class,
- *	not an abstract superclass
- */
-//static Class _PFNSErrorClass = nil;
-
-/*
- *	NSError is identical to CFError. The structure is simple, so we will keep this as an obj-c
- *	object.
- */
 @implementation NSError
 
-//+(void)initialize
-//{
-//    if( self == [NSError class] )
-//        _PFNSErrorClass = self;
-//}
-
-//+(id)alloc
-//{
-//    if( self == [NSError class] )
-//        return (id)&_PFNSErrorClass;
-//    return [super alloc];
-//}
-
-+ (id)errorWithDomain:(NSString *)domain code:(NSInteger)code userInfo:(NSDictionary *)dict
-{
-    PF_HELLO("")
-    CFErrorRef error = CFErrorCreate( kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict );
-    PF_RETURN_TEMP(error)
-    //return [[[self alloc] initWithDomain: domain code: code userInfo: dict] autorelease];
++ (id)errorWithDomain:(NSString *)domain code:(NSInteger)code userInfo:(NSDictionary *)dict {
+    return [(id)CFErrorCreate(kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict) autorelease];
 }
 
-// Designated initializer. Domain cannot be nil; dict may be nil if no userInfo desired
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code userInfo:(NSDictionary *)dict {
-    PF_HELLO("")
-    
     free(self);
-    
     if (!domain) return nil;
-    
-    return (id)CFErrorCreate(kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict);
+    return [(id)CFErrorCreate(kCFAllocatorDefault, (CFStringRef)domain, code, (CFDictionaryRef)dict) autorelease];
 }
 
 // Placeholder implementations of NSError methods
-
+// These will never be called because we always return a (__NS)CFError
 - (NSString *)domain { return nil; }
 - (NSInteger)code { return 0; }
 - (NSDictionary *)userInfo { return nil; }
@@ -117,71 +83,62 @@ NSString *const NSFilePathErrorKey						= @"NSFilePath";
 - (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 - (NSString *)description {
-	PF_HELLO("")
-	CFStringRef desc = CFErrorCopyDescription((CFErrorRef)self);
-	PF_RETURN_TEMP(desc)
-	//return [NSString stringWithFormat: @"Error Domain=%@ Code=%u\n\t\"%@\"", _domain, _code, @"TODO"];
+	return [(id)CFErrorCopyDescription(SELF) autorelease];
 }
 
-/* These define the error. Domains are described by names that are arbitrary strings used to differentiate groups of codes; for custom domain using reverse-DNS naming will help avoid conflicts. Codes are domain-specific.
- */
 - (NSString *)domain {
-    return (id)CFErrorGetDomain((CFErrorRef)self);
+    return (id)CFErrorGetDomain(SELF);
 }
 
 - (NSInteger)code {
-    return CFErrorGetCode((CFErrorRef)self);
+    return CFErrorGetCode(SELF);
 }
 
-/* Additional info which may be used to describe the error further. Examples of keys that might be included in here are "Line Number", "Failed URL", etc. Embedding other errors in here can also be used as a way to communicate underlying reasons for failures; for instance "File System Error" embedded in the userInfo of an NSError returned from a higher level document object. If the embedded error information is itself NSError, the standard key NSUnderlyingErrorKey can be used.
- */
 - (NSDictionary *)userInfo {
-    return (id)CFErrorCopyUserInfo((CFErrorRef)self);
+    return [(id)CFErrorCopyUserInfo(SELF) autorelease];
 }
 
-/* The primary user-presentable message for the error. This method can be overridden by subclassers wishing to present better error strings.  By default this looks for NSLocalizedDescriptionKey in the user info. If not present, it manufactures a string from the domain and code. Also, for some of the built-in domains it knows about, it might try to fetch an error string by calling a domain-specific function. In the absence of a custom error string, the manufactured one might not be suitable for presentation to the user, but can be used in logs or debugging. 
- */
 - (NSString *)localizedDescription {
-	return self.userInfo[NSLocalizedDescriptionKey];
+    return [(id)CFErrorCopyDescription(SELF) autorelease];
 }
 
-//#if MAC_OS_X_VERSION_10_4 <= MAC_OS_X_VERSION_MAX_ALLOWED
-
-/* Return a complete sentence which describes why the operation failed. In many cases this will be just the "because" part of the error message (but as a complete sentence, which makes localization easier). This will return nil if string is not available. Default implementation of this will pick up the value of the NSLocalizedFailureReasonErrorKey from the userInfo dictionary.
- */
 - (NSString *)localizedFailureReason {
-    return (id)CFErrorCopyFailureReason((CFErrorRef)self);
+    return [(id)CFErrorCopyFailureReason(SELF) autorelease];
 }
 
-/* Return the string that can be displayed as the "informative" (aka "secondary") message on an alert panel. Returns nil if no such string is available. Default implementation of this will pick up the value of the NSLocalizedRecoverySuggestionErrorKey from the userInfo dictionary.
- */
+id PFErrorUserInfoValue(CFErrorRef error, NSString *key) {
+    CFDictionaryRef userInfo = CFErrorCopyUserInfo(error);
+    if (!userInfo) return nil;
+    const void *value = CFDictionaryGetValue(userInfo, key);
+    CFRelease(userInfo);
+    return [(id)value autorelease];
+}
+
 - (NSString *)localizedRecoverySuggestion {
-	return self.userInfo[NSLocalizedRecoverySuggestionErrorKey];
+    return PFErrorUserInfoValue(SELF, NSLocalizedRecoverySuggestionErrorKey);
 }
 
-/* Return titles of buttons that are appropriate for displaying in an alert. These should match the string provided as a part of localizedRecoverySuggestion.  The first string would be the title of the right-most and default button, the second one next to it, and so on. If used in an alert the corresponding default return values are NSAlertFirstButtonReturn + n. Default implementation of this will pick up the value of the NSLocalizedRecoveryOptionsErrorKey from the userInfo dictionary.  nil return usually implies no special suggestion, which would imply a single "OK" button.
- */
 - (NSArray *)localizedRecoveryOptions {
-    PF_TODO
-    return nil;
+    return PFErrorUserInfoValue(SELF, NSLocalizedRecoveryOptionsErrorKey);
 }
 
-/* Return an object that conforms to the NSErrorRecoveryAttempting informal protocol. The recovery attempter must be an object that can correctly interpret an index into the array returned by -localizedRecoveryOptions. The default implementation of this method merely returns [[self userInfo] objectForKey:NSRecoveryAttempterErrorKey].
- */
 - (id)recoveryAttempter {
-    PF_TODO
-    return nil;
+    return PFErrorUserInfoValue(SELF, NSRecoveryAttempterErrorKey);
+}
+
+- (NSString *)helpAnchor {
+    return PFErrorUserInfoValue(SELF, NSHelpAnchorErrorKey);
 }
 
 #pragma mark - NSCopying
 
 - (id)copyWithZone:(NSZone *)zone {
-    CFStringRef domain = CFErrorGetDomain((CFErrorRef)self);
-    CFIndex code = CFErrorGetCode((CFErrorRef)self);
-    CFDictionaryRef userInfo = CFErrorCopyUserInfo((CFErrorRef)self);
+    CFStringRef domain = CFErrorGetDomain(SELF);
+    CFIndex code = CFErrorGetCode(SELF);
+    CFDictionaryRef userInfo = CFErrorCopyUserInfo(SELF);
 	CFErrorRef error = CFErrorCreate(kCFAllocatorDefault, domain, code, userInfo);
     CFRelease(userInfo);
-	PF_RETURN_NEW(error)
+    return [(id)error autorelease];
 }
 
 #pragma mark - NSCoding
@@ -196,3 +153,5 @@ NSString *const NSFilePathErrorKey						= @"NSFilePath";
 }
 
 @end
+
+#undef SELF
