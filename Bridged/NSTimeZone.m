@@ -1,5 +1,5 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *  PureFoundation -- http://www.puredarwin.org
  *	NSTimeZone.m
  *
  *	NSTimerZone, NSCFTimeZone
@@ -10,6 +10,8 @@
 
 #import "NSTimeZone.h"
 
+#define SELF ((CFTimeZoneRef)self)
+
 // On macOS, CFTimeZone is bridged with __NSTimeZone, and both NSTimeZone and __NSTimeZone are implemented in CoreFoundation
 
 @interface __NSTimeZone : NSTimeZone
@@ -17,64 +19,49 @@
 
 @implementation NSTimeZone
 
-// Init-ing a NSTimeZone will return a CFTimeZone, which is bridged to __NSTimeZone
+#pragma mark - init methods
+
 - (id)initWithName:(NSString *)tzName {
-    PF_HELLO("")
     free(self);
     return (id)CFTimeZoneCreateWithName(kCFAllocatorDefault, (CFStringRef)tzName, false);
 }
 
 - (id)initWithName:(NSString *)tzName data:(NSData *)data {
-    PF_HELLO("")
     free(self);
     return (id)CFTimeZoneCreate(kCFAllocatorDefault, (CFStringRef)tzName, (CFDataRef)data);
 }
 
-// Class creation methods, returning CFTimeZone instances
+#pragma mark - factory methods
+
 + (instancetype)timeZoneWithName:(NSString *)tzName {
-	PF_HELLO("")
-    return (id)CFTimeZoneCreateWithName(kCFAllocatorDefault, (CFStringRef)tzName, true);
+    return [(id)CFTimeZoneCreateWithName(kCFAllocatorDefault, (CFStringRef)tzName, true) autorelease];
 }
 
 + (id)timeZoneWithName:(NSString *)tzName data:(NSData *)data {
-	PF_HELLO("")
-    return (id)CFTimeZoneCreate(kCFAllocatorDefault, (CFStringRef)tzName, (CFDataRef)data);
+    return [(id)CFTimeZoneCreate(kCFAllocatorDefault, (CFStringRef)tzName, (CFDataRef)data) autorelease];
 }
 
-// Time zones created with this never have daylight savings and the
-// offset is constant no matter the date; the name and abbreviation
-// do NOT follow the POSIX convention (of minutes-west).
 + (id)timeZoneForSecondsFromGMT:(NSInteger)seconds {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCreateWithTimeIntervalFromGMT(kCFAllocatorDefault, seconds) )
+    return [(id)CFTimeZoneCreateWithTimeIntervalFromGMT(kCFAllocatorDefault, seconds) autorelease];
 }
 
 + (id)timeZoneWithAbbreviation:(NSString *)abbreviation {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCreateWithName(kCFAllocatorDefault, (CFStringRef)abbreviation, true) )
+    return [(id) CFTimeZoneCreateWithName(kCFAllocatorDefault, (CFStringRef)abbreviation, true) autorelease];
 }
 
-
-/*
- *	NSExtendedTimeZone class methods
- */
 + (NSTimeZone *)systemTimeZone {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopySystem() )
+    return [(id)CFTimeZoneCopySystem() autorelease];
 }
 
 + (void)resetSystemTimeZone {
-	PF_HELLO("")
 	CFTimeZoneResetSystem();
 }
  
 + (NSTimeZone *)defaultTimeZone {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyDefault() )
+    return [(id)CFTimeZoneCopyDefault() autorelease];
 }
 
 + (void)setDefaultTimeZone:(NSTimeZone *)aTimeZone {
-	PF_HELLO("")
 	CFTimeZoneSetDefault((CFTimeZoneRef)aTimeZone);
 }
 
@@ -82,22 +69,18 @@
 // TODO: implement some form of proxy timezone object
 + (NSTimeZone *)localTimeZone {
 	PF_TODO
+    return [(id)CFTimeZoneCopyDefault() autorelease];
 }
  
 + (NSArray *)knownTimeZoneNames {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyKnownNames() )
+    return [(id)CFTimeZoneCopyKnownNames() autorelease];
 }
  
 + (NSDictionary *)abbreviationDictionary {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyAbbreviationDictionary() )
+    return [(id)CFTimeZoneCopyAbbreviationDictionary() autorelease];
 }
  
-
-/*
- *	NSTimeZone instance methods
- */
+// NSTimeZone instance methods
 - (NSString *)name { return nil; }
 - (NSData *)data { return nil; }
 - (NSInteger)secondsFromGMTForDate:(NSDate *)aDate { return 0; }
@@ -108,31 +91,21 @@
 
 #pragma mark - NSCopying
 
-- (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    return self;
-}
+- (nonnull id)copyWithZone:(nullable NSZone *)zone { return nil; }
 
 #pragma mark - NSCoding
 
-- (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
-    PF_TODO
-}
-
-- (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder {
-    PF_TODO
-}
+- (void)encodeWithCoder:(nonnull NSCoder *)aCoder {}
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder { return nil; }
 
 @end
 
 
-// Class which bridges to CFTimeZoneRef
 @implementation __NSTimeZone
 
 - (CFTypeID)_cfTypeID {
 	return CFTimeZoneGetTypeID();
 }
-
-// TODO: classForCoder
 
 // Standard bridged-class over-rides
 - (id)retain { return (id)CFRetain((CFTypeRef)self); }
@@ -142,101 +115,85 @@
 - (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 - (NSString *)description {
-	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
+    return [(id)CFCopyDescription((CFTypeRef)self) autorelease];
 }
 
 - (NSString *)name {
-	PF_HELLO("")
-	PF_RETURN_NEW( CFTimeZoneGetName( (CFTimeZoneRef)self ) )
+    return (id)CFTimeZoneGetName(SELF);
 }
 
 - (NSData *)data {
-	PF_HELLO("")
-	PF_RETURN_NEW( CFTimeZoneGetData( (CFTimeZoneRef)self ) )
+    return (id)CFTimeZoneGetData(SELF);
 }
 
 - (NSInteger)secondsFromGMTForDate:(NSDate *)aDate {
-	PF_HELLO("")
-	return CFTimeZoneGetSecondsFromGMT( (CFTimeZoneRef)self, CFDateGetAbsoluteTime((CFDateRef)aDate) );
+	return CFTimeZoneGetSecondsFromGMT(SELF, CFDateGetAbsoluteTime((CFDateRef)aDate));
 }
 
 - (NSString *)abbreviationForDate:(NSDate *)aDate {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyAbbreviation( (CFTimeZoneRef)self, CFDateGetAbsoluteTime((CFDateRef)aDate) ) )
+    return [(id)CFTimeZoneCopyAbbreviation(SELF, CFDateGetAbsoluteTime((CFDateRef)aDate)) autorelease];
 }
 
 - (BOOL)isDaylightSavingTimeForDate:(NSDate *)aDate {
-	PF_HELLO("")
-	return CFTimeZoneIsDaylightSavingTime( (CFTimeZoneRef)self, CFDateGetAbsoluteTime((CFDateRef)aDate) );
+	return CFTimeZoneIsDaylightSavingTime(SELF, CFDateGetAbsoluteTime((CFDateRef)aDate));
 }
 
 - (NSTimeInterval)daylightSavingTimeOffsetForDate:(NSDate *)aDate {
-	PF_HELLO("")
-	return CFTimeZoneGetDaylightSavingTimeOffset( (CFTimeZoneRef)self, CFDateGetAbsoluteTime((CFDateRef)aDate) );
+	return CFTimeZoneGetDaylightSavingTimeOffset(SELF, CFDateGetAbsoluteTime((CFDateRef)aDate));
 }
 
 - (NSDate *)nextDaylightSavingTimeTransitionAfterDate:(NSDate *)aDate {
-	PF_HELLO("")
-	CFAbsoluteTime time = CFTimeZoneGetNextDaylightSavingTimeTransition( (CFTimeZoneRef)self, CFDateGetAbsoluteTime((CFDateRef)aDate) );
-	PF_RETURN_TEMP( CFDateCreate( kCFAllocatorDefault, time ) )
+	CFAbsoluteTime time = CFTimeZoneGetNextDaylightSavingTimeTransition(SELF, CFDateGetAbsoluteTime((CFDateRef)aDate));
+    return [(id)CFDateCreate(kCFAllocatorDefault, time) autorelease];
 }
 
 - (NSInteger)secondsFromGMT {
-	PF_HELLO("")
-	return CFTimeZoneGetSecondsFromGMT( (CFTimeZoneRef)self, CFAbsoluteTimeGetCurrent() );
+	return CFTimeZoneGetSecondsFromGMT(SELF, CFAbsoluteTimeGetCurrent());
 }
 
 - (NSString *)abbreviation {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyAbbreviation( (CFTimeZoneRef)self, CFAbsoluteTimeGetCurrent() ) )
+    return [(id)CFTimeZoneCopyAbbreviation(SELF, CFAbsoluteTimeGetCurrent()) autorelease];
 }
 
 - (BOOL)isDaylightSavingTime {
-	PF_HELLO("")
-	return CFTimeZoneIsDaylightSavingTime( (CFTimeZoneRef)self, CFAbsoluteTimeGetCurrent() );
+	return CFTimeZoneIsDaylightSavingTime(SELF, CFAbsoluteTimeGetCurrent());
 }
 
 - (NSTimeInterval)daylightSavingTimeOffset {
-	PF_HELLO("")
-	return CFTimeZoneGetDaylightSavingTimeOffset( (CFTimeZoneRef)self, CFAbsoluteTimeGetCurrent() );
+	return CFTimeZoneGetDaylightSavingTimeOffset(SELF, CFAbsoluteTimeGetCurrent());
 }
 
 - (NSDate *)nextDaylightSavingTimeTransition {
-	PF_HELLO("")
-	CFAbsoluteTime t = CFTimeZoneGetNextDaylightSavingTimeTransition( (CFTimeZoneRef)self, CFAbsoluteTimeGetCurrent());
-	PF_RETURN_TEMP( CFDateCreate( kCFAllocatorDefault, t ) )
+	CFAbsoluteTime time = CFTimeZoneGetNextDaylightSavingTimeTransition(SELF, CFAbsoluteTimeGetCurrent());
+    return [(id)CFDateCreate(kCFAllocatorDefault, time) autorelease];
 }
 
 - (BOOL)isEqualToTimeZone:(NSTimeZone *)aTimeZone {
-	PF_HELLO("")
     if (!aTimeZone) return NO;
-	if (self == aTimeZone) return YES;
-	return CFEqual( (CFTypeRef)self, (CFTypeRef)aTimeZone );
+	return (self == aTimeZone) || CFEqual((CFTypeRef)self, (CFTypeRef)aTimeZone);
 }
 
 - (NSString *)localizedName:(NSTimeZoneNameStyle)style locale:(NSLocale *)locale {
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFTimeZoneCopyLocalizedName( (CFTypeRef)self, style, (CFLocaleRef)locale ) )
+    return [(id)CFTimeZoneCopyLocalizedName(SELF, style, (CFLocaleRef)locale) autorelease];
 }
 
 #pragma mark - NSCopying
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    return (id)CFTimeZoneCreateWithName(kCFAllocatorDefault, CFTimeZoneGetName((CFTimeZoneRef)self), false);
+    return (id)CFTimeZoneCreateWithName(kCFAllocatorDefault, CFTimeZoneGetName(SELF), false);
 }
 
 #pragma mark - NSCoding
 
 - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
     PF_TODO
-    // TODO: serialise Name and Data
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder {
     PF_TODO
-    // TODO: create a CFTimeZone instance from the de-serialised Name and Data
-    // TODO: also free(self) to get rid of the alloc's memory
-    // TODO: this should probably be implemented in NSTimeZone because that is the class which will be in the coder
+    return nil;
 }
 
 @end
+
+#undef SELF

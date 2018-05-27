@@ -1,5 +1,5 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *  PureFoundation -- http://www.puredarwin.org
  *	NSDate.m
  *
  *	NSDate, NSCFDate
@@ -10,181 +10,113 @@
 
 #import "NSDate.h"
 
+#define SELF ((CFDateRef)self)
+
 @interface __NSDate : NSDate
 @end
 
-/*
- *	The dummy instance for alloc-init creation
- */
-static Class _PFNSCFDateClass = nil;
-static CFDateRef _PFReferenceDate = nil;
-
-//#define PFTimeIntervalTo1970 -NSTimeIntervalSince1970
-
-
-/*
- *	The NSDate class cluster frontend
- */
 @implementation NSDate
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSDate class] )
-	{
-		_PFNSCFDateClass = objc_getClass("NSCFDate");
-		_PFReferenceDate = CFDateCreate( kCFAllocatorDefault, 0 );
-	}
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone { return nil; }
+
+#pragma mark - NSCoding
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+- (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
+
+#pragma mark - factory methods
+
++ (id)date {
+    return [(id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent()) autorelease];
 }
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSDate class] )
-		return (id)&_PFNSCFDateClass;
-	return [super alloc];
++ (id)dateWithTimeIntervalSinceReferenceDate:(NSTimeInterval)seconds {
+    return [(id)CFDateCreate(kCFAllocatorDefault, seconds) autorelease];
 }
 
-// NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-	return nil;
++ (id)dateWithTimeIntervalSinceNow:(NSTimeInterval)seconds {
+    return [(id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + seconds) autorelease];
 }
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
++ (id)dateWithTimeIntervalSince1970:(NSTimeInterval)seconds {
+    return [(id)CFDateCreate(kCFAllocatorDefault, (seconds - NSTimeIntervalSince1970)) autorelease];
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
+// These values were deduced from proper Foundation
++ (id)distantFuture {
+    return [(id)CFDateCreate(kCFAllocatorDefault, 63113904000.000000) autorelease];
 }
 
-/*
- *	NSDateCreation class methods.
- */
-+ (id)date
-{
-	PF_HELLO("")
-	//return [[[self alloc] init] autorelease];
-	PF_RETURN_NEW( CFDateCreate( kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() ) )
++ (id)distantPast {
+    return [(id)CFDateCreate(kCFAllocatorDefault, -63114076800.000000) autorelease];
 }
 
-+ (id)dateWithTimeIntervalSinceReferenceDate:(NSTimeInterval)secs
-{
-	PF_HELLO("")
-	//return [[[self alloc] initWithTimeIntervalSinceReferenceDate: secs] autorelease];
-	PF_RETURN_NEW( CFDateCreate( kCFAllocatorDefault, secs ) )
-
-}
-
-
-+ (id)dateWithTimeIntervalSinceNow:(NSTimeInterval)secs
-{
-	PF_HELLO("")
-	//return [[[self alloc] initWithTimeIntervalSinceNow: secs] autorelease];
-	PF_RETURN_NEW( CFDateCreate( kCFAllocatorDefault, secs + CFAbsoluteTimeGetCurrent() ) )
-}
-
-+ (id)dateWithTimeIntervalSince1970:(NSTimeInterval)secs
-{
-	PF_HELLO("")
-	//return [[[self alloc] initWithTimeIntervalSinceReferenceDate: (secs - NSTimeIntervalSince1970)] autorelease];
-	PF_RETURN_NEW( CFDateCreate( kCFAllocatorDefault, (secs - NSTimeIntervalSince1970) ) )	
-}
-
-/*
- *	These values were deduced from proper Foundation
- */
-+ (id)distantFuture
-{
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFDateCreate( kCFAllocatorDefault, 63113904000.000000 ) )
-}
-
-+ (id)distantPast
-{
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFDateCreate( kCFAllocatorDefault, -63114076800.000000 ) )
-}
-
-
-
-/*
- *	NSDateExtended class method
- */
-+ (NSTimeInterval)timeIntervalSinceReferenceDate
-{
-	PF_HELLO("")										// are these the right way around?
-	//return (NSTimeInterval)CFDateGetTimeIntervalSinceDate( (CFDateRef)[self date], _PFReferenceDate );
++ (NSTimeInterval)timeIntervalSinceReferenceDate {
 	return CFAbsoluteTimeGetCurrent();
 }
 
-
-
-/*
- *	NSDate instance method
- */
-- (NSTimeInterval)timeIntervalSinceReferenceDate
-{
-	return 0.0;
++ (id)dateWithString:(NSString *)aString {
+    PF_TODO
+    return nil;
 }
 
-@end
+#pragma mark - NSNaturalLangage
 
++ dateWithNaturalLanguageString:(NSString *)string {
+    PF_TODO
+    return nil;
+}
 
-/*
- *	These additions were defined in NSCalendarDate.h but should be implemented here.
- */
-@implementation NSDate (NSCalendarDateExtras)
++ dateWithNaturalLanguageString:(NSString *)string locale:(id)locale {
+    PF_TODO
+    return nil;
+}
 
-+ (id)dateWithString:(NSString *)aString { return nil; }
+#pragma mark - init methods
 
-- (id)initWithString:(NSString *)description { return nil; }
+- (id)init {
+    return (id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent());
+}
+
+- (id)initWithTimeIntervalSinceReferenceDate:(NSTimeInterval)secondsToBeAdded {
+    return (id)CFDateCreate(kCFAllocatorDefault, secondsToBeAdded);
+}
+
+- (id)initWithTimeIntervalSinceNow:(NSTimeInterval)secondsToBeAddedToNow {
+    return (id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + secondsToBeAddedToNow);
+}
+
+- (id)initWithTimeInterval:(NSTimeInterval)secondsToBeAdded sinceDate:(NSDate *)anotherDate {
+    return (id)CFDateCreate(kCFAllocatorDefault, CFDateGetAbsoluteTime((CFDateRef)anotherDate) + secondsToBeAdded);
+}
+
+#pragma mark - NSCalendarDateExtras
+
+// TODO: Implement this using CFDateFormatter
+- (id)initWithString:(NSString *)description {
+    PF_TODO
+    return nil;
+}
+
+#pragma mark - instance method prototypes
+
+- (NSTimeInterval)timeIntervalSinceReferenceDate { return 0.0; }
 
 - (NSCalendarDate *)dateWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone { return nil; }
-
 - (NSString *)descriptionWithLocale:(id)locale { return nil; }
-
 - (NSString *)descriptionWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone locale:(id)locale { return nil; }
 
 @end
 
-@implementation NSDate (NSNaturalLangage)
-
-+ dateWithNaturalLanguageString:(NSString *)string
-{
-	PF_TODO
-}
-
-+ dateWithNaturalLanguageString:(NSString *)string locale:(id)locale
-{
-	PF_TODO
-}
-
-@end
-
-
-
-/*
- *	NSCFDate, the bridged class
- */
 @implementation __NSDate
-
-//+(id)alloc
-//{
-//    PF_HELLO("")
-//    return nil;
-//}
 
 - (CFTypeID)_cfTypeID {
 	return CFDateGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
+// Standard bridged-class over-rides
 - (id)retain { return (id)CFRetain((CFTypeRef)self); }
 - (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
 - (oneway void)release { CFRelease((CFTypeRef)self); }
@@ -198,169 +130,80 @@ static CFDateRef _PFReferenceDate = nil;
  *
  *	This will probably have to wait until NSDateFormatter is made.
  */
--(NSString *)description
-{
-	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
+-(NSString *)description {
+    return [(id)CFCopyDescription((CFTypeRef)self) autorelease];
 }
 
-/*
- *	These next two methods come to us via NSCalendarDate
- */
-- (NSString *)descriptionWithLocale:(id)locale 
-{ 
+- (NSString *)descriptionWithLocale:(id)locale {
 	PF_TODO
-	return nil; 
+    return [self description];
 }
 
-- (NSString *)descriptionWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone locale:(id)locale 
-{
+- (NSString *)descriptionWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone locale:(id)locale {
 	PF_TODO
-	return nil; 
+    return [self description];
 }
 
+#pragma mark - NSCopying
 
-// NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-	PF_HELLO("")
-	PF_RETURN_NEW( CFDateCreate( kCFAllocatorDefault, CFDateGetAbsoluteTime((CFDateRef)self) ) )
+- (id)copyWithZone:(NSZone *)zone {
+    return (id)CFDateCreate(kCFAllocatorDefault, CFDateGetAbsoluteTime(SELF));
 }
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
+#pragma mark - NSCoding
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
 	return nil;
 }
 
-/*
- *	NSDateCreation creation methods
- */
-- (id)init
-{
-	PF_HELLO("")
-	if( self != (id)&_PFNSCFDateClass ) [self autorelease];
-	
-	self = (id)CFDateCreate( kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() );
-	PF_RETURN_NEW(self)
+#pragma mark - instance methods
+
+- (NSTimeInterval)timeIntervalSinceReferenceDate {
+	return CFDateGetAbsoluteTime(SELF);
 }
 
-- (id)initWithTimeIntervalSinceReferenceDate:(NSTimeInterval)secsToBeAdded
-{
-	PF_HELLO("")
-	if( self != (id)&_PFNSCFDateClass ) [self autorelease];
-
-	self = (id)CFDateCreate( kCFAllocatorDefault, secsToBeAdded );
-	PF_RETURN_NEW(self)
-
+- (NSTimeInterval)timeIntervalSinceDate:(NSDate *)anotherDate {
+	return CFDateGetTimeIntervalSinceDate(SELF, (CFDateRef)anotherDate);
 }
 
-- (id)initWithTimeIntervalSinceNow:(NSTimeInterval)secsToBeAddedToNow
-{
-	PF_HELLO("")
-	if( self != (id)&_PFNSCFDateClass ) [self autorelease];
-
-	self = (id)CFDateCreate( kCFAllocatorDefault, secsToBeAddedToNow + CFAbsoluteTimeGetCurrent() );
-	PF_RETURN_NEW(self)
+- (NSTimeInterval)timeIntervalSinceNow {
+	return CFDateGetAbsoluteTime(SELF) - CFAbsoluteTimeGetCurrent();
 }
 
-- (id)initWithTimeInterval:(NSTimeInterval)secsToBeAdded sinceDate:(NSDate *)anotherDate
-{
-	PF_HELLO("")
-	if( self != (id)&_PFNSCFDateClass ) [self autorelease];
-	
-	self = (id)CFDateCreate( kCFAllocatorDefault, CFDateGetAbsoluteTime((CFDateRef)anotherDate) + secsToBeAdded );
-	PF_RETURN_NEW(self)
+- (NSTimeInterval)timeIntervalSince1970 {
+	return CFDateGetAbsoluteTime(SELF) + NSTimeIntervalSince1970;
 }
 
-
-
-/*
- *	NSDate instance method
- */
-- (NSTimeInterval)timeIntervalSinceReferenceDate
-{
-	PF_HELLO("")						// the right wat around?
-	//return CFDateGetTimeIntervalSinceDate( (CFDateRef)self, _PFReferenceDate );
-	return CFDateGetAbsoluteTime((CFDateRef)self);
+- (id)addTimeInterval:(NSTimeInterval)seconds {
+    return [(id)CFDateCreate(kCFAllocatorDefault, (CFDateGetAbsoluteTime(SELF) + seconds)) autorelease];
 }
 
-
-/*
- *	NSExtendedDate instance methods
- */
-- (NSTimeInterval)timeIntervalSinceDate:(NSDate *)anotherDate
-{
-	PF_HELLO("")
-	return CFDateGetTimeIntervalSinceDate( (CFDateRef)self, (CFDateRef)anotherDate );
+- (NSDate *)earlierDate:(NSDate *)anotherDate {
+    return CFDateCompare(SELF, (CFDateRef)anotherDate, NULL) == kCFCompareGreaterThan ? anotherDate : self;
 }
 
-- (NSTimeInterval)timeIntervalSinceNow
-{
-	PF_HELLO("")
-	return ( CFDateGetAbsoluteTime((CFDateRef)self) - CFAbsoluteTimeGetCurrent() );
+- (NSDate *)laterDate:(NSDate *)anotherDate {
+    return CFDateCompare(SELF, (CFDateRef)anotherDate, NULL) == kCFCompareLessThan ? anotherDate : self;
 }
 
-- (NSTimeInterval)timeIntervalSince1970
-{
-	PF_HELLO("")
-	return ( CFDateGetAbsoluteTime((CFDateRef)self) + NSTimeIntervalSince1970 );
+- (NSComparisonResult)compare:(NSDate *)other {
+	return (NSComparisonResult)CFDateCompare(SELF, (CFDateRef)other, NULL);
 }
 
-
-- (id)addTimeInterval:(NSTimeInterval)seconds
-{
-	PF_HELLO("")
-	PF_RETURN_TEMP( CFDateCreate( kCFAllocatorDefault, (CFDateGetAbsoluteTime((CFDateRef)self) + seconds) ) )
+- (BOOL)isEqualToDate:(NSDate *)otherDate {
+    if (!otherDate) return NO;
+	return (self == otherDate) || CFEqual((CFTypeRef)self, (CFTypeRef)otherDate);
 }
 
+#pragma mark - NSCalendarDate
 
-- (NSDate *)earlierDate:(NSDate *)anotherDate
-{
-	PF_HELLO("")
-	if( CFDateCompare( (CFDateRef)self, (CFDateRef)anotherDate, NULL ) == kCFCompareGreaterThan )
-		return anotherDate;
-	else
-		return self;
-}
-
-- (NSDate *)laterDate:(NSDate *)anotherDate
-{
-	PF_HELLO("")
-	if( CFDateCompare( (CFDateRef)self, (CFDateRef)anotherDate, NULL ) == kCFCompareLessThan )
-		return anotherDate;
-	else 
-		return self;
-}
-
-- (NSComparisonResult)compare:(NSDate *)other
-{
-	PF_HELLO("")
-	return (NSComparisonResult)CFDateCompare( (CFDateRef)self, (CFDateRef)other, NULL );
-}
-
-
-
-- (BOOL)isEqualToDate:(NSDate *)otherDate
-{
-	PF_HELLO("")
-	if( self == otherDate ) return YES;
-	if( otherDate == nil ) return NO;
-	return CFEqual( (CFTypeRef)self, (CFTypeRef)otherDate );
-}
-
-/*
- *	This is also an NSCalendarDate addition
- */
-- (NSCalendarDate *)dateWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone 
-{
+- (NSCalendarDate *)dateWithCalendarFormat:(NSString *)format timeZone:(NSTimeZone *)aTimeZone {
 	PF_TODO
 	return nil; 
 }
 
 @end
 
-
+#undef SELF

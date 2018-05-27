@@ -1,8 +1,8 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *  PureFoundation -- http://www.puredarwin.org
  *	NSLocale.m
  *
- *	NSLocale, NSCFLocale
+ *	NSLocale, __NSCFLocale
  *
  *	Created by Stuart Crook on 02/02/2009.
  *	LGPL'd. See LICENCE.txt for copyright information.
@@ -10,234 +10,130 @@
 
 #import "NSLocale.h"
 
+#define SELF ((CFLocaleRef)self)
+
 @interface __NSCFLocale : NSLocale
 @end
 
-
-/*
- *	Dummy instance
- */
-static Class _PFNSCFLocaleClass = nil;
-
-
-/*
- *	The bridged NSCFLocale class
- */
 @implementation NSLocale
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSLocale class] )
-		_PFNSCFLocaleClass = objc_getClass("NSCFClass");
+#pragma mark - init methods
+
+- (instancetype)init {
+    free(self);
+    return nil; // This is what Foundation does
 }
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSLocale class] )
-		return (id)&_PFNSCFLocaleClass;
-	return [super alloc];
+- (id)initWithLocaleIdentifier:(NSString *)string {
+    free(self);
+    return (id)CFLocaleCreate(kCFAllocatorDefault, (CFStringRef)string);
 }
 
-/*
- *	NSLocaleCreation class methods
- */
-+ (id)systemLocale
-{
-	PF_HELLO("")
+#pragma mark - factory methods
+
++ (id)systemLocale {
 	return (id)CFLocaleGetSystem();
 }
 
-+ (id)currentLocale
-{
-	PF_HELLO("")
++ (id)currentLocale {
 	return [(id)CFLocaleCopyCurrent() autorelease];
 }
 
-/*
- *	Now, how are we going to do this? Are we going to do this?
- */
-+ (id)autoupdatingCurrentLocale
-{
-	PF_TODO
-	return nil;
+// TODO: Somehow
++ (id)autoupdatingCurrentLocale {
+    return [(id)CFLocaleCopyCurrent() autorelease];
 }
 
-
-/*
- *	NSLocaleGeneralInfo class methods
- */
-+ (NSArray *)availableLocaleIdentifiers
-{
-	PF_HELLO("")
++ (NSArray *)availableLocaleIdentifiers {
 	return [(id)CFLocaleCopyAvailableLocaleIdentifiers() autorelease];
 }
 
-+ (NSArray *)ISOLanguageCodes
-{
-	PF_HELLO("")
++ (NSArray *)ISOLanguageCodes {
 	return [(id)CFLocaleCopyISOLanguageCodes() autorelease];
 }
 
-+ (NSArray *)ISOCountryCodes
-{
-	PF_HELLO("")
++ (NSArray *)ISOCountryCodes {
 	return [(id)CFLocaleCopyISOCountryCodes() autorelease];
 }
 
-+ (NSArray *)ISOCurrencyCodes
-{
-	PF_HELLO("")
++ (NSArray *)ISOCurrencyCodes {
 	return [(id)CFLocaleCopyISOCurrencyCodes() autorelease];
 }
 
-+ (NSArray *)commonISOCurrencyCodes
-{
-	PF_HELLO("")
++ (NSArray *)commonISOCurrencyCodes {
 	return [(id)CFLocaleCopyCommonISOCurrencyCodes() autorelease];
 }
 
-+ (NSArray *)preferredLanguages 
-{
-	PF_HELLO("")
++ (NSArray *)preferredLanguages {
 	return [(id)CFLocaleCopyPreferredLanguages() autorelease];
 }
 
-
-+ (NSDictionary *)componentsFromLocaleIdentifier:(NSString *)string
-{
-	PF_HELLO("")
-	return [(id)CFLocaleCreateComponentsFromLocaleIdentifier( kCFAllocatorDefault, (CFStringRef)string ) autorelease];
++ (NSDictionary *)componentsFromLocaleIdentifier:(NSString *)string {
+	return [(id)CFLocaleCreateComponentsFromLocaleIdentifier(kCFAllocatorDefault, (CFStringRef)string) autorelease];
 }
 
-+ (NSString *)localeIdentifierFromComponents:(NSDictionary *)dict
-{
-	PF_HELLO("")
-	return [(id)CFLocaleCreateLocaleIdentifierFromComponents( kCFAllocatorDefault, (CFDictionaryRef)dict ) autorelease];
++ (NSString *)localeIdentifierFromComponents:(NSDictionary *)dict {
+	return [(id)CFLocaleCreateLocaleIdentifierFromComponents(kCFAllocatorDefault, (CFDictionaryRef)dict) autorelease];
 }
 
-
-+ (NSString *)canonicalLocaleIdentifierFromString:(NSString *)string
-{
-	PF_HELLO("")
-	return [(id)CFLocaleCreateCanonicalLocaleIdentifierFromString( kCFAllocatorDefault, (CFStringRef)string ) autorelease];
++ (NSString *)canonicalLocaleIdentifierFromString:(NSString *)string {
+	return [(id)CFLocaleCreateCanonicalLocaleIdentifierFromString(kCFAllocatorDefault, (CFStringRef)string) autorelease];
 }
 
-/*
- *	NSLocale instance methods
- */
+#pragma mark - instance method prototypes
+
 - (id)objectForKey:(id)key { return nil; }
 - (NSString *)displayNameForKey:(id)key value:(id)value { return nil; }
 
-// NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-	return nil;
-}
+#pragma mark - NSCopying
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-}
+- (id)copyWithZone:(NSZone *)zone { return nil; }
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
-}
+#pragma mark - NSCoding
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+- (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
 
 @end
 
 
-
-/*
- *	NSCFLocale, the bridged class
- */
 @implementation __NSCFLocale
 
-+(id)alloc
-{
-	return nil;
-}
-
-- (id)init
-{
-	PF_HELLO("")
-	return nil; // this is what proper Foundation does
-}
-
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+-(CFTypeID)_cfTypeID {
 	return CFLocaleGetTypeID();
 }
 
-/*
- *	Standard bridged-class over-rides
- */
+// Standard bridged-class over-rides
 - (id)retain { return (id)CFRetain((CFTypeRef)self); }
 - (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
 - (oneway void)release { CFRelease((CFTypeRef)self); }
 - (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
 - (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
-// appears to return NSObjects <class address> description
-//-(NSString *)description
-//{
-//	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
-//}
+#pragma mark - NSCopying
 
-// NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-	PF_HELLO("")
-	PF_RETURN_NEW( CFLocaleCreateCopy( kCFAllocatorDefault, (CFLocaleRef)self ) )
+- (id)copyWithZone:(NSZone *)zone {
+    return (id)CFLocaleCreateCopy(kCFAllocatorDefault, SELF);
 }
 
-// NSCoding
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
+#pragma mark - NSCoding
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {}
+
+#pragma mark - instance methods
+
+- (id)objectForKey:(id)key {
+	return (id)CFLocaleGetValue(SELF, (CFStringRef)key);
 }
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	return nil;
+- (NSString *)displayNameForKey:(id)key value:(id)value {
+	return [(id)CFLocaleCopyDisplayNameForPropertyValue(SELF, (CFStringRef)key, (CFStringRef)value) autorelease];
 }
 
-
-// NSLocaleCreation
-- (id)initWithLocaleIdentifier:(NSString *)string
-{
-	PF_HELLO("")
-	if( self != (id)&_PFNSCFLocaleClass ) [self autorelease];
-	
-	self = (id)CFLocaleCreate( kCFAllocatorDefault, (CFStringRef)string );
-	PF_RETURN_NEW(self)
+- (NSString *)localeIdentifier {
+	return (id)CFLocaleGetIdentifier(SELF);
 }
-
-
-// NSLocale
-- (id)objectForKey:(id)key
-{
-	PF_HELLO("")
-	return (id)CFLocaleGetValue( (CFLocaleRef)self, (CFStringRef)key );
-}
-
-- (NSString *)displayNameForKey:(id)key value:(id)value
-{
-	PF_HELLO("")
-	CFStringRef name = CFLocaleCopyDisplayNameForPropertyValue( (CFLocaleRef)self, (CFStringRef)key, (CFStringRef)value );
-	PF_RETURN_TEMP(name)
-}
-
-
-// NSExtendedLocale -- "same as NSLocaleIdentifier"
-- (NSString *)localeIdentifier
-{
-	PF_HELLO("")
-	return (NSString *)CFLocaleGetIdentifier( (CFLocaleRef)self );
-}
-
-
 
 @end
+
+#undef SELF

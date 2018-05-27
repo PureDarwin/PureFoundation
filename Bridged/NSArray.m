@@ -1,8 +1,8 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *	PureFoundation -- http://www.puredarwin.org
  *	NSArray.m
  *
- *	NSArray, NSMutableArray, NSCFArray
+ *	NSArray, NSMutableArray, __NSCFArray
  *
  *	Created by Stuart Crook on 26/01/2009.
  *	LGPL'd. See LICENCE.txt for copyright information.
