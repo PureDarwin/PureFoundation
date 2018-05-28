@@ -24,7 +24,11 @@
 #pragma mark - NSCoding
 
 - (void)encodeWithCoder:(NSCoder *)aCoder {}
-- (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    free(self);
+    return nil;
+}
 
 #pragma mark - factory methods
 
@@ -77,18 +81,22 @@
 #pragma mark - init methods
 
 - (id)init {
+    free(self);
     return (id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent());
 }
 
 - (id)initWithTimeIntervalSinceReferenceDate:(NSTimeInterval)secondsToBeAdded {
+    free(self);
     return (id)CFDateCreate(kCFAllocatorDefault, secondsToBeAdded);
 }
 
 - (id)initWithTimeIntervalSinceNow:(NSTimeInterval)secondsToBeAddedToNow {
+    free(self);
     return (id)CFDateCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + secondsToBeAddedToNow);
 }
 
 - (id)initWithTimeInterval:(NSTimeInterval)secondsToBeAdded sinceDate:(NSDate *)anotherDate {
+    free(self);
     return (id)CFDateCreate(kCFAllocatorDefault, CFDateGetAbsoluteTime((CFDateRef)anotherDate) + secondsToBeAdded);
 }
 
@@ -97,6 +105,7 @@
 // TODO: Implement this using CFDateFormatter
 - (id)initWithString:(NSString *)description {
     PF_TODO
+    free(self);
     return nil;
 }
 
@@ -153,10 +162,6 @@
 #pragma mark - NSCoding
 
 - (void)encodeWithCoder:(NSCoder *)aCoder {}
-
-- (id)initWithCoder:(NSCoder *)aDecoder {
-	return nil;
-}
 
 #pragma mark - instance methods
 
