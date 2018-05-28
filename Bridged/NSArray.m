@@ -11,8 +11,10 @@
 #import "Foundation/NSArray.h"
 #import "PFEnumerator.h"
 #import "PureFoundation.h"
+#import "FileLoaders.h"
 
 #define ARRAY_CALLBACKS ((CFArrayCallBacks *)&_PFCollectionCallBacks)
+
 #define SELF ((CFArrayRef)self)
 #define MSELF ((CFMutableArrayRef)self)
 
@@ -74,7 +76,7 @@ static CFArrayRef PFArrayInitFromVAList(void *first, va_list args) {
     }
     
     CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)values, count, ARRAY_CALLBACKS);
-    free(values);
+    if (count > 1) free(values);
     return array;
 }
 
@@ -91,53 +93,6 @@ static void ** PFArrayShallowCopy(CFArrayRef array, CFIndex count) {
     return values;
 }
 
-// Attempts to load an array from a plist
-// TODO: May want to move this out into a utils class so we can use it for dictionaries
-static CFArrayRef PFArrayInitFromURL(CFURLRef url, Boolean mutable) {
-    CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
-    if (!stream) {
-        // TODO: Logging
-        return NULL;
-    }
-    CFErrorRef error = NULL;
-    CFOptionFlags options = mutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable;
-    CFArrayRef array = CFPropertyListCreateWithStream(kCFAllocatorDefault, stream, 0, options, NULL, &error);
-    if (error) {
-        // TODO: Logging
-        CFRelease(error);
-    }
-    CFRelease(stream);
-    return array;
-}
-
-static CFArrayRef PFArrayInitFromPath(CFStringRef path, Boolean mutable) {
-    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, false);
-    CFArrayRef array = PFArrayInitFromURL(url, mutable);
-    CFRelease(url);
-    return array;
-}
-
-// Attempts to save an array to a plist
-// TODO: May want to generalise this and move this out into a utility class
-static BOOL PFArraySaveToURL(CFArrayRef array, CFURLRef url, BOOL atomically, CFErrorRef *error) {
-    CFWriteStreamRef stream = CFWriteStreamCreateWithFile(kCFAllocatorDefault, url);
-    if (!stream) {
-        // TODO: Logging
-        // TODO: Create and return an error
-        return NO;
-    }
-    CFPropertyListFormat format = kCFPropertyListXMLFormat_v1_0;
-    CFIndex length = CFPropertyListWrite(array, stream, format, 0, error);
-    CFRelease(stream);
-    return length ? YES : NO;
-}
-
-static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomically, CFErrorRef *error) {
-    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, false);
-    BOOL result = PFArraySaveToURL(array, url, atomically, error);
-    CFRelease(url);
-    return result;
-}
 
 @implementation NSArray
 
@@ -163,7 +118,7 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 - (id)initWithCoder:(NSCoder *)aDecoder { return nil; }
 
 
-#pragma mark - Factory methods
+#pragma mark - imutable factory methods
 
 + (instancetype)array {
 	return [(id)CFArrayCreate(kCFAllocatorDefault, NULL, 0, ARRAY_CALLBACKS) autorelease];
@@ -199,14 +154,14 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 }
 
 + (id)arrayWithContentsOfFile:(NSString *)path {
-    return [(id)PFArrayInitFromPath((CFStringRef)path, false) autorelease];
+    return [(id)PFPropertyListInitFromPath((CFStringRef)path, false) autorelease];
 }
 
 + (id)arrayWithContentsOfURL:(NSURL *)url {
-    return [(id)PFArrayInitFromURL((CFURLRef)url, false) autorelease];
+    return [(id)PFPropertyListInitFromURL((CFURLRef)url, false) autorelease];
 }
 
-#pragma mark - Immutable init methods
+#pragma mark - immutable init methods
 
 - (instancetype)init {
     free(self);
@@ -257,28 +212,24 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 
 - (instancetype)initWithContentsOfFile:(NSString *)path {
     free(self);
-    return (id)PFArrayInitFromPath((CFStringRef)path, false);
+    return (id)PFPropertyListInitFromPath((CFStringRef)path, false);
 }
 
 - (instancetype)initWithContentsOfURL:(NSURL *)url {
     free(self);
-    return (id)PFArrayInitFromURL((CFURLRef)url, true);
+    return (id)PFPropertyListInitFromURL((CFURLRef)url, true);
 }
 
 #pragma mark - NSFastEnumeration
 
-- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state 
-								  objects:(id *)stackbuf 
-									count:(NSUInteger)len
-{
-	return 0; // TODO
-}
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id *)stackbuf count:(NSUInteger)len { return 0; }
 
 #pragma mark - Implementations using atomic methods
 
 // TODO
 
 @end
+
 
 @implementation NSMutableArray
 
@@ -325,11 +276,11 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 }
 
 + (instancetype)arrayWithContentsOfFile:(NSString *)path {
-    return [(id)PFArrayInitFromPath((CFStringRef)path, true) autorelease];
+    return [(id)PFPropertyListInitFromPath((CFStringRef)path, true) autorelease];
 }
 
 + (instancetype)arrayWithContentsOfURL:(NSURL *)url {
-    return [(id)PFArrayInitFromURL((CFURLRef)url, true) autorelease];
+    return [(id)PFPropertyListInitFromURL((CFURLRef)url, true) autorelease];
 }
 
 #pragma mark - Mutable init methods
@@ -349,7 +300,7 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
     CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void **)objects, (CFIndex)count, ARRAY_CALLBACKS);
     CFArrayRef mArray = CFArrayCreateMutableCopy(kCFAllocatorDefault, count, array);
     CFRelease(array);
-    return (id)array;
+    return (id)mArray;
 }
 
 - (id)initWithObjects:(id)firstObj, ... {
@@ -391,12 +342,18 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 
 - (instancetype)initWithContentsOfFile:(NSString *)path {
     free(self);
-    return (id)PFArrayInitFromPath((CFStringRef)path, true);
+    return (id)PFPropertyListInitFromPath((CFStringRef)path, true);
 }
 
 - (id)initWithContentsOfURL:(NSURL *)url {
     free(self);
-    return (id)PFArrayInitFromURL((CFURLRef)url, true);
+    return (id)PFPropertyListInitFromURL((CFURLRef)url, true);
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    PF_TODO
+    free(self);
+    return nil;
 }
 
 // Instance method prototypes
@@ -512,12 +469,12 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 
 - (BOOL)writeToFile:(NSString *)path atomically:(BOOL)atomically {
 	if (!path.length) return NO;
-    return PFArraySaveToPath(SELF, (CFStringRef)path, atomically, NULL);
+    return PFPropertyListSaveToPath(SELF, (CFStringRef)path, atomically, NULL);
 }
 
 - (BOOL)writeToURL:(NSURL *)url atomically:(BOOL)atomically {
 	if (!url) return NO;
-    return PFArraySaveToURL(SELF, (CFURLRef)url, atomically, NULL);
+    return PFPropertyListSaveToURL(SELF, (CFURLRef)url, atomically, NULL);
 }
 
 #pragma mark - primatives
@@ -597,7 +554,7 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 	if (!anObject || !count) return NSNotFound;
     
     if (range.location >= count || range.location + range.length > count) {
-		[NSException raise: NSRangeException format: @"TODO"];
+		[NSException raise:NSRangeException format:@"TODO"];
     }
 	
 	CFIndex result = CFArrayGetFirstIndexOfValue(SELF, CFRangeMake(range.location, range.length), (const void *)anObject);
@@ -617,7 +574,7 @@ static BOOL PFArraySaveToPath(CFArrayRef array, CFStringRef path, BOOL atomicall
 	if (!anObject || !count) return NSNotFound;
 	
     if (range.location >= count || range.location + range.length > count) {
-		[NSException raise: NSRangeException format: @"TODO"];
+		[NSException raise:NSRangeException format:@"TODO"];
     }
 	
 	NSUInteger context[3] = { NSNotFound, range.location, (NSUInteger)anObject };
