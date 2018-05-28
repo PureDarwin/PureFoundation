@@ -96,7 +96,12 @@
 #pragma mark - NSCoding
 
 - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {}
-- (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder { return nil; }
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder {
+    PF_TODO
+    free(self);
+    return nil;
+}
 
 @end
 
@@ -187,11 +192,6 @@
 
 - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
     PF_TODO
-}
-
-- (nullable instancetype)initWithCoder:(nonnull NSCoder *)aDecoder {
-    PF_TODO
-    return nil;
 }
 
 @end
