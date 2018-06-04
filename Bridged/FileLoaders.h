@@ -7,7 +7,15 @@
 
 #import <CoreFoundation/CoreFoundation.h>
 
-static CFPropertyListRef PFPropertyListInitFromURL(CFURLRef url, Boolean mutable);
-static CFPropertyListRef PFPropertyListInitFromPath(CFStringRef path, Boolean mutable);
-static BOOL PFPropertyListSaveToURL(CFPropertyListRef item, CFURLRef url, BOOL atomically, CFErrorRef *error);
-static BOOL PFPropertyListSaveToPath(CFPropertyListRef list, CFStringRef path, BOOL atomically, CFErrorRef *error);
+CFPropertyListRef PFPropertyListInitFromURL(CFURLRef url, Boolean mutable);
+CFPropertyListRef PFPropertyListInitFromPath(CFStringRef path, Boolean mutable);
+
+BOOL PFPropertyListWriteToURL(CFPropertyListRef item, CFURLRef url, BOOL atomically, CFErrorRef *error);
+BOOL PFPropertyListWriteToPath(CFPropertyListRef list, CFStringRef path, BOOL atomically, CFErrorRef *error);
+
+// This version should be able to deal with data:// URLs and server URLs
+CFDataRef PFDataInitFromURL(CFURLRef url, NSDataReadingOptions options, CFErrorRef *error);
+CFDataRef PFDataInitFromPath(CFStringRef path, NSDataReadingOptions options, CFErrorRef *error);
+
+BOOL PFDataWriteToURL(CFDataRef data, CFURLRef url, NSDataWritingOptions options, CFErrorRef *error);
+BOOL PFDataWriteToPath(CFDataRef data, CFStringRef path, NSDataWritingOptions options, CFErrorRef *error);
