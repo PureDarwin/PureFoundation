@@ -10,76 +10,49 @@
 
 #import "NSTimer.h"
 
-/*
- *	Declare the bridged class
- */
+#define SELF ((CFRunLoopTimerRef)self)
+
 @interface __NSCFTimer : NSTimer
 @end
 
-/*
- *	The dummy instance for init calls
- */
-static Class _PFNSCFTimerClass = nil;
 
-
-/*
- *	The NSTimer front-end class
- */
 @implementation NSTimer
 
-+(void)initialize
-{
-	PF_HELLO("")
-	if( self == [NSTimer class] )
-		_PFNSCFTimerClass = objc_getClass("NSCFTimer");
+#pragma mark - factory methods
+
++ (NSTimer *)timerWithTimeInterval:(NSTimeInterval)ti invocation:(NSInvocation *)invocation repeats:(BOOL)repeats {
+	PF_TODO
+    return nil;
 }
 
-+(id)alloc
-{
-	PF_HELLO("")
-	if( self == [NSTimer class] )
-		return (id)&_PFNSCFTimerClass;
-	return [super alloc];
++ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)ti invocation:(NSInvocation *)invocation repeats:(BOOL)repeats {
+	PF_TODO
+    return nil;
 }
 
-/*
- *	Class creation methods
- */
-+ (NSTimer *)timerWithTimeInterval:(NSTimeInterval)ti 
-						invocation:(NSInvocation *)invocation 
-						   repeats:(BOOL)yesOrNo
++ (NSTimer *)timerWithTimeInterval:(NSTimeInterval)ti target:(id)aTarget selector:(SEL)aSelector userInfo:(id)userInfo repeats:(BOOL)repeats
 {
-	
+    PF_TODO
+    return nil;
 }
 
-+ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)ti 
-								 invocation:(NSInvocation *)invocation 
-									repeats:(BOOL)yesOrNo
++ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)ti target:(id)aTarget selector:(SEL)aSelector userInfo:(id)userInfo repeats:(BOOL)repeats
 {
-	
+	PF_TODO
+    return nil;
 }
 
-+ (NSTimer *)timerWithTimeInterval:(NSTimeInterval)ti 
-							target:(id)aTarget 
-						  selector:(SEL)aSelector 
-						  userInfo:(id)userInfo 
-						   repeats:(BOOL)yesOrNo
+#pragma mark - init
+
+- (id)initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)repeats
 {
+    PF_TODO
+    free(self);
+    return nil;
 }
 
-+ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)ti 
-									 target:(id)aTarget 
-								   selector:(SEL)aSelector 
-								   userInfo:(id)userInfo 
-									repeats:(BOOL)yesOrNo
-{
-	
-}
+#pragma mark - instance methods
 
-/*
- *	instance methods to keep the compiler happy
- */
-- (id)initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep { return nil; }
 - (void)fire { }
 - (NSDate *)fireDate { return nil; }
 - (void)setFireDate:(NSDate *)date { }
@@ -91,21 +64,9 @@ static Class _PFNSCFTimerClass = nil;
 @end
 
 
-
-/*
- *	NSCFTimer bridged class
- */
 @implementation __NSCFTimer
 
-+(id)alloc
-{
-	PF_HELLO("")
-	return nil;
-}
-
--(CFTypeID)_cfTypeID
-{
-	PF_HELLO("")
+-(CFTypeID)_cfTypeID {
 	return CFRunLoopTimerGetTypeID();
 }
 
@@ -119,58 +80,41 @@ static Class _PFNSCFTimerClass = nil;
 - (NSUInteger)hash { return CFHash((CFTypeRef)self); }
 
 - (NSString *)description {
-	PF_RETURN_TEMP( CFCopyDescription((CFTypeRef)self) )
+    return [(id)CFCopyDescription((CFTypeRef)self) autorelease];
 }
 
-- (id)initWithFireDate:(NSDate *)date 
-			  interval:(NSTimeInterval)ti 
-				target:(id)t 
-			  selector:(SEL)s 
-			  userInfo:(id)ui 
-			   repeats:(BOOL)rep
-{
-	
+- (void)fire {
+    PF_TODO
 }
 
-- (void)fire
-{
+- (NSDate *)fireDate {
+    CFAbsoluteTime time = CFRunLoopTimerGetNextFireDate(SELF);
+    return [(id)CFDateCreate(kCFAllocatorDefault, time) autorelease];
 }
 
-- (NSDate *)fireDate
-{
+- (void)setFireDate:(NSDate *)date {
+	CFRunLoopTimerSetNextFireDate(SELF, CFDateGetAbsoluteTime((CFDateRef)date));
 }
 
-- (void)setFireDate:(NSDate *)date
-{
-	PF_HELLO("")
-	CFRunLoopTimerSetNextFireDate( (CFRunLoopTimerRef)self, CFDateGetAbsoluteTime((CFDateRef)date) );
+- (NSTimeInterval)timeInterval {
+	return CFRunLoopTimerGetInterval(SELF);
 }
 
-- (NSTimeInterval)timeInterval
-{
-	PF_HELLO("")
-	return CFRunLoopTimerGetInterval( (CFRunLoopTimerRef)self );
+- (void)invalidate {
+	CFRunLoopTimerInvalidate(SELF);
 }
 
-- (void)invalidate
-{
-	PF_HELLO("")
-	CFRunLoopTimerInvalidate( (CFRunLoopTimerRef)self );
+- (BOOL)isValid {
+	return CFRunLoopTimerIsValid(SELF);
 }
 
-- (BOOL)isValid
-{
-	PF_HELLO("")
-	return CFRunLoopTimerIsValid( (CFRunLoopTimerRef)self );
-}
-
-- (id)userInfo
-{
-	PF_HELLO("")
-	CFRunLoopTimerContext context;
-	context.version = 0; // aparently we should do this
-	CFRunLoopTimerGetContext( (CFRunLoopTimerRef)self, &context );
-	PF_RETURN_TEMP( context.info )
+- (id)userInfo {
+    CFRunLoopTimerContext context = { 0, NULL, NULL, NULL, NULL };
+	CFRunLoopTimerGetContext(SELF, &context);
+    return context.info;
 }
 
 @end
+
+#undef SELF
+
