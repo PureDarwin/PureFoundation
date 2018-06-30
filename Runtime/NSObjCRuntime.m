@@ -141,8 +141,6 @@ const char *NSGetSizeAndAlignment(const char *typePtr, NSUInteger *sizep, NSUInt
  */
 void NSLog(NSString *format, ...) //__attribute__((format(__NSString__, 1, 2)));
 {
-	PF_HELLO("")
-	
 	va_list arguments;
 	va_start( arguments, format );
 	NSLogv( format, arguments );
@@ -153,8 +151,6 @@ void NSLog(NSString *format, ...) //__attribute__((format(__NSString__, 1, 2)));
  *	...which calls this function, which is copied from CFLogv() in CFUtilities.c
  */
 void NSLogv(NSString *format, va_list args) {
-	PF_HELLO("")
-
 	CFStringRef s = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, (CFStringRef)format, args);
 	CFIndex length = CFStringGetLength(s);
 	char chars[++length];

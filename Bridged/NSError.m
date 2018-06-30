@@ -1,11 +1,10 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *	PureFoundation -- http://puredarwin.org
  *	NSError.m
  *
  *	NSError
  *
  *	Created by Stuart Crook on 26/01/2009.
- *	LGPL'd. See LICENCE.txt for copyright information.
  */
 
 #import <Foundation/NSError.h>
@@ -29,18 +28,6 @@ NSString *const NSFilePathErrorKey						= @"NSFilePath";
 
 NSString *const NSHelpAnchorErrorKey = @"NSHelpAnchor";
 
-#define SELF ((CFErrorRef)self)
-
-static id PFErrorUserInfoValue(CFErrorRef error, NSString *key) {
-    CFDictionaryRef userInfo = CFErrorCopyUserInfo(error);
-    if (!userInfo) return nil;
-    const void *value = CFDictionaryGetValue(userInfo, key);
-    CFRelease(userInfo);
-    return [(id)value autorelease];
-}
-
-@interface __NSCFError : NSError
-@end
 
 @implementation NSError
 
@@ -76,82 +63,24 @@ static id PFErrorUserInfoValue(CFErrorRef error, NSString *key) {
 
 @end
 
-
-@implementation __NSCFError
-
-- (CFTypeID)_cfTypeID {
-	return CFErrorGetTypeID();
-}
-
-// Standard bridged-class over-rides
-- (id)retain { return (id)CFRetain((CFTypeRef)self); }
-- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
-- (oneway void)release { CFRelease((CFTypeRef)self); }
-- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
-- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
-
-- (NSString *)description {
-	return [(id)CFErrorCopyDescription(SELF) autorelease];
-}
-
-- (NSString *)domain {
-    return (id)CFErrorGetDomain(SELF);
-}
-
-- (NSInteger)code {
-    return CFErrorGetCode(SELF);
-}
-
-- (NSDictionary *)userInfo {
-    return [(id)CFErrorCopyUserInfo(SELF) autorelease];
-}
-
-- (NSString *)localizedDescription {
-    return [(id)CFErrorCopyDescription(SELF) autorelease];
-}
-
-- (NSString *)localizedFailureReason {
-    return [(id)CFErrorCopyFailureReason(SELF) autorelease];
-}
-
-- (NSString *)localizedRecoverySuggestion {
-    return PFErrorUserInfoValue(SELF, NSLocalizedRecoverySuggestionErrorKey);
-}
-
-- (NSArray *)localizedRecoveryOptions {
-    return PFErrorUserInfoValue(SELF, NSLocalizedRecoveryOptionsErrorKey);
-}
-
-- (id)recoveryAttempter {
-    return PFErrorUserInfoValue(SELF, NSRecoveryAttempterErrorKey);
-}
-
-- (NSString *)helpAnchor {
-    return PFErrorUserInfoValue(SELF, NSHelpAnchorErrorKey);
-}
-
-#pragma mark - NSCopying
-
-- (id)copyWithZone:(NSZone *)zone {
-    CFStringRef domain = CFErrorGetDomain(SELF);
-    CFIndex code = CFErrorGetCode(SELF);
-    CFDictionaryRef userInfo = CFErrorCopyUserInfo(SELF);
-	CFErrorRef error = CFErrorCreate(kCFAllocatorDefault, domain, code, userInfo);
-    CFRelease(userInfo);
-    return [(id)error autorelease];
-}
-
-#pragma mark - NSCoding
-
-- (void)encodeWithCoder:(NSCoder *)aCoder {
-    PF_TODO
-}
-
-- (id)initWithCoder:(NSCoder *)aDecoder {
-    PF_TODO
-	return nil;
-}
-
+// NSCFError is defined in Foundation while __NSCFError is implemented in CoreFoundation
+@interface NSCFError : NSError
 @end
 
-#undef SELF
+@implementation NSCFError
+
+// TODO:
+// t +[NSCFError automaticallyNotifiesObserversForKey:]
+// t -[NSCFError allowsWeakReference]
+// t -[NSCFError classForCoder]
+// t -[NSCFError code]
+// t -[NSCFError domain]
+// t -[NSCFError hash]
+// t -[NSCFError isEqual:]
+// t -[NSCFError release]
+// t -[NSCFError retainCount]
+// t -[NSCFError retainWeakReference]
+// t -[NSCFError retain]
+// t -[NSCFError userInfo]
+
+@end

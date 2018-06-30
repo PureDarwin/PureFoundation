@@ -1,23 +1,19 @@
 /*
- *	PureFoundation -- http://code.google.com/p/purefoundation/
+ *	PureFoundation -- http://puredarwin.org
  *	NSRunLoop.m
  *
  *	NSRunLoop
  *
  *	Created by Stuart Crook on 18/02/2009.
- *	LGPL'd. See LICENCE.txt for copyright information.
  */
 
 #import "NSRunLoop.h"
 
-/*
- *	Constants
- */
-NSString * const NSDefaultRunLoopMode = @"kCFRunLoopDefaultMode";
-NSString * const NSRunLoopCommonModes = @"kCFRunLoopCommonModes";
+// NSRunLoop is defined in CF but implemented here in Foundation
 
+#define RUNLOOP ((CFRunLoopRef)_rl)
 
-NSRunLoop *_pfMainRunLoop = nil;
+static NSRunLoop *_pfMainRunLoop = nil;
 
 /*
  *	ivars:	id		_rl;
@@ -25,41 +21,48 @@ NSRunLoop *_pfMainRunLoop = nil;
  *			id		_perft;
  *			void	*_reserved[8];
  */
-@implementation NSRunLoop
+@implementation NSRunLoop (NSRunLoop)
 
-/*
- *	Life cycle
- */
-- (id)init
-{
-	_rl = (id)CFRunLoopGetCurrent();
-	_dperf = nil;
-	_perft = nil;
-	
-	return self;
+// TODO:
+//00000000001cc2c0 t -[NSRunLoop(NSRunLoop) allModes]
+//00000000000904df t -[NSRunLoop(NSRunLoop) containsPort:forMode:]
+//00000000001cc1c9 t -[NSRunLoop(NSRunLoop) containsTimer:forMode:]
+//00000000001cc016 t -[NSRunLoop(NSRunLoop) copyWithZone:]
+//00000000001cc03d t -[NSRunLoop(NSRunLoop) description]
+//00000000001cc099 t -[NSRunLoop(NSRunLoop) portsForMode:]
+//00000000001cc0b2 t -[NSRunLoop(NSRunLoop) removeTimer:forMode:]
+//00000000001cc66f t -[NSRunLoop(NSRunLoop) runBeforeDate:]
+//00000000001cc568 t -[NSRunLoop(NSRunLoop) runMode:untilDate:]
+//00000000001cc1b0 t -[NSRunLoop(NSRunLoop) timersForMode:]
+
+- (id)init {
+    if (self = [super init]) {
+        _rl = (id)CFRunLoopGetCurrent();
+        _dperf = nil;
+        _perft = nil;
+    }
+    return self;
 }
 
-- (void)dealloc
-{
-	if( _pfMainRunLoop == self ) _pfMainRunLoop = nil;
-	[[[NSThread currentThread] threadDictionary] removeObjectForKey: @"NSRunLoop"];
-	
-	_rl = nil; // got, so don't release
-	// etc...
-	
-	[super dealloc];
+- (id)initWithCFRunLoop:(CFRunLoopRef)cfRunLoop {
+    if (self = [super init]) {
+        _rl = (id)cfRunLoop;
+        _dperf = nil;
+        _perft = nil;
+    }
+    return self;
 }
 
-/*
- *	Runloops will be stored in the current thread's dictionary under @"NSRunLoop"
- */
-+ (NSRunLoop *)currentRunLoop 
-{ 
+- (void)dealloc {
+    PF_TODO
+    [super dealloc];
+}
+
++ (NSRunLoop *)currentRunLoop {
 	NSThread *thread = [NSThread currentThread];
 	NSMutableDictionary *dict = [thread threadDictionary];
 	NSRunLoop *rl = [dict objectForKey: @"NSRunLoop"];
-	if( rl == nil )
-	{
+	if (!rl) {
 		rl = [[[NSRunLoop alloc] init] autorelease];
 		[dict setObject: rl forKey: @"NSRunLoop"];
 		if( thread == [NSThread mainThread] ) _pfMainRunLoop = rl;
@@ -67,46 +70,41 @@ NSRunLoop *_pfMainRunLoop = nil;
 	return rl;
 }
 
-+ (NSRunLoop *)mainRunLoop 
-{
-	if( _pfMainRunLoop == nil )
-	{
-		NSRunLoop *rl = [[[NSRunLoop alloc] init] autorelease];
-		[[[NSThread currentThread] threadDictionary] setObject: rl forKey: @"NSRunLoop"];
-		_pfMainRunLoop = rl;
++ (NSRunLoop *)mainRunLoop {
+	if (!_pfMainRunLoop) {
+		_pfMainRunLoop = [[[NSRunLoop alloc] initWithCFRunLoop:CFRunLoopGetMain()] autorelease];
+		[[[NSThread currentThread] threadDictionary] setObject:_pfMainRunLoop forKey:@"NSRunLoop"];
 	}
 	return _pfMainRunLoop;
 }
 
-/*
- *	Runloop instance methods
- */
-- (NSString *)currentMode { PF_RETURN_TEMP(CFRunLoopCopyCurrentMode((CFRunLoopRef)_rl)) }
+- (NSString *)currentMode {
+    return [(id)CFRunLoopCopyCurrentMode(RUNLOOP) autorelease];
+}
 
-- (CFRunLoopRef)getCFRunLoop { return (CFRunLoopRef)_rl; }
+- (CFRunLoopRef)getCFRunLoop {
+    return RUNLOOP;
+}
 
-- (void)addTimer:(NSTimer *)timer forMode:(NSString *)mode 
-{
+- (void)addTimer:(NSTimer *)timer forMode:(NSString *)mode {
 	CFRetain((CFTypeRef)timer);
-	CFRunLoopAddTimer((CFRunLoopRef)_rl, (CFRunLoopTimerRef)timer, (CFStringRef)mode);
+	CFRunLoopAddTimer(RUNLOOP, (CFRunLoopTimerRef)timer, (CFStringRef)mode);
 }
 
-- (void)addPort:(NSPort *)aPort forMode:(NSString *)mode 
-{
-
-
+- (void)addPort:(NSPort *)aPort forMode:(NSString *)mode {
+    PF_TODO
 }
 
-- (void)removePort:(NSPort *)aPort forMode:(NSString *)mode {}
-
-- (NSDate *)limitDateForMode:(NSString *)mode 
-{
-	CFAbsoluteTime next = CFRunLoopGetNextTimerFireDate((CFRunLoopRef)_rl, (CFStringRef)mode);
-	PF_RETURN_TEMP(CFDateCreate( kCFAllocatorDefault, next ))
+- (void)removePort:(NSPort *)aPort forMode:(NSString *)mode {
+    PF_TODO
 }
 
-- (void)acceptInputForMode:(NSString *)mode beforeDate:(NSDate *)limitDate 
-{
+- (NSDate *)limitDateForMode:(NSString *)mode {
+	CFAbsoluteTime next = CFRunLoopGetNextTimerFireDate(RUNLOOP, (CFStringRef)mode);
+    return [(id)CFDateCreate(kCFAllocatorDefault, next) autorelease];
+}
+
+- (void)acceptInputForMode:(NSString *)mode beforeDate:(NSDate *)limitDate {
 	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
 	CFRunLoopRunInMode((CFStringRef)mode, length, TRUE);
 }
@@ -115,55 +113,46 @@ NSRunLoop *_pfMainRunLoop = nil;
 
 @implementation NSRunLoop (NSRunLoopConveniences)
 
-- (void)run 
-{ 
-	/*	This implementation is strictly correct, since the docs say it should repeatedly call
-	 *	runMode:beforeDate:. However, as far as I can tell it achieves the same result 
-	 */
-	CFRunLoopRun(); 
+// TODO:
+// t -[NSRunLoop(NSRunLoop) performBlock:]
+// t -[NSRunLoop(NSRunLoop) performInModes:block:]
+
+- (void)run {
+	CFRunLoopRun();
 }
 
-- (void)runUntilDate:(NSDate *)limitDate 
-{
+- (void)runUntilDate:(NSDate *)limitDate {
 	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
-	// docs don't say what mode it should be run in, so we'll assume the common modes
 	CFRunLoopRunInMode(kCFRunLoopCommonModes, length, FALSE);
 }
 
-- (BOOL)runMode:(NSString *)mode beforeDate:(NSDate *)limitDate 
-{
+- (BOOL)runMode:(NSString *)mode beforeDate:(NSDate *)limitDate {
 	CFTimeInterval length = CFDateGetAbsoluteTime((CFDateRef)limitDate) - CFAbsoluteTimeGetCurrent();
 	SInt32 result = CFRunLoopRunInMode((CFStringRef)mode, length, TRUE);
 	return (result == kCFRunLoopRunFinished) ? NO : YES;
 }
 
-// DEPRECATED_IN_MAC_OS_X_VERSION_10_5_AND_LATER;
-// "Deprecated. Does nothing."
 - (void)configureAsServer {}
 
 @end
 
-
-
-
-/**************** 	Delayed perform	 ******************/
-
-/*
 @implementation NSObject (NSDelayedPerforming)
 
-- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay inModes:(NSArray *)modes;
-- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay;
-+ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget selector:(SEL)aSelector object:(id)anArgument;
-+ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget;
+// TODO:
+//- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay inModes:(NSArray *)modes;
+//- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay;
+//+ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget selector:(SEL)aSelector object:(id)anArgument;
+//+ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget;
 
 @end
 
 @implementation NSRunLoop (NSOrderedPerform)
 
-- (void)performSelector:(SEL)aSelector target:(id)target argument:(id)arg order:(NSUInteger)order modes:(NSArray *)modes;
-- (void)cancelPerformSelector:(SEL)aSelector target:(id)target argument:(id)arg;
-- (void)cancelPerformSelectorsWithTarget:(id)target;
- 
-@end
-*/
+// TODO:
+//- (void)performSelector:(SEL)aSelector target:(id)target argument:(id)arg order:(NSUInteger)order modes:(NSArray *)modes;
+//- (void)cancelPerformSelector:(SEL)aSelector target:(id)target argument:(id)arg;
+//- (void)cancelPerformSelectorsWithTarget:(id)target;
 
+@end
+
+#undef RUNLOOP

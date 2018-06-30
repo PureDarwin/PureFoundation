@@ -2,21 +2,15 @@
  *	PureFoundation -- http://code.google.com/p/purefoundation/
  *	NSTimer.m
  *
- *	NSTimer, NSCFTimer
- *
  *	Created by Stuart Crook on 02/02/2009.
- *	LGPL'd. See LICENCE.txt for copyright information.
  */
 
 #import "NSTimer.h"
 
-#define SELF ((CFRunLoopTimerRef)self)
+// NSTimer is declared in CoreFoundation
+// TODO: Implement the factory creation methods prototyped here
 
-@interface __NSCFTimer : NSTimer
-@end
-
-
-@implementation NSTimer
+@implementation NSTimer (NSTimer)
 
 #pragma mark - factory methods
 
@@ -62,59 +56,3 @@
 - (id)userInfo { return nil; }
 
 @end
-
-
-@implementation __NSCFTimer
-
--(CFTypeID)_cfTypeID {
-	return CFRunLoopTimerGetTypeID();
-}
-
-/*
- *	Standard bridged-class over-rides
- */
-- (id)retain { return (id)CFRetain((CFTypeRef)self); }
-- (NSUInteger)retainCount { return (NSUInteger)CFGetRetainCount((CFTypeRef)self); }
-- (oneway void)release { CFRelease((CFTypeRef)self); }
-- (void)dealloc { } // this is missing [super dealloc] on purpose, XCode
-- (NSUInteger)hash { return CFHash((CFTypeRef)self); }
-
-- (NSString *)description {
-    return [(id)CFCopyDescription((CFTypeRef)self) autorelease];
-}
-
-- (void)fire {
-    PF_TODO
-}
-
-- (NSDate *)fireDate {
-    CFAbsoluteTime time = CFRunLoopTimerGetNextFireDate(SELF);
-    return [(id)CFDateCreate(kCFAllocatorDefault, time) autorelease];
-}
-
-- (void)setFireDate:(NSDate *)date {
-	CFRunLoopTimerSetNextFireDate(SELF, CFDateGetAbsoluteTime((CFDateRef)date));
-}
-
-- (NSTimeInterval)timeInterval {
-	return CFRunLoopTimerGetInterval(SELF);
-}
-
-- (void)invalidate {
-	CFRunLoopTimerInvalidate(SELF);
-}
-
-- (BOOL)isValid {
-	return CFRunLoopTimerIsValid(SELF);
-}
-
-- (id)userInfo {
-    CFRunLoopTimerContext context = { 0, NULL, NULL, NULL, NULL };
-	CFRunLoopTimerGetContext(SELF, &context);
-    return context.info;
-}
-
-@end
-
-#undef SELF
-

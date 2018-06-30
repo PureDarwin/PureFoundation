@@ -7,9 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1708960220DEBFC5001C552A /* NSAttributedString.m in Sources */ = {isa = PBXBuildFile; fileRef = 1708960120DEBFC5001C552A /* NSAttributedString.m */; };
+		17A1478520B974C700653CAF /* SwiftStubs.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A1478420B974C700653CAF /* SwiftStubs.m */; };
+		17A1478820BB2FC500653CAF /* FileLoaders.h in Headers */ = {isa = PBXBuildFile; fileRef = 17A1478620BB2FC500653CAF /* FileLoaders.h */; };
+		17A1478920BB2FC500653CAF /* FileLoaders.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A1478720BB2FC500653CAF /* FileLoaders.m */; };
 		17A6FAD6207A3D2F0002EEAA /* NSZombie.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD4207A3D2F0002EEAA /* NSZombie.m */; };
 		17A6FADA207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m in Sources */ = {isa = PBXBuildFile; fileRef = 17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */; };
 		17A6FADC207A7D0A0002EEAA /* SymbolAliases in Resources */ = {isa = PBXBuildFile; fileRef = 17A6FADB207A7D0A0002EEAA /* SymbolAliases */; };
+		17C84F3520E5779D00F6EAFA /* NSAssertionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 17C84F3420E5779D00F6EAFA /* NSAssertionHandler.m */; };
 		17CD9B650F162D1A00A925B3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */; };
 		17F9928B1F93C27100F37DF9 /* CTScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992891F93C27100F37DF9 /* CTScanner.h */; };
 		17F9928C1F93C27100F37DF9 /* CTScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9928A1F93C27100F37DF9 /* CTScanner.m */; };
@@ -19,14 +24,9 @@
 		17F992961F93C29000F37DF9 /* GSNextRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992901F93C29000F37DF9 /* GSNextRuntime.h */; };
 		17F992971F93C29000F37DF9 /* GSNextRuntime.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992911F93C29000F37DF9 /* GSNextRuntime.m */; };
 		17F992981F93C29000F37DF9 /* GSUnion.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992921F93C29000F37DF9 /* GSUnion.h */; };
-		17F9929F1F93C2CE00F37DF9 /* PFDateComponents.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992991F93C2CE00F37DF9 /* PFDateComponents.h */; };
-		17F992A01F93C2CE00F37DF9 /* PFDateComponents.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9929A1F93C2CE00F37DF9 /* PFDateComponents.m */; };
-		17F992A11F93C2CE00F37DF9 /* PFEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F9929B1F93C2CE00F37DF9 /* PFEnumerator.h */; };
-		17F992A21F93C2CE00F37DF9 /* PFEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9929C1F93C2CE00F37DF9 /* PFEnumerator.m */; };
 		17F992A31F93C2CE00F37DF9 /* PFObjCTypeTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F9929D1F93C2CE00F37DF9 /* PFObjCTypeTools.h */; };
 		17F992A41F93C2CE00F37DF9 /* PFObjCTypeTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F9929E1F93C2CE00F37DF9 /* PFObjCTypeTools.m */; };
 		17F992B51F93C3B900F37DF9 /* NSArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992A51F93C3B900F37DF9 /* NSArray.m */; };
-		17F992B61F93C3B900F37DF9 /* NSCalendar.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992A61F93C3B900F37DF9 /* NSCalendar.m */; };
 		17F992B81F93C3B900F37DF9 /* NSData.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992A81F93C3B900F37DF9 /* NSData.m */; };
 		17F992B91F93C3B900F37DF9 /* NSDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992A91F93C3B900F37DF9 /* NSDate.m */; };
 		17F992BA1F93C3B900F37DF9 /* NSDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992AA1F93C3B900F37DF9 /* NSDictionary.m */; };
@@ -52,8 +52,6 @@
 		17F992E51F93C4D200F37DF9 /* NSAutoreleasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992DD1F93C4D200F37DF9 /* NSAutoreleasePool.m */; };
 		17F992E61F93C4D200F37DF9 /* NSDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992DE1F93C4D200F37DF9 /* NSDebug.m */; };
 		17F992E71F93C4D200F37DF9 /* NSException.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992DF1F93C4D200F37DF9 /* NSException.m */; };
-		17F992E81F93C4D200F37DF9 /* NSInvocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E01F93C4D200F37DF9 /* NSInvocation.m */; };
-		17F992E91F93C4D200F37DF9 /* NSMethodSignature.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */; };
 		17F992EA1F93C4D200F37DF9 /* NSObjCRuntime.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */; };
 		17F992EC1F93C4D200F37DF9 /* NSZone.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992E41F93C4D200F37DF9 /* NSZone.m */; };
 		17F992F01F93C55600F37DF9 /* NSDateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992ED1F93C55600F37DF9 /* NSDateFormatter.m */; };
@@ -62,9 +60,7 @@
 		17F992F61F93C59100F37DF9 /* NSValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992F31F93C59100F37DF9 /* NSValue.m */; };
 		17F992F71F93C59100F37DF9 /* PFValues.h in Headers */ = {isa = PBXBuildFile; fileRef = 17F992F41F93C59100F37DF9 /* PFValues.h */; };
 		17F992F81F93C59100F37DF9 /* PFValues.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992F51F93C59100F37DF9 /* PFValues.m */; };
-		17F992FA1F93C65500F37DF9 /* NSNull.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992F91F93C65500F37DF9 /* NSNull.m */; };
 		17F993001F93C6D500F37DF9 /* NSCountedSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992FE1F93C6D500F37DF9 /* NSCountedSet.m */; };
-		17F993011F93C6D500F37DF9 /* NSEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F992FF1F93C6D500F37DF9 /* NSEnumerator.m */; };
 		17F993041F93C73300F37DF9 /* NSKeyValueCoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F993021F93C73300F37DF9 /* NSKeyValueCoding.m */; };
 		17F993051F93C73300F37DF9 /* NSKeyValueObserving.m in Sources */ = {isa = PBXBuildFile; fileRef = 17F993031F93C73300F37DF9 /* NSKeyValueObserving.m */; };
 		17F9930A1F93C77F00F37DF9 /* 64-bit.txt in Resources */ = {isa = PBXBuildFile; fileRef = 17F993061F93C77F00F37DF9 /* 64-bit.txt */; };
@@ -90,9 +86,14 @@
 
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1708960120DEBFC5001C552A /* NSAttributedString.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = NSAttributedString.m; path = Strings/NSAttributedString.m; sourceTree = "<group>"; };
+		17A1478420B974C700653CAF /* SwiftStubs.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SwiftStubs.m; sourceTree = "<group>"; };
+		17A1478620BB2FC500653CAF /* FileLoaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileLoaders.h; path = Bridged/FileLoaders.h; sourceTree = "<group>"; };
+		17A1478720BB2FC500653CAF /* FileLoaders.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileLoaders.m; path = Bridged/FileLoaders.m; sourceTree = "<group>"; };
 		17A6FAD4207A3D2F0002EEAA /* NSZombie.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = NSZombie.m; path = Runtime/NSZombie.m; sourceTree = "<group>"; };
 		17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "NSObject+NSDeprecatedMethods.m"; path = "Runtime/NSObject+NSDeprecatedMethods.m"; sourceTree = "<group>"; };
 		17A6FADB207A7D0A0002EEAA /* SymbolAliases */ = {isa = PBXFileReference; lastKnownFileType = text; name = SymbolAliases; path = Runtime/SymbolAliases; sourceTree = "<group>"; };
+		17C84F3420E5779D00F6EAFA /* NSAssertionHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = NSAssertionHandler.m; path = Runtime/NSAssertionHandler.m; sourceTree = "<group>"; };
 		17CD9B640F162D1A00A925B3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		17F992871F93B90C00F37DF9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		17F992891F93C27100F37DF9 /* CTScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CTScanner.h; path = Cocotron/CTScanner.h; sourceTree = "<group>"; };
@@ -103,14 +104,9 @@
 		17F992901F93C29000F37DF9 /* GSNextRuntime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSNextRuntime.h; path = GNUStep/GSNextRuntime.h; sourceTree = "<group>"; };
 		17F992911F93C29000F37DF9 /* GSNextRuntime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GSNextRuntime.m; path = GNUStep/GSNextRuntime.m; sourceTree = "<group>"; };
 		17F992921F93C29000F37DF9 /* GSUnion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSUnion.h; path = GNUStep/GSUnion.h; sourceTree = "<group>"; };
-		17F992991F93C2CE00F37DF9 /* PFDateComponents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFDateComponents.h; path = PureFoundation/PFDateComponents.h; sourceTree = "<group>"; };
-		17F9929A1F93C2CE00F37DF9 /* PFDateComponents.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PFDateComponents.m; path = PureFoundation/PFDateComponents.m; sourceTree = "<group>"; };
-		17F9929B1F93C2CE00F37DF9 /* PFEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFEnumerator.h; path = PureFoundation/PFEnumerator.h; sourceTree = "<group>"; };
-		17F9929C1F93C2CE00F37DF9 /* PFEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PFEnumerator.m; path = PureFoundation/PFEnumerator.m; sourceTree = "<group>"; };
 		17F9929D1F93C2CE00F37DF9 /* PFObjCTypeTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFObjCTypeTools.h; path = PureFoundation/PFObjCTypeTools.h; sourceTree = "<group>"; };
 		17F9929E1F93C2CE00F37DF9 /* PFObjCTypeTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PFObjCTypeTools.m; path = PureFoundation/PFObjCTypeTools.m; sourceTree = "<group>"; };
 		17F992A51F93C3B900F37DF9 /* NSArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSArray.m; path = Bridged/NSArray.m; sourceTree = "<group>"; };
-		17F992A61F93C3B900F37DF9 /* NSCalendar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSCalendar.m; path = Bridged/NSCalendar.m; sourceTree = "<group>"; };
 		17F992A81F93C3B900F37DF9 /* NSData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSData.m; path = Bridged/NSData.m; sourceTree = "<group>"; };
 		17F992A91F93C3B900F37DF9 /* NSDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSDate.m; path = Bridged/NSDate.m; sourceTree = "<group>"; };
 		17F992AA1F93C3B900F37DF9 /* NSDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSDictionary.m; path = Bridged/NSDictionary.m; sourceTree = "<group>"; };
@@ -136,8 +132,6 @@
 		17F992DD1F93C4D200F37DF9 /* NSAutoreleasePool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSAutoreleasePool.m; path = Runtime/NSAutoreleasePool.m; sourceTree = "<group>"; };
 		17F992DE1F93C4D200F37DF9 /* NSDebug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSDebug.m; path = Runtime/NSDebug.m; sourceTree = "<group>"; };
 		17F992DF1F93C4D200F37DF9 /* NSException.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSException.m; path = Runtime/NSException.m; sourceTree = "<group>"; };
-		17F992E01F93C4D200F37DF9 /* NSInvocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSInvocation.m; path = Runtime/NSInvocation.m; sourceTree = "<group>"; };
-		17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSMethodSignature.m; path = Runtime/NSMethodSignature.m; sourceTree = "<group>"; };
 		17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSObjCRuntime.m; path = Runtime/NSObjCRuntime.m; sourceTree = "<group>"; };
 		17F992E31F93C4D200F37DF9 /* NSObject+NSCoderMethods.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+NSCoderMethods.m"; path = "Runtime/NSObject+NSCoderMethods.m"; sourceTree = "<group>"; };
 		17F992E41F93C4D200F37DF9 /* NSZone.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSZone.m; path = Runtime/NSZone.m; sourceTree = "<group>"; };
@@ -147,9 +141,7 @@
 		17F992F31F93C59100F37DF9 /* NSValue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSValue.m; path = Values/NSValue.m; sourceTree = "<group>"; };
 		17F992F41F93C59100F37DF9 /* PFValues.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFValues.h; path = Values/PFValues.h; sourceTree = "<group>"; };
 		17F992F51F93C59100F37DF9 /* PFValues.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PFValues.m; path = Values/PFValues.m; sourceTree = "<group>"; };
-		17F992F91F93C65500F37DF9 /* NSNull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSNull.m; path = Values/NSNull.m; sourceTree = "<group>"; };
 		17F992FE1F93C6D500F37DF9 /* NSCountedSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSCountedSet.m; path = Collections/NSCountedSet.m; sourceTree = "<group>"; };
-		17F992FF1F93C6D500F37DF9 /* NSEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSEnumerator.m; path = Collections/NSEnumerator.m; sourceTree = "<group>"; };
 		17F993021F93C73300F37DF9 /* NSKeyValueCoding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSKeyValueCoding.m; path = Runtime/NSKeyValueCoding.m; sourceTree = "<group>"; };
 		17F993031F93C73300F37DF9 /* NSKeyValueObserving.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSKeyValueObserving.m; path = Runtime/NSKeyValueObserving.m; sourceTree = "<group>"; };
 		17F993061F93C77F00F37DF9 /* 64-bit.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "64-bit.txt"; path = "Documentation/64-bit.txt"; sourceTree = "<group>"; };
@@ -230,6 +222,7 @@
 			isa = PBXGroup;
 			children = (
 				179DDE2E0F3C3E2B008E838A /* Notes */,
+				17A1478320B974A300653CAF /* Swift */,
 				17F992FD1F93C6BE00F37DF9 /* Collections */,
 				17FC48450F39A03300AD37F1 /* Bridged Classes */,
 				17B11FCE0F4B0FDF008D395B /* Cocotron */,
@@ -276,7 +269,6 @@
 				17F992F31F93C59100F37DF9 /* NSValue.m */,
 				17F992F41F93C59100F37DF9 /* PFValues.h */,
 				17F992F51F93C59100F37DF9 /* PFValues.m */,
-				17F992F91F93C65500F37DF9 /* NSNull.m */,
 				17F993151F93C84500F37DF9 /* NSPropertyList.m */,
 			);
 			name = Values;
@@ -316,10 +308,6 @@
 			children = (
 				17F993271F93C98300F37DF9 /* PureFoundation.h */,
 				17F993281F93C98300F37DF9 /* PureFoundation.m */,
-				17F992991F93C2CE00F37DF9 /* PFDateComponents.h */,
-				17F9929A1F93C2CE00F37DF9 /* PFDateComponents.m */,
-				17F9929B1F93C2CE00F37DF9 /* PFEnumerator.h */,
-				17F9929C1F93C2CE00F37DF9 /* PFEnumerator.m */,
 				17F9929D1F93C2CE00F37DF9 /* PFObjCTypeTools.h */,
 				17F9929E1F93C2CE00F37DF9 /* PFObjCTypeTools.m */,
 			);
@@ -335,6 +323,14 @@
 				17F993091F93C77F00F37DF9 /* Organisation.txt */,
 			);
 			name = Notes;
+			sourceTree = "<group>";
+		};
+		17A1478320B974A300653CAF /* Swift */ = {
+			isa = PBXGroup;
+			children = (
+				17A1478420B974C700653CAF /* SwiftStubs.m */,
+			);
+			path = Swift;
 			sourceTree = "<group>";
 		};
 		17B11E130F4999FE008D395B /* Threads, etc. */ = {
@@ -368,10 +364,9 @@
 				17F992DD1F93C4D200F37DF9 /* NSAutoreleasePool.m */,
 				17F992DE1F93C4D200F37DF9 /* NSDebug.m */,
 				17F992DF1F93C4D200F37DF9 /* NSException.m */,
-				17F992E01F93C4D200F37DF9 /* NSInvocation.m */,
+				17C84F3420E5779D00F6EAFA /* NSAssertionHandler.m */,
 				17F993021F93C73300F37DF9 /* NSKeyValueCoding.m */,
 				17F993031F93C73300F37DF9 /* NSKeyValueObserving.m */,
-				17F992E11F93C4D200F37DF9 /* NSMethodSignature.m */,
 				17F992E21F93C4D200F37DF9 /* NSObjCRuntime.m */,
 				17F992E31F93C4D200F37DF9 /* NSObject+NSCoderMethods.m */,
 				17A6FAD8207A503E0002EEAA /* NSObject+NSDeprecatedMethods.m */,
@@ -403,7 +398,6 @@
 			isa = PBXGroup;
 			children = (
 				17F992FE1F93C6D500F37DF9 /* NSCountedSet.m */,
-				17F992FF1F93C6D500F37DF9 /* NSEnumerator.m */,
 			);
 			name = Collections;
 			sourceTree = "<group>";
@@ -433,6 +427,7 @@
 				17F993211F93C93400F37DF9 /* NSCharacterSet.m */,
 				17F993221F93C93400F37DF9 /* NSString_NSURLUtilities.m */,
 				17F993231F93C93400F37DF9 /* NSString.m */,
+				1708960120DEBFC5001C552A /* NSAttributedString.m */,
 				17F9931F1F93C91500F37DF9 /* NSScanner.m */,
 			);
 			name = Strings;
@@ -455,7 +450,6 @@
 			isa = PBXGroup;
 			children = (
 				17F992A51F93C3B900F37DF9 /* NSArray.m */,
-				17F992A61F93C3B900F37DF9 /* NSCalendar.m */,
 				17F992A81F93C3B900F37DF9 /* NSData.m */,
 				17F992A91F93C3B900F37DF9 /* NSDate.m */,
 				17F992AA1F93C3B900F37DF9 /* NSDictionary.m */,
@@ -467,6 +461,8 @@
 				17F992B21F93C3B900F37DF9 /* NSTimer.m */,
 				17F992B31F93C3B900F37DF9 /* NSTimeZone.m */,
 				17F992B41F93C3B900F37DF9 /* NSURL.m */,
+				17A1478620BB2FC500653CAF /* FileLoaders.h */,
+				17A1478720BB2FC500653CAF /* FileLoaders.m */,
 			);
 			name = "Bridged Classes";
 			sourceTree = "<group>";
@@ -485,8 +481,7 @@
 				17F992A31F93C2CE00F37DF9 /* PFObjCTypeTools.h in Headers */,
 				17F992961F93C29000F37DF9 /* GSNextRuntime.h in Headers */,
 				17F992951F93C29000F37DF9 /* GSIArray.h in Headers */,
-				17F992A11F93C2CE00F37DF9 /* PFEnumerator.h in Headers */,
-				17F9929F1F93C2CE00F37DF9 /* PFDateComponents.h in Headers */,
+				17A1478820BB2FC500653CAF /* FileLoaders.h in Headers */,
 				17F992931F93C29000F37DF9 /* GSDirectoryEnumerator.h in Headers */,
 				17F992CD1F93C41600F37DF9 /* PFFileHandle.h in Headers */,
 			);
@@ -574,8 +569,7 @@
 				17F992DB1F93C48200F37DF9 /* NSRunLoop.m in Sources */,
 				17F992B91F93C3B900F37DF9 /* NSDate.m in Sources */,
 				17F992BE1F93C3B900F37DF9 /* NSSet.m in Sources */,
-				17F992B61F93C3B900F37DF9 /* NSCalendar.m in Sources */,
-				17F992A01F93C2CE00F37DF9 /* PFDateComponents.m in Sources */,
+				17A1478520B974C700653CAF /* SwiftStubs.m in Sources */,
 				17F992C31F93C3B900F37DF9 /* NSTimeZone.m in Sources */,
 				17F9928C1F93C27100F37DF9 /* CTScanner.m in Sources */,
 				17F9931C1F93C8D200F37DF9 /* NSBundle.m in Sources */,
@@ -583,22 +577,22 @@
 				17F992B51F93C3B900F37DF9 /* NSArray.m in Sources */,
 				17F992941F93C29000F37DF9 /* GSDirectoryEnumerator.m in Sources */,
 				17F993251F93C93400F37DF9 /* NSString_NSURLUtilities.m in Sources */,
-				17F992E91F93C4D200F37DF9 /* NSMethodSignature.m in Sources */,
 				17F992A41F93C2CE00F37DF9 /* PFObjCTypeTools.m in Sources */,
 				17F992F11F93C55600F37DF9 /* NSFormatter.m in Sources */,
 				17F992D81F93C48200F37DF9 /* NSLock.m in Sources */,
 				17F992BF1F93C3B900F37DF9 /* NSStream.m in Sources */,
 				17F9932A1F93C98300F37DF9 /* PureFoundation.m in Sources */,
 				17F992E51F93C4D200F37DF9 /* NSAutoreleasePool.m in Sources */,
+				1708960220DEBFC5001C552A /* NSAttributedString.m in Sources */,
+				17C84F3520E5779D00F6EAFA /* NSAssertionHandler.m in Sources */,
 				17F993241F93C93400F37DF9 /* NSCharacterSet.m in Sources */,
 				17F992C41F93C3B900F37DF9 /* NSURL.m in Sources */,
 				17F992EA1F93C4D200F37DF9 /* NSObjCRuntime.m in Sources */,
 				17F992F21F93C55600F37DF9 /* NSNumberFormatter.m in Sources */,
 				17F992CA1F93C41600F37DF9 /* NSFileHandle.m in Sources */,
+				17A1478920BB2FC500653CAF /* FileLoaders.m in Sources */,
 				17F992BC1F93C3B900F37DF9 /* NSLocale.m in Sources */,
 				17F992CE1F93C41600F37DF9 /* PFFileHandle.m in Sources */,
-				17F993011F93C6D500F37DF9 /* NSEnumerator.m in Sources */,
-				17F992E81F93C4D200F37DF9 /* NSInvocation.m in Sources */,
 				17F993161F93C84500F37DF9 /* NSPropertyList.m in Sources */,
 				17F992EC1F93C4D200F37DF9 /* NSZone.m in Sources */,
 				17F9930F1F93C7CF00F37DF9 /* NSHTTPCookie.m in Sources */,
@@ -611,7 +605,6 @@
 				17F992B81F93C3B900F37DF9 /* NSData.m in Sources */,
 				17F992971F93C29000F37DF9 /* GSNextRuntime.m in Sources */,
 				17F992CC1F93C41600F37DF9 /* NSPathUtilities.m in Sources */,
-				17F992FA1F93C65500F37DF9 /* NSNull.m in Sources */,
 				17F993191F93C86C00F37DF9 /* NSHFSFileTypes.m in Sources */,
 				17F992F01F93C55600F37DF9 /* NSDateFormatter.m in Sources */,
 				17F992DA1F93C48200F37DF9 /* NSRecursiveLock.m in Sources */,
@@ -629,7 +622,6 @@
 				17F992DC1F93C48200F37DF9 /* NSThread.m in Sources */,
 				17F993041F93C73300F37DF9 /* NSKeyValueCoding.m in Sources */,
 				17F992CB1F93C41600F37DF9 /* NSFileManager.m in Sources */,
-				17F992A21F93C2CE00F37DF9 /* PFEnumerator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
