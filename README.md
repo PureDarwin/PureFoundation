@@ -6,13 +6,13 @@
 
 #### About
 
-PureFoundation is a minimum viable product reimplmentation of Apple's Foundation objective-C library. The project was originally started to allow those few strange programs (like `arch`) which required it to run on Darwin. It is the intention that in the future it will provide the features necessary to allow swift programs to also run unmodifed on Darwin.
+PureFoundation is a minimum viable product reimplementation of Apple's Foundation objective-C library. The project was originally started to allow those few strange programs (like `arch`) which required it to run on Darwin. It is the intention that in the future it will provide the features necessary to allow Swift binaries to run unmodified on Darwin.
 
-PureFoundation is chiefly built on top of CFLite, the parts of CoreFoundation which Apple has opensourced. All [bridged](https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFDesignConcepts/Articles/tollFreeBridgedTypes.html) CoreFoundation types will be availble. Other Foundation classes will be built on the non-bridged functionality exposed.
+PureFoundation is chiefly built on top of CFLite, the parts of CoreFoundation which Apple has open-sourced. All [bridged](https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFDesignConcepts/Articles/tollFreeBridgedTypes.html) CoreFoundation types will be available (although the chances are you'll find their actual implementation is in [CoreFoundation](https://github.com/PureDarwin/CoreFoundation), because that is how Apple does it, and the aim of PureFoundation is binary compatibility). Other Foundation classes will be built on the non-bridged functionality exposed.
 
 #### Prerequisites
 
-You will need a version of CoreFoundation / CFLite with the objective-C bridge re-enabled, such as [this one](https://github.com/sjc/CoreFoundation).
+You will need a version of CoreFoundation / CFLite with the objective-C bridge re-enabled, such as [this one](https://github.com/PureDarwin/CoreFoundation).
 
 You will also need a version of libobjc.dylib.
 
@@ -22,7 +22,7 @@ Install the `Foundation.framework` into `/System/Library/Frameworks/` of a Darwi
 
 #### Known Issues
 
-Too many to mention. All classes are only partial implementations. Implemented methods quite probably vary in behaviour from their Apple equivalents. If you find a bug which is stopping you from whatever you want to do with PureFoundation, please let us know and we'll do our best to fix it.
+Too many to mention. All classes are only partial implementations. Implemented methods quite probably vary in behavior from their Apple equivalents. If you find a bug which is stopping you from whatever you want to do with PureFoundation, please let us know and we'll do our best to fix it.
 
 #### TODO
 
