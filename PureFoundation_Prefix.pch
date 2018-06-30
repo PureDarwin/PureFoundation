@@ -36,6 +36,8 @@
 // TODO comment, which we may want to keep in the release code
 #define PF_TODO printf("%s TODO\n", __func__);
 
+#define PF_DEPRECATED   printf("%s unimplemented because deprecated\n", __func__);
+
 #define PF_PATH_TO_CF ../CF-476.15
 
 #define PF_RETURN_NEW(obj) return NSMakeCollectable(obj);

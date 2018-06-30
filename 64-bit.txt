@@ -1,6 +1,0 @@
-PureFoundation was built and tested under 32-bit. This is a (by no means comprehensive) list of places where it is known not to be 64-bit safe.
-
-* Fast enumeration handler in NSCFArray, NSCFDictionary and NSCFSet: the mutationGuard is pointed to a fixed offset from the start of the object. When CFLite moves to 64-bit, this offset will need to grow accordingly.
-
-* In several classes (notably NSThread) new data structures are declared and overlaid on existing ivars to simplify access. These will probably not fit when pointers move to 64-bit. Conversely, under the 64-bit runtime, ivars are added dynamically, so we can abandon this fix and just declare the ivars we actually need.
-
