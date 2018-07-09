@@ -8,6 +8,7 @@
 #import "FileLoaders.h"
 
 #include <sys/stat.h>
+#include <sys/mman.h>
 
 // Attempts to load a plist from a file URL
 CFPropertyListRef PFPropertyListInitFromURL(CFURLRef url, Boolean mutable) {
@@ -58,53 +59,79 @@ BOOL PFPropertyListWriteToPath(CFPropertyListRef list, CFStringRef path, BOOL at
 }
 
 // This version should be able to deal with data:// URLs and server URLs
-CFDataRef PFDataInitFromURL(CFURLRef url, NSDataReadingOptions options, CFErrorRef *error) {
+CFDataRef PFDataInitFromURL(CFURLRef url, NSDataReadingOptions options, BOOL mutable, CFErrorRef *error) {
     CFDataRef data = NULL;
     CFStringRef scheme = CFURLCopyScheme(url);
     if (CFEqual((CFTypeRef)scheme, CFSTR("file"))) {
-        data = PFDataInitFromPath(CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle), options, error);
+        data = PFDataInitFromPath(CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle), mutable, options, error);
     }
     // TODO: Implement data:// schemes
     // TODO: Implement sync URL loading of network files
-    
+
     CFRelease(scheme);
     return data;
 }
 
 #define MaxPathSize 1024
 
-CFDataRef PFDataInitFromPath(CFStringRef path, NSDataReadingOptions options, CFErrorRef *error) {
+CFDataRef PFDataInitFromPath(CFStringRef path, NSDataReadingOptions options, BOOL mutable, CFErrorRef *error) {
 
     char filepath[MaxPathSize];
     if (!CFStringGetCString(path, filepath, MaxPathSize, kCFStringEncodingUTF8)) return NULL;
 
-    // TODO: Implement mmaped data. For now we'll just read all the file into a buffer
-
-    FILE *fh = fopen(filepath, "r");
-    if (!fh) {
+    if (mutable) {
+        // Mutable data objects are never created from mmapped files
+        options &= NSDataReadingUncached;
+    }
+    
+    int fd = open(filepath, O_RDONLY);
+    if (fd == -1) {
         if (error) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
         return NULL;
     }
     struct stat st;
-    if (stat(filepath, &st)) {
-        if (errno) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-        fclose(fh);
+    if(fstat(fd, &st)) {
+        if (error) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+        close(fd);
         return NULL;
     }
-    UInt8 *buffer = malloc(st.st_size);
+    size_t length = st.st_size;
+    
+    if (options & (NSDataReadingMapped|NSDataReadingMappedIfSafe)) {
+        void *ptr = mmap(NULL, length, PROT_READ, MAP_FILE|MAP_SHARED, fd, 0);
+        if (ptr == MAP_FAILED) {
+            if (error) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+            close(fd);
+            return NULL;
+        }
+        // Wrap the mapped memory into a data object
+        dispatch_data_t data = dispatch_data_create(ptr, length, dispatch_get_main_queue(), ^{
+            if (munmap(ptr, length)) {
+                fprintf(stderr, "munmap() mapped data failed, ptr: %p errno: %d", ptr, errno);
+            }
+        });
+        close(fd);
+        return (void *)data;
+    }
+
+    UInt8 *buffer = malloc(length);
     if (!buffer) {
         if (errno) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-        fclose(fh);
+        close(fd);
         return NULL;
     }
-    if (fread(buffer, 1, st.st_size, fh) != st.st_size && ferror(fh)) {
-        if (error) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ferror(fh), NULL);
-        fclose(fh);
+    if (read(fd, buffer, length) == -1) {
+        if (error) *error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+        close(fd);
         return NULL;
     }
-    fclose(fh);
-    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)buffer, st.st_size);
-    free(buffer);
+    close(fd);
+    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)buffer, length, kCFAllocatorDefault);
+    if (mutable) {
+        CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, data);
+        CFRelease(data);
+        data = (CFDataRef)mData;
+    }
     return data;
 }
 
