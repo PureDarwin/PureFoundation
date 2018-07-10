@@ -61,23 +61,23 @@
 }
 
 + (id)dataWithContentsOfURL:(NSURL *)url {
-    return [(id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NULL) autorelease];
+    return [(id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NO, NULL) autorelease];
 }
 
 + (id)dataWithContentsOfURL:(NSURL *)url options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
-    return [(id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, (CFErrorRef *)errorPtr) autorelease];
+    return [(id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, NO, (CFErrorRef *)errorPtr) autorelease];
 }
 
 + (id)dataWithContentsOfFile:(NSString *)path {
-    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NULL) autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NO, NULL) autorelease];
 }
 
 + (id)dataWithContentsOfFile:(NSString *)path options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
-    return [(id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, (CFErrorRef *)errorPtr) autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, NO, (CFErrorRef *)errorPtr) autorelease];
 }
 
 + (id)dataWithContentsOfMappedFile:(NSString *)path {
-    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NULL) autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NO, NULL) autorelease];
 }
 
 + (id)dataWithData:(NSData *)data {
@@ -107,29 +107,37 @@
     return (id)CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, deallocator);
 }
 
+- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length deallocator:(void (^)(void *, NSUInteger))deallocator {
+    free(self);
+    dispatch_data_t data = dispatch_data_create(bytes, length, dispatch_get_main_queue(), ^{
+        deallocator(bytes, length);
+    });
+    return (id)data;
+}
+
 - (id)initWithContentsOfFile:(NSString *)path options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
     free(self);
-    return (id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, (CFErrorRef *)errorPtr);
+    return (id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, NO, (CFErrorRef *)errorPtr);
 }
 
 - (id)initWithContentsOfURL:(NSURL *)url options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
     free(self);
-    return (id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, (CFErrorRef *)errorPtr);
+    return (id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, NO, (CFErrorRef *)errorPtr);
 }
 
 - (id)initWithContentsOfFile:(NSString *)path {
     free(self);
-    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NULL);
+    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NO, NULL);
 }
 
 - (id)initWithContentsOfURL:(NSURL *)url {
     free(self);
-    return (id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NULL);
+    return (id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NO, NULL);
 }
 
 - (id)initWithContentsOfMappedFile:(NSString *)path {
     free(self);
-    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NULL);
+    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NO, NULL);
 }
 
 - (id)initWithData:(NSData *)data {
@@ -153,12 +161,8 @@
 }
 
 + (instancetype)dataWithLength:(NSUInteger)length {
-    // TODO: Check that ownership of these bytes is correctly passed on to the mutable data
-    UInt8 *bytes = calloc(length, 1);
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, kCFAllocatorNull);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    free(bytes);
+    CFMutableDataRef mData = CFDataCreateMutable(kCFAllocatorDefault, 0);
+    CFDataSetLength(mData, length);
     return [(id)mData autorelease];
 }
 
@@ -170,53 +174,45 @@
 }
 
 + (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length {
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, kCFAllocatorDefault);
+    // As per the documentation, when creating NSMutableData, `NoCopy` is ignored and the data is copied immediately
+    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)bytes, length);
     CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
     CFRelease(data);
+    if (bytes) {
+        free(bytes);
+    }
     return [(id)mData autorelease];
 }
 
-+ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)free {
-    CFAllocatorRef deallocator = free ? kCFAllocatorDefault : kCFAllocatorNull;
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, deallocator);
++ (id)dataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)freeWhenDone {
+    // As per the documentation, when creating NSMutableData, `NoCopy` is ignored and the data is copied immediately
+    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)bytes, length);
     CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
     CFRelease(data);
+    if (freeWhenDone && bytes) {
+        free(bytes);
+    }
     return [(id)mData autorelease];
 }
 
 + (id)dataWithContentsOfURL:(NSURL *)url {
-    CFDataRef data = PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return [(id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, YES, NULL) autorelease];
 }
 
 + (id)dataWithContentsOfURL:(NSURL *)url options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
-    CFDataRef data = PFDataInitFromURL((CFURLRef)url, readOptionsMask, (CFErrorRef *)errorPtr);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return [(id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, YES, (CFErrorRef *)errorPtr) autorelease];
 }
 
 + (id)dataWithContentsOfFile:(NSString *)path {
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, YES, NULL) autorelease];
 }
 
 + (id)dataWithContentsOfFile:(NSString *)path options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, readOptionsMask, (CFErrorRef *)errorPtr);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, YES, (CFErrorRef *)errorPtr) autorelease];
 }
 
 + (id)dataWithContentsOfMappedFile:(NSString *)path {
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return [(id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, YES, NULL) autorelease];
 }
 
 + (id)dataWithData:(NSData *)data {
@@ -237,13 +233,8 @@
 
 - (id)initWithLength:(NSUInteger)length {
     free(self);
-    // TODO: Check that ownership of these bytes is correctly passed on to the mutable data
-    // Or could use CFDataSetLength()
-    UInt8 *bytes = calloc(length, 1);
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, kCFAllocatorNull);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    free(bytes);
+    CFMutableDataRef mData = CFDataCreateMutable(kCFAllocatorDefault, 0);
+    CFDataSetLength(mData, length);
     return (id)mData;
 }
 
@@ -257,59 +248,61 @@
 
 - (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length {
     free(self);
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, kCFAllocatorDefault);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
+    // As per the documentation, when creating NSMutableData, `NoCopy` is ignored and the data is copied immediately
+    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)bytes, length);
+    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, data);
     CFRelease(data);
+    if (bytes) {
+        free(bytes);
+    }
     return (id)mData;
 }
 
 - (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)freeWhenDone  {
     free(self);
-    CFAllocatorRef deallocator = free ? kCFAllocatorDefault : kCFAllocatorNull;
-    CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)bytes, length, deallocator);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
+    // As per the documentation, when creating NSMutableData, `NoCopy` is ignored and the data is copied immediately
+    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)bytes, length);
+    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, data);
     CFRelease(data);
+    if (freeWhenDone && bytes) {
+        free(bytes);
+    }
+    return (id)mData;
+}
+
+- (id)initWithBytesNoCopy:(void *)bytes length:(NSUInteger)length deallocator:(void (^)(void *, NSUInteger))deallocator {
+    free(self);
+    // As per the documentation, when creating NSMutableData, `NoCopy` is ignored and the data is copied immediately
+    CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)bytes, length);
+    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, data);
+    CFRelease(data);
+    deallocator(bytes, length);
     return (id)mData;
 }
 
 - (id)initWithContentsOfFile:(NSString *)path options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
     free(self);
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, readOptionsMask, (CFErrorRef *)errorPtr);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return (id)mData;
+    return (id)PFDataInitFromPath((CFStringRef)path, readOptionsMask, YES, (CFErrorRef *)errorPtr);
 }
 
 - (id)initWithContentsOfURL:(NSURL *)url options:(NSDataReadingOptions)readOptionsMask error:(NSError **)errorPtr {
     free(self);
-    CFDataRef data = PFDataInitFromURL((CFURLRef)url, readOptionsMask, (CFErrorRef *)errorPtr);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return (id)mData;
+    return (id)PFDataInitFromURL((CFURLRef)url, readOptionsMask, YES, (CFErrorRef *)errorPtr);
 }
 
 - (id)initWithContentsOfFile:(NSString *)path {
     free(self);
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingUncached, YES, NULL);
 }
 
 - (id)initWithContentsOfURL:(NSURL *)url {
     free(self);
-    CFDataRef data = PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return (id)mData;
+    return (id)PFDataInitFromURL((CFURLRef)url, NSDataReadingUncached, YES, NULL);
 }
 
 - (id)initWithContentsOfMappedFile:(NSString *)path {
     free(self);
-    CFDataRef data = PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, NULL);
-    CFMutableDataRef mData = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, (CFDataRef)data);
-    CFRelease(data);
-    return [(id)mData autorelease];
+    return (id)PFDataInitFromPath((CFStringRef)path, NSDataReadingMappedAlways, YES, NULL);
 }
 
 - (id)initWithData:(NSData *)data {
